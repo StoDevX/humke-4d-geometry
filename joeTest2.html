@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>MathBox - 3D Grapher</title>
+    <script src="mathbox-src/build/mathbox-bundle.js"></script>
+    <script src="datgui/dat.gui.js"></script>
+    
+    <script src="parser.js"></script>
+
+    <link rel="stylesheet" href="../build/mathbox.css">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+  </head>
+  <body>
+    <script>
+
+      var z_value = 0;
+      var gui = new dat.GUI();
+
+      var params = {
+      equation: "x^2+y^2+z^2 = 10",
+      z_value: 0
+      };
+
+      var equation = gui.add(params, 'equation');
+
+      var z_value_control = gui.add(params, 'z_value').min(-10).max(10).step(0.5).name('Z = ').listen();
+
+      z_value_control.onChange(function(new_z) {
+      z_value = new_z;
+      });
+      
+      
+      var mathbox = mathBox({
+      plugins: ['core', 'controls', 'cursor', 'mathbox'],
+      controls: {
+      klass: THREE.OrbitControls,
+      },
+      });
+      if (mathbox.fallback) throw "WebGL not supported"
+
+      var three = mathbox.three;
+      three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
+
+      var camera = mathbox.camera({
+      proxy: true,
+      position: [3, 3, 3],
+      });
+
+      var view = mathbox.cartesian({
+      range: [[-10, 10], [-10, 10], [-10, 10]],
+      scale: [3, 3, 3],
+      });
+
+      view
+      .axis({
+      axis: 1,
+      color: "red",
+      width: 6,
+      })
+      .axis({
+      axis: 2,
+      color: "green",
+      width: 6,
+      })
+      .axis({
+      axis: 3,
+      color: "blue",
+      width: 6,
+      })
+      .grid({
+      axes: [3, 1]
+      });
+
+      var top_data =
+      view.interval({
+      id: "top_data",
+      expr: function (emit, x, i, t) {
+      emit(x, Math.sqrt((100-z_value*z_value)-x*x), z_value);
+      },
+      width: 180,
+      channels: 3,
+      });
+      
+      var bottom_data =
+      view.interval({
+      id: "bottom_data",
+      expr: function (emit, x, i, t) {
+      emit(x, -Math.sqrt((100-z_value*z_value)-x*x), z_value);
+      },
+      width: 180,
+      channels: 3,
+      });
+
+      var curve =
+      view.line({
+      points: mathbox.select('#top_data'),
+      width: 15,
+      color: '#FF0099',
+      });
+
+      var curve =
+      view.line({
+      points: mathbox.select('#bottom_data'),
+      width: 15,
+      color: '#FF0099',
+      });
+    </script>
+  </body>
