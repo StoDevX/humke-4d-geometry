@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>4D Geometry Viewer</title>
+	<script src="../mathbox-src/build/mathbox-bundle.js"></script>
+  	<link rel="stylesheet" href="../../build/mathbox.css">
+  	<meta name="viewport" content="initial-scale=1, maximum-scale=1">
+</head>
+<body>
+<script type="text/javascript">
+	// Initialize mathbox 
+	var mathbox = mathBox({
+      plugins: ['core', 'controls', 'cursor', 'mathbox'],
+      controls: {
+        // Orbit controls, i.e. Euler angles, with gimbal lock
+        klass: THREE.OrbitControls,
+
+        // Trackball controls, i.e. Free quaternion rotation
+        //klass: THREE.TrackballControls,
+      },
+    });
+    if (mathbox.fallback) throw "WebGL not supported"
+
+    var three = mathbox.three;
+    three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
+
+	// 1- We need a 3D camera
+	var camera = mathbox.camera({
+	  proxy: true, // this alows interactive camera controls to override the position
+	  position: [0, 0, 3],
+	})
+
+	mathbox.print(); // Prints out the state of the Mathbox DOM
+
+	// 2- Set up our coordinate system 
+	var view = mathbox.cartesian({
+	  range: [[0, 2], [0, 1]],
+	  scale: [2, 1,1],
+	});
+	// Add axes and a grid 
+	view
+	  .axis({
+	    axis: 1,
+	    width: 3,
+	    color:'black',
+	  })
+	  .axis({
+	    axis: 2,
+	    width: 3,
+	    color:'black',
+	  })
+	  .grid({
+	    width: 3,  
+	    divideX: 20,
+	    divideY: 10,        
+	  });
+
+	  // 3- Give it some geometrical data 
+	  var data =
+	  view.interval({
+	    expr: function (emit, x, i, t) {
+	      emit(x, Math.sin(x*4)*0.5+0.5);
+	    },
+	    width: 64,
+	    channels: 2,
+	  });
+
+	  // 4- The shape to draw 
+	  var curve =
+		  view.line({
+		    width: 5,
+		    color: '#3090FF',
+		  });
+
+    mathbox.set('focus', 3);
+
+
+
+</script>
+</body>
+</html>
