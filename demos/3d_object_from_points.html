@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>4D Geometry Viewer</title>
+	<script src="../mathbox-src/build/mathbox-bundle.js"></script>
+  	<link rel="stylesheet" href="../../build/mathbox.css">
+  	<meta name="viewport" content="initial-scale=1, maximum-scale=1">
+</head>
+<body>
+<script type="text/javascript">
+	// Initialize mathbox 
+	var mathbox = mathBox({
+      plugins: ['core', 'controls', 'cursor', 'mathbox'],
+      controls: {
+        // Orbit controls, i.e. Euler angles, with gimbal lock
+        klass: THREE.OrbitControls,
+
+        // Trackball controls, i.e. Free quaternion rotation
+        //klass: THREE.TrackballControls,
+      },
+    });
+    if (mathbox.fallback) throw "WebGL not supported"
+
+    var three = mathbox.three;
+    three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
+
+	// 1- We need a 3D camera
+	var camera = mathbox.camera({
+	  proxy: true, // this alows interactive camera controls to override the position
+	  position: [3, 3, 3],
+	})
+
+	mathbox.print(); // Prints out the state of the Mathbox DOM
+
+	// 2- Set up our coordinate system 
+	var view = mathbox.cartesian({
+	  range: [[-10, 10], [-10, 10], [-10, 10]],
+      scale: [3, 3, 3],
+	});
+	// Add axes and a grid 
+	view
+      .axis({
+	      axis: 1,
+	      color: "red",
+	      width: 6,
+      })
+      .axis({
+	      axis: 2,
+	      color: "green",
+	      width: 6,
+      })
+      .axis({
+	      axis: 3,
+	      color: "blue",
+	      width: 6,
+      })
+      .grid({
+      	axes: [3, 1]
+      });
+
+	  // 3- Give it some geometrical data 
+	  // var data =
+	  // view.interval({
+	  //   expr: function (emit, x, i, t) {
+	  //     emit(x, Math.sin(x*4+t)*0.5+0.5);
+	  //   },
+	  //   width: 64*4,
+	  //   channels: 2,
+	  // });
+
+	  // 4- The shape to draw 
+	  // var curve =
+		 //  view.line({
+		 //    width: 5,
+		 //    color: '#3090FF',
+		 //  });
+
+    mathbox.set('focus', 3);
+
+    // ========= Attempt to draw a convex hull =========
+
+    // First create the points data
+    var points = view.volume({
+      expr: function (emit, x, y, z, i, j, k, t) {
+      		emit(x,y,z)
+      	},
+      width:  9,
+      height: 9,
+      depth:  9,
+      channels: 3,
+    });
+
+    // view.voxel({
+    //   data: [
+    //          0,0,0, 5,0,0, 5,5,0, 0,5,0,
+    //          0,0,5, 5,0,5, 5,5,5, 0,5,5,
+    //         ],
+    //   width: 4,
+    //   height: 2,
+    //   depth: 1,
+    //   items: 1,
+    //   channels: 3,
+    // });
+
+    //mathbox.print()
+
+    // Now draw it? 
+    view
+    // .transform({
+    //   pass: 'eye',
+    //   position: [2, 2, 2],
+    //   scale: [1, 1, 1],
+    // })
+      .surface({
+        color: 0x3090FF,
+        shaded: true,
+        width: 3,
+      })
+      .surface({
+        color: 0x3090FF,
+        fill: false,
+        lineX: true,
+        lineY: true,
+        width: 3,
+      })
+      
+     
+
+</script>
+</body>
+</html>
