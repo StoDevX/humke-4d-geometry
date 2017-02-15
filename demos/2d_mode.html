@@ -13,7 +13,8 @@
 <body>
 <script type="text/javascript">
 	var colors = {
-		'viewing_axis':'#e59a1c'
+		'viewing_axis':'#e59a1c',
+		'data':'#3090FF'
 	}
 	var params = {} //gui params
 	var view;
@@ -93,9 +94,9 @@
 	    viewing.add(params, 'show_axis');
 	    // Turn the slider orange 
 	    document.querySelector(".slider-fg").style.background = colors.viewing_axis
-	    
+	    document.querySelector(".dg .cr.number input[type='text']").style.color = colors.viewing_axis
+    	document.querySelector(".dg .cr.number").style['border-left'] = "3px solid " + colors.viewing_axis
     }
-
     initGUI()
     
 
@@ -151,7 +152,7 @@
 	  var curve =
 		  view.line({
 		    width: 5,
-		    color: '#3090FF',
+		    color: colors.data,
 		  });
 
 	// Draw viewing axis 
@@ -212,13 +213,7 @@
       color: 0x000000,
     });
 
-    // Draw the intersection 
-
-
-	/* 
-	- Calculate the intrection with the curve 
-	- 
-	*/	 
+    
 
 </script>
 </body>
