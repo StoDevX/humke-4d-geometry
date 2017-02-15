@@ -12,6 +12,9 @@
 </head>
 <body>
 <script type="text/javascript">
+	var colors = {
+		'viewing_axis':'#e59a1c'
+	}
 	var params = {} //gui params
 	var view;
 	var equation = {
@@ -88,7 +91,8 @@
 	    	params.axis_value = 0;
 	    });
 	    viewing.add(params, 'show_axis');
-
+	    // Turn the slider orange 
+	    document.querySelector(".slider-fg").style.background = colors.viewing_axis
 	    
     }
 
@@ -150,6 +154,20 @@
 		    color: '#3090FF',
 		  });
 
+	// Draw projection axis 
+	view.interval({
+		expr: function(emit,x,i,t){
+			emit(x,params.axis_value)
+		},
+		width:2,
+		channels:2,
+		id:"viewing_axis"
+	}).line({
+		width:5,
+		color:colors.viewing_axis
+	})
+
+
 	// Add text
 	view.array({
       data: [[11,1], [0,12]],
@@ -160,6 +178,9 @@
     }).label({
       color: 0x000000,
     });
+
+    // Draw the viewing axis 
+
 
     //mathbox.set('focus', 2);
 
@@ -191,7 +212,6 @@
     });
 
 	/* 
-	- Draw an orange axis on the XY graph 
 	- Make it move with the slider 
 	- Calculate the intrection with the curve 
 	- 
