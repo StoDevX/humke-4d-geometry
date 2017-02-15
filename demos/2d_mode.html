@@ -12,6 +12,24 @@
 </head>
 <body>
 <script type="text/javascript">
+	var params = {} //gui params
+	var view;
+	var equation = {
+		eq: null,
+		parse: function(str){
+			//Takes a string and stores the new equation
+			// In case it's a malformed equation, set eq to null so we know something went wrong
+			this.eq = Parser.parse( str ).toJSFunction( ['x'] );
+		
+		},
+		eval: function(x){
+			// Evaluates the function 
+			if(this.eq == null) return undefined;
+			return this.eq(x)
+ 		},
+	}
+
+
 	// Initialize mathbox 
 	var mathbox = mathBox({
       plugins: ['core', 'controls', 'cursor', 'mathbox'],
@@ -30,10 +48,10 @@
 
     //Init the GUI
     function initGUI(){
-    	var params = {
+    	params = {
 	    	'axis_value':0,
 	    	'axis':'X',
-	    	'equation': 'y=sin(x)',
+	    	'equation': 'sin(x)*3',
 	    	'points': '(0,0),(0,1)',
 	    	'source': 'equation',
 	    	'fill':false,
@@ -47,7 +65,17 @@
 
 	    // Add shape options 
 	    // Should be able to: (1) Draw from equation (2) Draw from points and (a) fill or outline.
-	    shapeProperties.add(params, 'equation');
+	    shapeProperties.add(params, 'equation').name('Y =').onChange(function(val){
+	    	// Check that the equation is correct first 
+	    	try {
+	    		Parser.parse( val )
+	    		// If that succeeds, go ahead 
+	    		equation.parse(val)
+	    	} catch(err){
+	    		console.log("Error parsing equation",err)
+	    	}
+	    	
+	    });
 	    shapeProperties.add(params, 'points');
 	    shapeProperties.add(params, 'fill');
 	    shapeProperties.add(params, 'source',['equation','points']);
@@ -76,7 +104,7 @@
 	mathbox.print(); // Prints out the state of the Mathbox DOM
 
 	// 2- Set up our coordinate system 
-	var view = mathbox.cartesian({
+	view = mathbox.cartesian({
 	  range: [[-10, 10], [-10, 10]],
 	  scale: [1, 1],
 	});
@@ -103,13 +131,15 @@
 
 
 	  // 3- Give it some geometrical data 
+	  equation.parse(params.equation);
 	  var data =
 	  view.interval({
 	    expr: function (emit, x, i, t) {
-	      emit(x, Math.sin(x) * 3);
+	      emit(x, equation.eval(x));
 	    },
 	    width: 256,
 	    channels: 2,
+	    id:"data"
 	  });
 
 
@@ -161,7 +191,10 @@
     });
 
 	/* 
-	
+	- Draw an orange axis on the XY graph 
+	- Make it move with the slider 
+	- Calculate the intrection with the curve 
+	- 
 	*/	 
 
 </script>
