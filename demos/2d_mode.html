@@ -154,10 +154,13 @@
 		    color: '#3090FF',
 		  });
 
-	// Draw projection axis 
+	// Draw viewing axis 
 	view.interval({
 		expr: function(emit,x,i,t){
-			emit(x,params.axis_value)
+			if(params.axis == "X") 
+				emit(x,params.axis_value);
+			else 
+				emit(params.axis_value,x);
 		},
 		width:2,
 		channels:2,
@@ -178,8 +181,6 @@
     }).label({
       color: 0x000000,
     });
-
-    // Draw the viewing axis 
 
 
     //mathbox.set('focus', 2);
@@ -211,8 +212,10 @@
       color: 0x000000,
     });
 
+    // Draw the intersection 
+
+
 	/* 
-	- Make it move with the slider 
 	- Calculate the intrection with the curve 
 	- 
 	*/	 
