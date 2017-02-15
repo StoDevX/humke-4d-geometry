@@ -55,7 +55,7 @@
     	params = {
 	    	'axis_value':0,
 	    	'axis':'X',
-	    	'equation': 'sin(x)*3',
+	    	'equation': 'x',
 	    	'points': '(0,0),(0,1)',
 	    	'source': 'equation',
 	    	'fill':false,
@@ -213,7 +213,23 @@
       color: 0x000000,
     });
 
-    
+    // Draw the intersection with viewing axis 
+    view2.interval({
+		expr: function(emit,x,i,t){
+			if(params.axis == "X"){
+				if(Math.abs(equation.eval(x) - params.axis_value) < 0.1){
+					emit(x, 1);
+				}
+				
+			}
+		},
+		width:256,
+		channels:2,
+		id:"section_data"
+	}).point({
+		points: "#section_data",
+		color:colors.data
+	})
 
 </script>
 </body>
