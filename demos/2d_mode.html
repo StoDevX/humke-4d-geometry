@@ -114,6 +114,10 @@
 	  scale: [1, 1],
 	});
 
+	view = view.transform({
+      position: [-15, 0, 0],
+    })
+
 
 	// Add axes and a grid 
 	view
@@ -194,7 +198,7 @@
 	});
 
     view2 = view2.transform({
-      position: [30, 0, 0],
+      position: [15, 0, 0],
     })
 
 	view2.axis({
@@ -214,16 +218,18 @@
     });
 
     // Draw the intersection with viewing axis 
+    var data = []
+    //manually calculate intersection points 
     view2.interval({
 		expr: function(emit,x,i,t){
 			if(params.axis == "X"){
-				if(Math.abs(equation.eval(x) - params.axis_value) < 0.1){
+				if(Math.abs(equation.eval(x) - params.axis_value) < 0.4){
 					emit(x, 1);
 				}
 				
 			}
 		},
-		width:256,
+		width:200,
 		channels:2,
 		id:"section_data"
 	}).point({
