@@ -144,9 +144,10 @@
 	  var data =
 	  view.interval({
 	    expr: function (emit, x, i, t) {
+	    	if(!params.show_shape) return;
 	      emit(x, equation.eval(x));
 	    },
-	    width: 256,
+	    width: 256 ,
 	    channels: 2,
 	    id:"data"
 	  });
