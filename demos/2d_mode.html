@@ -59,8 +59,7 @@
 	    	'points': '(0,0),(0,1)',
 	    	'source': 'equation',
 	    	'fill':false,
-	    	'show_shape':true,
-	    	'show_axis':true
+	    	'show_shape':true
 	    }
 	    var gui = new dat.GUI();
 	    // Setup folders 
@@ -91,7 +90,6 @@
 	    	axis_control.name(val + " = ")
 	    	params.axis_value = 0;
 	    });
-	    viewing.add(params, 'show_axis');
 	    // Turn the slider orange 
 	    document.querySelector(".slider-fg").style.background = colors.viewing_axis
 	    document.querySelector(".dg .cr.number input[type='text']").style.color = colors.viewing_axis
