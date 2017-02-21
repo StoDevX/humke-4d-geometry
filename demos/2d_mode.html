@@ -58,7 +58,6 @@
 	    	'equation': 'x',
 	    	'points': '(0,0),(0,1)',
 	    	'source': 'equation',
-	    	'fill':false,
 	    	'show_shape':true
 	    }
 	    var gui = new dat.GUI();
@@ -67,7 +66,8 @@
 	    var viewing = gui.addFolder('Viewing Controls');
 
 	    // Add shape options 
-	    // Should be able to: (1) Draw from equation (2) Draw from points and (a) fill or outline.
+	    // Should be able to: (1) Draw from cartesian equation (2) Draw from points (3) Draw from parametric equation
+
 	    shapeProperties.add(params, 'equation').name('Y =').onChange(function(val){
 	    	// Check that the equation is correct first 
 	    	try {
@@ -80,7 +80,6 @@
 	    	
 	    });
 	    shapeProperties.add(params, 'points');
-	    shapeProperties.add(params, 'fill');
 	    shapeProperties.add(params, 'source',['equation','points']);
 	    shapeProperties.add(params, 'show_shape');
 
