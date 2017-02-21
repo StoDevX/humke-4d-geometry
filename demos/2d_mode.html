@@ -161,7 +161,7 @@
 	// Draw viewing axis 
 	view.interval({
 		expr: function(emit,x,i,t){
-			if(params.axis == "X") 
+			if(params.axis == "Y") 
 				emit(x,params.axis_value);
 			else 
 				emit(params.axis_value,x);
@@ -221,7 +221,7 @@
     //manually calculate intersection points 
     view2.interval({
 		expr: function(emit,x,i,t){
-			if(params.axis == "X"){
+			if(params.axis == "Y"){
 				if(Math.abs(equation.eval(x) - params.axis_value) < 0.4){
 					emit(x, 1);
 				}
