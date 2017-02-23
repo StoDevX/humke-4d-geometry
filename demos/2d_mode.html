@@ -238,7 +238,9 @@
 				}	
 			}
 			if(params.axis == "X"){
-
+				if(Math.abs(x - params.axis_value) < 0.05){
+					emit(1,equation.eval(x))
+				}
 			}
 		},
 		width:200,
