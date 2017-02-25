@@ -32,10 +32,10 @@
 			this.eq = function(x,y) { return LHSfunc(x,y) - RHSfunc(x,y); }
 
 		},
-		eval: function(x){
+		eval: function(x,y){
 			// Evaluates the function
 			if(this.eq == null) return undefined;
-			return this.eq(x)
+			return this.eq(x,y)
  		},
 	};
 	var edgeArray = [];
@@ -76,11 +76,11 @@
     	params = {
 	    	'axis_value':0,
 	    	'axis':'Y',
-	    	'equation': 'y = x',
+	    	'equation': 'x^2+y^2 = 30',
 	    	'points': '(0,0),(0,1)',
 	    	'source': 'equation',
 	    	'show_shape':true,
-				'resolution':20
+			'resolution':60
 	    }
 	    var gui = new dat.GUI();
 	    // Setup folders
@@ -128,6 +128,7 @@
     initGUI()
 
 
+
 	// 1- We need a 3D camera
 	var camera = mathbox.camera({
 	  proxy: true, // this alows interactive camera controls to override the position
@@ -168,6 +169,7 @@
 
 
 	  // 3- Give it some geometrical data
+	  equation.parse(params.equation);
 		renderGraph();
 	  var edgeData = view.array({
 			width: edgeArray.length/2,
@@ -257,14 +259,12 @@
     view2.interval({
 		expr: function(emit,x,i,t){
 			if(params.axis == "Y"){
-				if(Math.abs(equation.eval(x) - params.axis_value) < 0.4){
+				if(Math.abs(equation.eval(x,params.axis_value)) < 0.4){
 					emit(x, 1);
 				}
 			}
 			if(params.axis == "X"){
-				if(Math.abs(x - params.axis_value) < 0.05){
-					emit(1,equation.eval(x))
-				}
+				// Todo: figure out how to intersect on this axis
 			}
 		},
 		width:200,
