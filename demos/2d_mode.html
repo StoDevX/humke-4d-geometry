@@ -74,13 +74,16 @@
     //Init the GUI
     function initGUI(){
     	params = {
-	    	'axis_value':0,
-	    	'axis':'Y',
-	    	'equation': 'x^2+y^2 = 30',
+			'equation': 'x^2+y^2 = 30',
 	    	'points': '(0,0),(0,1)',
 	    	'source': 'equation',
 	    	'show_shape':true,
-			'resolution':60
+			'resolution':60,
+
+			'axis_value':0,
+	    	'axis':'Y',
+	    	'samples':200,
+	    	'thickness':'thin',
 	    }
 	    var gui = new dat.GUI();
 	    // Setup folders
@@ -106,6 +109,10 @@
 	    	//Toggle opacity on shape
 	    	mathbox.select("#shape_view").set("opacity",Number(val));
 	    });
+	    shapeProperties.add(params, 'resolution', 20, 200).name('Resolution').onChange(function(val) {
+			resolution = Math.floor(val);
+			renderGraph();
+		});
 
 
 	    // Add viewing options
@@ -121,16 +128,29 @@
 	    	if(val == "X") CreateViewAxis(2,[0,12],"y")
 	    });
 			
-	    // Turn the slider orange
-	    document.querySelector(".slider-fg").style.background = colors.viewing_axis
-	    document.querySelector(".dg .cr.number input[type='text']").style.color = colors.viewing_axis
-    	document.querySelector(".dg .cr.number").style['border-left'] = "3px solid " + colors.viewing_axis
+	   	// Samples slider, for how many points to use as intersection 
+	    viewing.add(params, 'samples', 200, 10000).name('Samples').onChange(function(){
+	    	mathbox.remove("#section_data")
+	    	CreateSectionLine()
+	    })
 
-    	// Add this slider down here so it's not affected by the color change above 
-    	shapeProperties.add(params, 'resolution', 20, 200).name('Resolution').onChange(function(val) {
-			resolution = Math.floor(val);
-			renderGraph();
-		});
+	    // Thickness, controls threshold for how wide a range to use when checking for intersection. Visually changes thickness just to communicate that easily 
+	    viewing.add(params, 'thickness', ['thin','medium','thick']).name('Thickness').onChange(function(val){
+	    	mathbox.remove("#viewing_axis")
+	    	Create2DViewingLine();
+	    })
+
+	    // Turn all sliders orange after the first one (the first one is the resolution one)
+	    var sliders = document.querySelectorAll(".slider-fg")
+	    for(var i=1;i<sliders.length;i++){ //notice i=1
+	    	var slider = sliders[i]
+	    	slider.style.background = colors.viewing_axis
+		    slider.parentNode.parentNode.querySelector(".dg .cr.number input[type='text']").style.color = colors.viewing_axis
+	    	slider.parentNode.parentNode.parentNode.parentNode.style['border-left'] = "3px solid " + colors.viewing_axis
+	    }
+	    
+
+    	
     }
     initGUI()
 
@@ -199,21 +219,29 @@
 		id: "shape_view"
 	});
 
+	var thicknessValuesTable = {'thin':0.2,'medium':0.5,'thick':1}
+
 	// Draw viewing axis
-	view.interval({
-		expr: function(emit,x,i,t){
-			if(params.axis == "Y")
-				emit(x,params.axis_value);
-			else
-				emit(params.axis_value,x);
-		},
-		width:2,
-		channels:2,
-		id:"viewing_axis"
-	}).line({
-		width:5,
-		color:colors.viewing_axis
-	})
+	function Create2DViewingLine(){
+		
+	    var thickness = thicknessValuesTable[params.thickness]
+		view.interval({
+			expr: function(emit,x,i,t){
+				if(params.axis == "Y")
+					emit(x,params.axis_value);
+				else
+					emit(params.axis_value,x);
+			},
+			width:2,
+			channels:2,
+			id:"viewing_axis"
+		}).line({
+			width:5 + 5 * thickness,
+			color:colors.viewing_axis
+		})
+	}
+
+	Create2DViewingLine()
 
 
 	// Add text
@@ -264,29 +292,32 @@
     CreateViewAxis(1,[11,1],"x")
 
     // Draw the intersection with viewing axis
-    var data = []
-    //manually calculate intersection points
-    view2.interval({
-		expr: function(emit,x,i,t){
-			if(params.axis == "Y"){
-				if(Math.abs(equation.eval(x,params.axis_value)) < 0.4){
-					emit(x, 1);
+  	function CreateSectionLine(){
+  		view2.interval({
+			expr: function(emit,x,i,t){
+				var thickness = thicknessValuesTable[params.thickness]
+				if(params.axis == "Y"){
+					if(Math.abs(equation.eval(x,params.axis_value)) < thickness){
+						emit(x, 1);
+					}
 				}
-			}
-			if(params.axis == "X"){
-				if(Math.abs(equation.eval(params.axis_value,x)) < 0.4){
-					emit(1,x)
+				if(params.axis == "X"){
+					if(Math.abs(equation.eval(params.axis_value,x)) < thickness){
+						emit(1,x)
+					}
 				}
-			}
-		},
-		width:200,
-		channels:2,
-		id:"section_data"
-	}).point({
-		points: "#section_data",
-		color:colors.data,
-		size: 15
-	})
+			},
+			width:params.samples,
+			channels:2,
+			id:"section_data"
+		}).point({
+			points: "#section_data",
+			color:colors.data,
+			size: 15
+		})
+  	}
+  	CreateSectionLine()
+    
 
 </script>
 </body>
