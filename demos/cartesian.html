@@ -102,7 +102,10 @@
 	    });
 	    shapeProperties.add(params, 'points');
 	    shapeProperties.add(params, 'source',['equation','points']);
-	    shapeProperties.add(params, 'show_shape');
+	    shapeProperties.add(params, 'show_shape').onChange(function(val){
+	    	//Toggle opacity on shape
+	    	mathbox.select("#shape_view").set("opacity",Number(val));
+	    });
 
 	    // Add viewing options
 	    var axis_control = viewing.add(params, 'axis_value').min(-10).max(10).step(0.01).name('Y = ').listen()
@@ -171,6 +174,7 @@
 	  // 3- Give it some geometrical data
 	  equation.parse(params.equation);
 		renderGraph();
+
 	  var edgeData = view.array({
 			width: edgeArray.length/2,
 			items: 2,
@@ -182,12 +186,14 @@
 
 
 	  // 4- The shape to draw
-		var edgeView = view.vector({
-			points: edgeData,
-			color: colors.data,
-			width: 5,
-			start: false
-		});
+	var edgeView = view.vector({
+		points: edgeData,
+		color: colors.data,
+		width: 5,
+		start: false,
+		opacity:1,
+		id: "shape_view"
+	});
 
 	// Draw viewing axis
 	view.interval({
