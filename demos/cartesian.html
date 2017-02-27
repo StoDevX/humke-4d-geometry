@@ -264,7 +264,9 @@
 				}
 			}
 			if(params.axis == "X"){
-				// Todo: figure out how to intersect on this axis
+				if(Math.abs(equation.eval(params.axis_value,x)) < 0.4){
+					emit(1,x)
+				}
 			}
 		},
 		width:200,
