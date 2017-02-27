@@ -140,7 +140,7 @@
     function initGUI(){
     	params = {
 			'equation': 'x^2+y^2 = 30',
-	    	'points': '(1,1),(1,5),(5,5),(5,1)',
+	    	'points': '(5,5),(5,-5),(-5,-5),(-5,5)',
 	    	'source': 'cartesian',
 	    	'show_shape':true,
 			'resolution':60,
@@ -324,7 +324,7 @@
 		    id:'hull_data'
 		})
 		view.face({
-			color:'red',
+			color:colors.data,
 			id:'hull_view',
 			points:'#hull_data',
 		})
