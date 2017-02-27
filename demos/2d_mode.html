@@ -9,6 +9,7 @@
   	<meta name="viewport" content="initial-scale=1, maximum-scale=1">
   	<!-- http://silentmatt.com/javascript-expression-evaluator/ -->
 	<script src="../parser.js"></script>
+	<script src="../polygonize.js"></script>
 </head>
 <body>
 <script type="text/javascript">
@@ -23,18 +24,25 @@
 		parse: function(str){
 			//Takes a string and stores the new equation
 			// In case it's a malformed equation, set eq to null so we know something went wrong
-			this.eq = Parser.parse( str ).toJSFunction( ['x'] );
-		
+			let sides = str.split('=');
+			let LHS = sides[0];
+			let RHS = sides[1];
+			let LHSfunc = Parser.parse(LHS).toJSFunction(['x','y']);
+			let RHSfunc = Parser.parse(RHS).toJSFunction(['x','y']);
+			this.eq = function(x,y) { return LHSfunc(x,y) - RHSfunc(x,y); }
+
 		},
-		eval: function(x){
-			// Evaluates the function 
+		eval: function(x,y){
+			// Evaluates the function
 			if(this.eq == null) return undefined;
-			return this.eq(x)
+			return this.eq(x,y)
  		},
-	}
+	};
+	var edgeArray = [];
+	var resolution = 20;
 
 
-	// Initialize mathbox 
+	// Initialize mathbox
 	var mathbox = mathBox({
       plugins: ['core', 'controls', 'cursor', 'mathbox'],
       controls: {
@@ -50,58 +58,83 @@
     var three = mathbox.three;
     three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
 
+		function renderGraph() {
+			// Check that the equation is correct first
+			try {
+				edgeArray = [];
+				edgeArray = Polygonize.generate(equation.eq, [[-10, 10], [-10, 10]], resolution);
+
+				edgeData.set("width", edgeArray.length/2);
+				edgeData.set("data", edgeArray);
+			} catch(err){
+				console.log("Error rendering equation",err)
+			}
+		}
+
     //Init the GUI
     function initGUI(){
     	params = {
 	    	'axis_value':0,
 	    	'axis':'Y',
-	    	'equation': 'x',
+	    	'equation': 'x^2+y^2 = 30',
 	    	'points': '(0,0),(0,1)',
 	    	'source': 'equation',
-	    	'show_shape':true
+	    	'show_shape':true,
+			'resolution':60
 	    }
 	    var gui = new dat.GUI();
-	    // Setup folders 
+	    // Setup folders
 	    var shapeProperties = gui.addFolder('Shape Properties');
 	    var viewing = gui.addFolder('Viewing Controls');
 
-	    // Add shape options 
+	    // Add shape options
 	    // Should be able to: (1) Draw from cartesian equation (2) Draw from points (3) Draw from parametric equation
-
-	    shapeProperties.add(params, 'equation').name('Y =').onChange(function(val){
-	    	// Check that the equation is correct first 
+	    shapeProperties.add(params, 'equation').name('Equation').onChange(function(val){
+	    	// Check that the equation is correct first
 	    	try {
-	    		Parser.parse( val )
-	    		// If that succeeds, go ahead 
-	    		equation.parse(val)
+	    		// If that succeeds, go ahead
+	    		equation.parse(val);
+					renderGraph();
 	    	} catch(err){
 	    		console.log("Error parsing equation",err)
 	    	}
-	    	
+
 	    });
 	    shapeProperties.add(params, 'points');
 	    shapeProperties.add(params, 'source',['equation','points']);
-	    shapeProperties.add(params, 'show_shape');
+	    shapeProperties.add(params, 'show_shape').onChange(function(val){
+	    	//Toggle opacity on shape
+	    	mathbox.select("#shape_view").set("opacity",Number(val));
+	    });
+
 
 	    // Add viewing options
 	    var axis_control = viewing.add(params, 'axis_value').min(-10).max(10).step(0.01).name('Y = ').listen()
 	    viewing.add(params, 'axis', [ 'X', 'Y'] ).onChange(function(val){
 	    	axis_control.name(val + " = ")
 	    	params.axis_value = 0;
-	    	// Delete if already exists 
+	    	// Delete if already exists
 	    	mathbox.remove("#viewing_1d_axis")
 	    	mathbox.remove("#viewing_1d_axis_label")
-	    	// Update view axis 
+	    	// Update view axis
 	    	if(val == "Y") CreateViewAxis(1,[11,1],"x")
 	    	if(val == "X") CreateViewAxis(2,[0,12],"y")
 	    });
-	    // Turn the slider orange 
+			
+	    // Turn the slider orange
 	    document.querySelector(".slider-fg").style.background = colors.viewing_axis
 	    document.querySelector(".dg .cr.number input[type='text']").style.color = colors.viewing_axis
     	document.querySelector(".dg .cr.number").style['border-left'] = "3px solid " + colors.viewing_axis
+
+    	// Add this slider down here so it's not affected by the color change above 
+    	shapeProperties.add(params, 'resolution', 20, 200).name('Resolution').onChange(function(val) {
+			resolution = Math.floor(val);
+			renderGraph();
+		});
     }
     initGUI()
-    
+
+
 
 	// 1- We need a 3D camera
 	var camera = mathbox.camera({
@@ -111,7 +144,7 @@
 
 	mathbox.print(); // Prints out the state of the Mathbox DOM
 
-	// 2- Set up our coordinate system 
+	// 2- Set up our coordinate system
 	view = mathbox.cartesian({
 	  range: [[-10, 10], [-10, 10]],
 	  scale: [1, 1],
@@ -122,7 +155,7 @@
     })
 
 
-	// Add axes and a grid 
+	// Add axes and a grid
 	view
 	  .axis({
 	    axis: 1,
@@ -135,40 +168,43 @@
 	    color:'black',
 	  })
 	  .grid({
-	    width: 1, 
+	    width: 1,
 	    divideX: 10,
-	    divideY: 10        
+	    divideY: 10
 	  });
 
 
 
-	  // 3- Give it some geometrical data 
+	  // 3- Give it some geometrical data
 	  equation.parse(params.equation);
-	  var data =
-	  view.interval({
-	    expr: function (emit, x, i, t) {
-	    	if(!params.show_shape) return;
-	      emit(x, equation.eval(x));
-	    },
-	    width: 256 ,
-	    channels: 2,
-	    id:"data"
-	  });
+		renderGraph();
+
+	  var edgeData = view.array({
+			width: edgeArray.length/2,
+			items: 2,
+			channels: 2,
+			data: edgeArray,
+			id: "data"
+		});
 
 
-	  // 4- The shape to draw 
-	  var curve =
-		  view.line({
-		    width: 5,
-		    color: colors.data,
-		  });
 
-	// Draw viewing axis 
+	  // 4- The shape to draw
+	var edgeView = view.vector({
+		points: edgeData,
+		color: colors.data,
+		width: 5,
+		start: false,
+		opacity:1,
+		id: "shape_view"
+	});
+
+	// Draw viewing axis
 	view.interval({
 		expr: function(emit,x,i,t){
-			if(params.axis == "Y") 
+			if(params.axis == "Y")
 				emit(x,params.axis_value);
-			else 
+			else
 				emit(params.axis_value,x);
 		},
 		width:2,
@@ -194,8 +230,8 @@
 
     //mathbox.set('focus', 2);
 
-    
-    // Create the other coordinate system 
+
+    // Create the other coordinate system
     var view2 = mathbox.cartesian({
 	  range: [[-10, 10],[-10,10]],
 	  scale: [1, 1],
@@ -212,7 +248,7 @@
 		    color:'black',
 		    id:'viewing_1d_axis',
 		  })
-		  
+
 		view2.array({
 	      data: [pos],
 	      channels: 2, // necessary
@@ -224,22 +260,22 @@
 	      id:'viewing_1d_axis_label',
 	    });
     }
-    
+
     CreateViewAxis(1,[11,1],"x")
 
-    // Draw the intersection with viewing axis 
+    // Draw the intersection with viewing axis
     var data = []
-    //manually calculate intersection points 
+    //manually calculate intersection points
     view2.interval({
 		expr: function(emit,x,i,t){
 			if(params.axis == "Y"){
-				if(Math.abs(equation.eval(x) - params.axis_value) < 0.4){
+				if(Math.abs(equation.eval(x,params.axis_value)) < 0.4){
 					emit(x, 1);
-				}	
+				}
 			}
 			if(params.axis == "X"){
-				if(Math.abs(x - params.axis_value) < 0.05){
-					emit(1,equation.eval(x))
+				if(Math.abs(equation.eval(params.axis_value,x)) < 0.4){
+					emit(1,x)
 				}
 			}
 		},
