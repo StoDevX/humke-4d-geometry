@@ -85,15 +85,18 @@
 
 	    // Add viewing options
 	    var axis_control = viewing.add(params, 'axis_value').min(-10).max(10).step(0.01).name('Y = ').listen()
-	    viewing.add(params, 'axis', [ 'X', 'Y'] ).onChange(function(val){
+	    viewing.add(params, 'axis', [ 'X', 'Y', 'Z'] ).onChange(function(val){
 	    	axis_control.name(val + " = ")
 	    	params.axis_value = 0;
 	    	// Delete if already exists 
-	    	mathbox.remove("#viewing_1d_axis")
-	    	mathbox.remove("#viewing_1d_axis_label")
+	mathbox.remove("#viewing_2d_axis_a")
+	mathbox.remove("#viewing_2d_axis_b")
+		mathbox.remove("#viewing_2d_grid")
+	    	mathbox.remove("#viewing_2d_axis_label")
 	    	// Update view axis 
-	    	if(val == "Y") CreateViewAxis(1,[11,1],"x")
-	    	if(val == "X") CreateViewAxis(2,[0,12],"y")
+	    	if(val == "Y") CreateViewAxis(1, 3,[11,1],"x")
+        	if(val == "X") CreateViewAxis(2, 3,[0,12],"y")
+	        if(val === "Z") CreateViewAxis(1, 2, [0, 12], "z")
 	    });
 	    // Turn the slider orange 
 	    document.querySelector(".slider-fg").style.background = colors.viewing_axis
@@ -211,13 +214,25 @@
       position: [15, 0, 0],
     })
 
- function CreateViewAxis(axisNum,pos,labelName){
+ function CreateViewAxis(axis_a, axis_b, pos,labelName){
      view2.axis({
-	 axis: axisNum,
+	 axis: axis_a,
 	 width: 4,
 	 color:'black',
-	 id:'viewing_1d_axis',
+	 id:'viewing_2d_axis_a',
+     }).axis({
+	 axis: axis_b,
+	 width: 4,
+	color:'black',
+	id:'viewing_2d_axis_b',
      })
+	.grid({
+	axes: [axis_a,axis_b],
+	width: 1, 
+	divideX: 10,
+	divideY: 10,
+	id:'viewing_2d_grid'
+	});
      
      view2.array({
 	 data: [pos],
@@ -227,21 +242,12 @@
 	 data: [labelName],
      }).label({
 	 color: 0x000000,
-	 id:'viewing_1d_axis_label',
+	 id:'viewing_2d_axis_label',
      });
  }
 
- view2.axis({
-	    axis: 3,
-	     width: 4,
-	     color: 'black',
-	})
- 	.grid({
-	    axes: [1,3],
-	    width: 1, 
-	    divideX: 10,
-	    divideY: 10        
-	  });
+CreateViewAxis(1, 3, [0,12], "Y")
+ 
  
 view2.array({
      data: [[11,1]],
@@ -251,7 +257,7 @@ view2.array({
      data: ["slices"],
  }).label({
      color: 0x000000,
-     id:'viewing_1d_axis_label',
+     id:'viewing_2d_axis_label',
  });
     
 // CreateViewAxis(1,[11,1],"x")
