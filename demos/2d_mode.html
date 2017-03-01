@@ -172,7 +172,7 @@
 	    		cleanupCartesian();
 	    		initParametric();
 	    	}
-	    	if(val == 'convex-hull' && gui_controls['cconvex-hull_input'] == undefined){
+	    	if(val == 'convex-hull' && gui_controls['convex-hull_input'] == undefined){
 	    		cleanupCartesian();
 	    		cleanupParametric();
 	    		initPoints();
@@ -233,13 +233,15 @@
 
 	// 1- We need a 3D camera
 	var camera = mathbox.camera({
-	  proxy: false, // this alows interactive camera controls to override the position
+	  proxy: true, // this alows interactive camera controls to override the position
 	  position: [0, 0, 3],
 	})
 
 	//mathbox.print(); // Prints out the state of the Mathbox DOM
 
 	// 2- Set up our coordinate system
+
+
 	view = mathbox.cartesian({
 	  range: [[-10, 10], [-10, 10]],
 	  scale: [1, 1],
@@ -274,6 +276,7 @@
 	  equation.parse(params.equation);
 		renderGraph();
 
+
 	  var edgeData = view.array({
 			width: edgeArray.length/2,
 			items: 2,
@@ -282,7 +285,7 @@
 			id: "data"
 		});
 
-
+	  
 
 	  // 4- The shape to draw
 	var edgeView = view.vector({
@@ -323,10 +326,15 @@
 		    channels: 2,
 		    id:'hull_data'
 		})
+
+
+
+
 		view.face({
 			color:colors.data,
 			id:'hull_view',
 			points:'#hull_data',
+			//size:15,
 		})
 	}
 	
@@ -369,6 +377,8 @@
 
 
     // Create the other coordinate system
+    
+
     var view2 = mathbox.cartesian({
 	  range: [[-10, 10],[-10,10]],
 	  scale: [1, 1],
@@ -377,6 +387,8 @@
     view2 = view2.transform({
       position: [15, 0, 0],
     })
+
+
 
     function CreateViewAxis(axisNum,pos,labelName){
     	view2.axis({
@@ -425,6 +437,9 @@
 			color:colors.data,
 			size: 15
 		})
+
+		
+
   	}
   	CreateSectionLine()
 
