@@ -9,6 +9,7 @@
   	<meta name="viewport" content="initial-scale=1, maximum-scale=1">
   	<!-- http://silentmatt.com/javascript-expression-evaluator/ -->
 	<script src="../parser.js"></script>
+	<script src="../polygonize.js"></script>
 </head>
 <body>
 <script type="text/javascript">
@@ -17,24 +18,32 @@
 		'data':'#3090FF'
 	}
 	var params = {} //gui params
+	var gui_controls = {}
+	var param_eq_data = {}
+	var gui;
 	var view;
 	var equation = {
 		eq: null,
 		parse: function(str){
 			//Takes a string and stores the new equation
 			// In case it's a malformed equation, set eq to null so we know something went wrong
-			this.eq = Parser.parse( str ).toJSFunction( ['x'] );
-		
+			let sides = str.split('=');
+			let LHS = sides[0];
+			let RHS = sides[1];
+			let LHSfunc = Parser.parse(LHS).toJSFunction(['x','y']);
+			let RHSfunc = Parser.parse(RHS).toJSFunction(['x','y']);
+			this.eq = function(x,y) { return LHSfunc(x,y) - RHSfunc(x,y); }
+
 		},
-		eval: function(x){
-			// Evaluates the function 
+		eval: function(x,y){
+			// Evaluates the function
 			if(this.eq == null) return undefined;
-			return this.eq(x)
+			return this.eq(x,y)
  		},
-	}
+	};
+	var edgeArray = [];
 
-
-	// Initialize mathbox 
+	// Initialize mathbox
 	var mathbox = mathBox({
       plugins: ['core', 'controls', 'cursor', 'mathbox'],
       controls: {
@@ -50,58 +59,207 @@
     var three = mathbox.three;
     three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
 
-    //Init the GUI
-    function initGUI(){
-    	params = {
-	    	'axis_value':0,
-	    	'axis':'Y',
-	    	'equation': 'x',
-	    	'points': '(0,0),(0,1)',
-	    	'source': 'equation',
-	    	'show_shape':true
-	    }
-	    var gui = new dat.GUI();
-	    // Setup folders 
-	    var shapeProperties = gui.addFolder('Shape Properties');
-	    var viewing = gui.addFolder('Viewing Controls');
+		function renderGraph() {
+			// Check that the equation is correct first
+			try {
+				edgeArray = [];
+				edgeArray = Polygonize.generate(equation.eq, [[-10, 10], [-10, 10]], params.resolution);
 
-	    // Add shape options 
-	    // Should be able to: (1) Draw from cartesian equation (2) Draw from points (3) Draw from parametric equation
+				edgeData.set("width", edgeArray.length/2);
+				edgeData.set("data", edgeArray);
+			} catch(err){
+				console.log("Error rendering equation",err)
+			}
+		}
 
-	    shapeProperties.add(params, 'equation').name('Y =').onChange(function(val){
-	    	// Check that the equation is correct first 
+	// Initialize difference sources of input
+	function initCartesian(){
+		var cartesian_input = gui_controls['shape_folder'].add(params, 'equation').name('Equation').onChange(function(val){
+	    	// Check that the equation is correct first
 	    	try {
-	    		Parser.parse( val )
-	    		// If that succeeds, go ahead 
-	    		equation.parse(val)
+	    		// If that succeeds, go ahead
+	    		equation.parse(val);
+					renderGraph();
 	    	} catch(err){
 	    		console.log("Error parsing equation",err)
 	    	}
+	    });
+
+		var resolution_input =  gui_controls['shape_folder'].add(params, 'resolution', 20, 200).name('Resolution').onChange(function(val) {
+			params.resolution = Math.floor(val);
+			renderGraph();
+		});
+
+		// Turn shape viewing back on 
+		mathbox.select("#shape_view").set("opacity",Number(params.show_shape));
+
+		// Save all the controls
+	    gui_controls['cartesian_input'] = cartesian_input;
+	    gui_controls['resolution_input'] = resolution_input;
+	}
+	function cleanupCartesian(){
+		if(gui_controls['cartesian_input']){
+			// Hide shape 
+			mathbox.select("#shape_view").set("opacity",0);
+			gui_controls['shape_folder'].remove(gui_controls['cartesian_input']);
+			gui_controls['shape_folder'].remove(gui_controls['resolution_input']);
+			gui_controls['cartesian_input'] = undefined;	
+			gui_controls['resolution_input'] = undefined;	
+		}
+		
+	}
+
+	function initParametric(){
+		var param_input = gui_controls['shape_folder'].add(params, 'param_y').name('y = ').onChange(function(val){
 	    	
 	    });
-	    shapeProperties.add(params, 'points');
-	    shapeProperties.add(params, 'source',['equation','points']);
-	    shapeProperties.add(params, 'show_shape');
+
+	    var param_input2 = gui_controls['shape_folder'].add(params, 'param_x').name('x = ').onChange(function(val){
+	    	
+	    });
+
+	    var param_input3 = gui_controls['shape_folder'].add(params, 'param_a').name('a = ').onChange(function(val){
+	    	DrawParamEq();
+	    });
+
+	    gui_controls['param_input'] = param_input;
+	    gui_controls['param_input2'] = param_input2;
+	    gui_controls['param_input3'] = param_input3;
+
+	    DrawParamEq();
+	}
+	function cleanupParametric(){
+		if(gui_controls['param_input']){
+			// Hide shape 
+			mathbox.remove("#param_data");
+			mathbox.remove("#param_view");
+			gui_controls['shape_folder'].remove(gui_controls['param_input']);
+			gui_controls['shape_folder'].remove(gui_controls['param_input2']);
+			gui_controls['shape_folder'].remove(gui_controls['param_input3']);
+			gui_controls['param_input'] = undefined;
+			gui_controls['param_input2'] = undefined;
+			gui_controls['param_input3'] = undefined;	
+		}
+	}
+
+	function initPoints(){
+		var points_input = gui_controls['shape_folder'].add(params, 'points').onChange(function(val){
+	    	mathbox.remove("#hull_view")
+	    	mathbox.remove("#hull_data")
+	    	DrawHullFromPoints();
+	    })
+
+		DrawHullFromPoints();
+
+	    gui_controls['convex-hull_input'] = points_input;
+	}
+	function cleanupPoints(){
+		if(gui_controls['convex-hull_input']){
+			mathbox.remove("#hull_view")
+	    	mathbox.remove("#hull_data")
+			gui_controls['shape_folder'].remove(gui_controls['convex-hull_input']);
+			gui_controls['convex-hull_input'] = undefined;	
+		}
+	}
+
+
+    //Init the GUI
+    function initGUI(){
+    	params = {
+    		'param_y': 'cos(a) * 5 ',
+    		'param_x': 'sin(a) * 5',
+    		'param_a': '0 < a < 2 * PI',
+			'equation': 'x^2+y^2 = 30',
+	    	'points': '(5,5),(5,-5),(-5,-5),(-5,5)',
+	    	'source': 'cartesian',
+	    	'show_shape':true,
+			'resolution':60,
+
+			'axis_value':0,
+	    	'axis':'Y',
+	    	'samples':200,
+	    	'thickness':'medium',
+	    }
+	    gui = new dat.GUI();
+	    // Setup folders
+	    var shapeProperties = gui.addFolder('Shape Properties');
+	    var viewing = gui.addFolder('Viewing Controls');
+	    gui_controls['shape_folder'] = shapeProperties;
+	    gui_controls['viewing_folder'] = viewing;
+
+	    // Add shape options
+	    // Should be able to: (1) Draw from cartesian equation (2) Draw from points (3) Draw from parametric equation
+	    
+
+	    shapeProperties.add(params, 'source',['cartesian','parametric','convex-hull']).onChange(function(val){
+	    	if(val == 'cartesian' && gui_controls['cartesian_input'] == undefined){
+	    		cleanupPoints();
+	    		cleanupParametric();
+	    		initCartesian();
+	    	}
+	    	if(val == 'parametric' && gui_controls['parametric_input'] == undefined){
+	    		cleanupPoints();
+	    		cleanupCartesian();
+	    		initParametric();
+	    	}
+	    	if(val == 'convex-hull' && gui_controls['convex-hull_input'] == undefined){
+	    		cleanupCartesian();
+	    		cleanupParametric();
+	    		initPoints();
+	    	}
+	    });
+
+	    shapeProperties.add(params, 'show_shape').onChange(function(val){
+	    	//Toggle opacity on shape
+	    	var view = "#shape_view"
+	    	if(params.source == "convex-hull") view = "#hull_view"
+	    	if(params.source == "parametric") view = "#parametric_view"
+	    	mathbox.select(view).set("opacity",Number(val));
+	    });
+	    
+	    initCartesian();
 
 	    // Add viewing options
 	    var axis_control = viewing.add(params, 'axis_value').min(-10).max(10).step(0.01).name('Y = ').listen()
 	    viewing.add(params, 'axis', [ 'X', 'Y'] ).onChange(function(val){
 	    	axis_control.name(val + " = ")
 	    	params.axis_value = 0;
-	    	// Delete if already exists 
+	    	// Delete if already exists
 	    	mathbox.remove("#viewing_1d_axis")
 	    	mathbox.remove("#viewing_1d_axis_label")
-	    	// Update view axis 
+	    	// Update view axis
 	    	if(val == "Y") CreateViewAxis(1,[11,1],"x")
 	    	if(val == "X") CreateViewAxis(2,[0,12],"y")
 	    });
-	    // Turn the slider orange 
-	    document.querySelector(".slider-fg").style.background = colors.viewing_axis
-	    document.querySelector(".dg .cr.number input[type='text']").style.color = colors.viewing_axis
-    	document.querySelector(".dg .cr.number").style['border-left'] = "3px solid " + colors.viewing_axis
+			
+	   	// Samples slider, for how many points to use as intersection 
+	    viewing.add(params, 'samples', 200, 10000).name('Samples').onChange(function(){
+	    	mathbox.remove("#section_data")
+	    	mathbox.remove("#section_points")
+	    	CreateSectionLine()
+	    })
+
+	    // Thickness, controls threshold for how wide a range to use when checking for intersection. Visually changes thickness just to communicate that easily 
+	    viewing.add(params, 'thickness', ['thin','medium','thick']).name('Thickness').onChange(function(val){
+	    	mathbox.remove("#viewing_axis")
+	    	Create2DViewingLine();
+	    })
+
+	    // Turn all sliders orange after the first one (the first one is the resolution one)
+	    var sliders = document.querySelectorAll(".slider-fg")
+	    for(var i=1;i<sliders.length;i++){ //notice i=1
+	    	var slider = sliders[i]
+	    	slider.style.background = colors.viewing_axis
+		    slider.parentNode.parentNode.querySelector(".dg .cr.number input[type='text']").style.color = colors.viewing_axis
+	    	slider.parentNode.parentNode.parentNode.parentNode.style['border-left'] = "3px solid " + colors.viewing_axis
+	    }
+	    
+
+    	
     }
     initGUI()
-    
+
+
 
 	// 1- We need a 3D camera
 	var camera = mathbox.camera({
@@ -109,9 +267,11 @@
 	  position: [0, 0, 3],
 	})
 
-	mathbox.print(); // Prints out the state of the Mathbox DOM
+	//mathbox.print(); // Prints out the state of the Mathbox DOM
 
-	// 2- Set up our coordinate system 
+	// 2- Set up our coordinate system
+
+
 	view = mathbox.cartesian({
 	  range: [[-10, 10], [-10, 10]],
 	  scale: [1, 1],
@@ -122,7 +282,7 @@
     })
 
 
-	// Add axes and a grid 
+	// Add axes and a grid
 	view
 	  .axis({
 	    axis: 1,
@@ -135,49 +295,132 @@
 	    color:'black',
 	  })
 	  .grid({
-	    width: 1, 
+	    width: 1,
 	    divideX: 10,
-	    divideY: 10        
+	    divideY: 10
 	  });
 
 
 
-	  // 3- Give it some geometrical data 
+	  // 3- Give it some geometrical data
 	  equation.parse(params.equation);
-	  var data =
-	  view.interval({
-	    expr: function (emit, x, i, t) {
-	    	if(!params.show_shape) return;
-	      emit(x, equation.eval(x));
-	    },
-	    width: 256 ,
-	    channels: 2,
-	    id:"data"
-	  });
+		renderGraph();
 
 
-	  // 4- The shape to draw 
-	  var curve =
-		  view.line({
-		    width: 5,
-		    color: colors.data,
-		  });
+	  var edgeData = view.array({
+			width: edgeArray.length/2,
+			items: 2,
+			channels: 2,
+			data: edgeArray,
+			id: "data"
+		});
 
-	// Draw viewing axis 
-	view.interval({
-		expr: function(emit,x,i,t){
-			if(params.axis == "Y") 
-				emit(x,params.axis_value);
-			else 
-				emit(params.axis_value,x);
-		},
-		width:2,
-		channels:2,
-		id:"viewing_axis"
-	}).line({
-		width:5,
-		color:colors.viewing_axis
-	})
+	  
+
+	  // 4- The shape to draw
+	var edgeView = view.vector({
+		points: edgeData,
+		color: colors.data,
+		width: 5,
+		start: false,
+		opacity:1,
+		id: "shape_view"
+	});
+
+
+	function DrawHullFromPoints(){
+		// Parse points 
+		// Remove whitespace 
+		var points_str = params.points.replace(/\s+/g, '');
+		// Split based on the pattern (digits,digits)
+		var points_split = points_str.match(/\(-*\d+,-*\d+\)/g);
+		var pointsArray = []
+
+		for(var i=0;i<points_split.length;i++){
+			var p = points_split[i];
+			// Remove parenthesis 
+			p = p.replace(/[\(\)]/g,'');
+			// Split by comma
+			var comma_split = p.split(",") 
+			var point = []
+			for(var j=0;j<comma_split.length;j++) point.push(Number(comma_split[j]))
+			pointsArray.push(point)
+		}
+
+		view.array({
+			expr: function (emit, i, t) {
+				for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
+		    },
+		    width: 1,
+		    items:pointsArray.length,
+		    channels: 2,
+		    id:'hull_data'
+		})
+
+		view.face({
+			color:colors.data,
+			id:'hull_view',
+			points:'#hull_data',
+			//size:15,
+		})
+	}
+
+	function DrawParamEq(){
+		// Remove previous param drawing 
+		mathbox.remove("#param_data");
+		mathbox.remove("#param_view");
+
+		var total_samples = 256;
+		var a_range = [0,1];
+		// get range from string 
+		var splitArray = params.param_a.split("<"); // should return 3 pieces. We want the first and last 
+		a_range[0] = Parser.evaluate(splitArray[0]);
+		a_range[1] = Parser.evaluate(splitArray[2]);
+
+		view.array({
+			expr: function(emit, i, t){
+				var a = (i / total_samples) * (a_range[1] - a_range[0]) + a_range[0]
+				var x = Parser.evaluate(params.param_x,{a:a});
+				var y = Parser.evaluate(params.param_y,{a:a});
+				emit(x,y);
+			},
+			width: total_samples,
+			channels:2,
+			id:'param_data'
+		})
+
+		view.line({
+			color:colors.data,
+			width:5,
+			id:'param_view',
+			points:'#param_data'
+		})
+	}
+	
+
+	var thicknessValuesTable = {'thin':0.2,'medium':0.5,'thick':1}
+
+	// Draw viewing axis
+	function Create2DViewingLine(){
+		
+	    var thickness = thicknessValuesTable[params.thickness]
+		view.interval({
+			expr: function(emit,x,i,t){
+				if(params.axis == "Y")
+					emit(x,params.axis_value);
+				else
+					emit(params.axis_value,x);
+			},
+			width:2,
+			channels:2,
+			id:"viewing_axis"
+		}).line({
+			width:5 + 5 * thickness,
+			color:colors.viewing_axis
+		})
+	}
+
+	Create2DViewingLine()
 
 
 	// Add text
@@ -192,10 +435,9 @@
     });
 
 
-    //mathbox.set('focus', 2);
-
+    // Create the other coordinate system
     
-    // Create the other coordinate system 
+
     var view2 = mathbox.cartesian({
 	  range: [[-10, 10],[-10,10]],
 	  scale: [1, 1],
@@ -205,6 +447,8 @@
       position: [15, 0, 0],
     })
 
+
+
     function CreateViewAxis(axisNum,pos,labelName){
     	view2.axis({
 		    axis: axisNum,
@@ -212,7 +456,7 @@
 		    color:'black',
 		    id:'viewing_1d_axis',
 		  })
-		  
+
 		view2.array({
 	      data: [pos],
 	      channels: 2, // necessary
@@ -224,33 +468,71 @@
 	      id:'viewing_1d_axis_label',
 	    });
     }
-    
+
     CreateViewAxis(1,[11,1],"x")
 
-    // Draw the intersection with viewing axis 
-    var data = []
-    //manually calculate intersection points 
-    view2.interval({
-		expr: function(emit,x,i,t){
-			if(params.axis == "Y"){
-				if(Math.abs(equation.eval(x) - params.axis_value) < 0.4){
+    // Draw the intersection with viewing axis
+  	function CreateSectionLine(){
+
+  		function CartesianIntersection(emit,x,i,t){
+  			var thickness = thicknessValuesTable[params.thickness]
+  			if(params.axis == "Y"){
+				if(Math.abs(equation.eval(x,params.axis_value)) < thickness){
 					emit(x, 1);
-				}	
-			}
-			if(params.axis == "X"){
-				if(Math.abs(x - params.axis_value) < 0.05){
-					emit(1,equation.eval(x))
 				}
 			}
-		},
-		width:200,
-		channels:2,
-		id:"section_data"
-	}).point({
-		points: "#section_data",
-		color:colors.data,
-		size: 15
-	})
+			if(params.axis == "X"){
+				if(Math.abs(equation.eval(params.axis_value,x)) < thickness){
+					emit(1,x)
+				}
+			}
+  		}
+
+  		function ParamIntersection(emit,x,i,t){
+  			var thickness = thicknessValuesTable[params.thickness]
+
+  			var a_range = [0,1];
+			// get range from string 
+			var splitArray = params.param_a.split("<"); // should return 3 pieces. We want the first and last 
+			a_range[0] = Parser.evaluate(splitArray[0]);
+			a_range[1] = Parser.evaluate(splitArray[2]);
+
+  			var a = (i / params.samples) * (a_range[1] - a_range[0]) + a_range[0]
+			var x = Parser.evaluate(params.param_x,{a:a});
+			var y = Parser.evaluate(params.param_y,{a:a});
+
+  			if(params.axis == "Y"){
+				if(Math.abs(y - params.axis_value) < thickness){
+					emit(x,1);
+				}
+			}
+			if(params.axis == "X"){
+				if(Math.abs(x - params.axis_value) < thickness){
+					emit(1,y);
+				}
+			}
+  		}
+
+
+  		view2.interval({
+			expr: function(emit,x,i,t){
+				if(params.source == "cartesian") CartesianIntersection(emit,x,i,t);
+				if(params.source == "parametric") ParamIntersection(emit,x,i,t);
+			},
+			width:params.samples,
+			channels:2,
+			id:"section_data"
+		}).point({
+			id:"section_points",
+			points: "#section_data",
+			color:colors.data,
+			size: 15
+		})
+
+		
+
+  	}
+  	CreateSectionLine()
 
 </script>
 </body>
