@@ -19,6 +19,7 @@
 	}
 	var params = {} //gui params
 	var gui_controls = {}
+	var param_eq_data = {}
 	var gui;
 	var view;
 	var equation = {
@@ -109,10 +110,36 @@
 	}
 
 	function initParametric(){
+		var param_input = gui_controls['shape_folder'].add(params, 'param_y').name('y = ').onChange(function(val){
+	    	
+	    });
 
+	    var param_input2 = gui_controls['shape_folder'].add(params, 'param_x').name('x = ').onChange(function(val){
+	    	
+	    });
+
+	    var param_input3 = gui_controls['shape_folder'].add(params, 'param_a').name('a = ').onChange(function(val){
+	    	DrawParamEq();
+	    });
+
+	    gui_controls['param_input'] = param_input;
+	    gui_controls['param_input2'] = param_input2;
+	    gui_controls['param_input3'] = param_input3;
+
+	    DrawParamEq();
 	}
 	function cleanupParametric(){
-
+		if(gui_controls['param_input']){
+			// Hide shape 
+			mathbox.remove("#param_data");
+			mathbox.remove("#param_view");
+			gui_controls['shape_folder'].remove(gui_controls['param_input']);
+			gui_controls['shape_folder'].remove(gui_controls['param_input2']);
+			gui_controls['shape_folder'].remove(gui_controls['param_input3']);
+			gui_controls['param_input'] = undefined;
+			gui_controls['param_input2'] = undefined;
+			gui_controls['param_input3'] = undefined;	
+		}
 	}
 
 	function initPoints(){
@@ -139,6 +166,9 @@
     //Init the GUI
     function initGUI(){
     	params = {
+    		'param_y': 'cos(a) * 5 ',
+    		'param_x': 'sin(a) * 5',
+    		'param_a': '0 < a < 2 * PI',
 			'equation': 'x^2+y^2 = 30',
 	    	'points': '(5,5),(5,-5),(-5,-5),(-5,5)',
 	    	'source': 'cartesian',
@@ -327,14 +357,43 @@
 		    id:'hull_data'
 		})
 
-
-
-
 		view.face({
 			color:colors.data,
 			id:'hull_view',
 			points:'#hull_data',
 			//size:15,
+		})
+	}
+
+	function DrawParamEq(){
+		// Remove previous param drawing 
+		mathbox.remove("#param_data");
+		mathbox.remove("#param_view");
+
+		var total_samples = 256;
+		var a_range = [0,1];
+		// get range from string 
+		var splitArray = params.param_a.split("<"); // should return 3 pieces. We want the first and last 
+		a_range[0] = Parser.evaluate(splitArray[0]);
+		a_range[1] = Parser.evaluate(splitArray[2]);
+
+		view.array({
+			expr: function(emit, i, t){
+				var a = (i / total_samples) * (a_range[1] - a_range[0]) + a_range[0]
+				var x = Parser.evaluate(params.param_x,{a:a});
+				var y = Parser.evaluate(params.param_y,{a:a});
+				emit(x,y);
+			},
+			width: total_samples,
+			channels:2,
+			id:'param_data'
+		})
+
+		view.line({
+			color:colors.data,
+			width:5,
+			id:'param_view',
+			points:'#param_data'
 		})
 	}
 	
@@ -414,19 +473,51 @@
 
     // Draw the intersection with viewing axis
   	function CreateSectionLine(){
+
+  		function CartesianIntersection(emit,x,i,t){
+  			var thickness = thicknessValuesTable[params.thickness]
+  			if(params.axis == "Y"){
+				if(Math.abs(equation.eval(x,params.axis_value)) < thickness){
+					emit(x, 1);
+				}
+			}
+			if(params.axis == "X"){
+				if(Math.abs(equation.eval(params.axis_value,x)) < thickness){
+					emit(1,x)
+				}
+			}
+  		}
+
+  		function ParamIntersection(emit,x,i,t){
+  			var thickness = thicknessValuesTable[params.thickness]
+
+  			var a_range = [0,1];
+			// get range from string 
+			var splitArray = params.param_a.split("<"); // should return 3 pieces. We want the first and last 
+			a_range[0] = Parser.evaluate(splitArray[0]);
+			a_range[1] = Parser.evaluate(splitArray[2]);
+
+  			var a = (i / params.samples) * (a_range[1] - a_range[0]) + a_range[0]
+			var x = Parser.evaluate(params.param_x,{a:a});
+			var y = Parser.evaluate(params.param_y,{a:a});
+
+  			if(params.axis == "Y"){
+				if(Math.abs(y - params.axis_value) < thickness){
+					emit(x,1);
+				}
+			}
+			if(params.axis == "X"){
+				if(Math.abs(x - params.axis_value) < thickness){
+					emit(1,y);
+				}
+			}
+  		}
+
+
   		view2.interval({
 			expr: function(emit,x,i,t){
-				var thickness = thicknessValuesTable[params.thickness]
-				if(params.axis == "Y"){
-					if(Math.abs(equation.eval(x,params.axis_value)) < thickness){
-						emit(x, 1);
-					}
-				}
-				if(params.axis == "X"){
-					if(Math.abs(equation.eval(params.axis_value,x)) < thickness){
-						emit(1,x)
-					}
-				}
+				if(params.source == "cartesian") CartesianIntersection(emit,x,i,t);
+				if(params.source == "parametric") ParamIntersection(emit,x,i,t);
 			},
 			width:params.samples,
 			channels:2,
