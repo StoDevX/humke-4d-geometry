@@ -508,7 +508,132 @@ var Polygonize = (function (scope) {
 
     // A helper function for performing the marching cubes algorithm
     march3D: function() {
+      // An array to hold interpolated values
+      let vlist = new Array(12); // 12 edges in a cube
 
+      // Loop over all of the squares
+      let xind, yind, zind;
+      for (xind = 0; xind < this.res-1; xind++) {
+        for (yind = 0; yind < this.res-1; yind++) {
+          for (zind = 0; zind < this.res-1; zind++) {
+            // Determine the index of the values array corresponding to the
+            // vertices of the square.
+            let p    = xind + this.res * yind + Math.pow(this.res, 2) * zind,
+                px   = p   + 1,
+                py   = p   + this.res,
+                pxy  = py  + 1,
+                pz   = p   + Math.pow(this.res, 2),
+                pxz  = pz  + 1,
+                pyz  = pz  + this.res,
+                pxyz = pyz + 1;
+
+            // Retrieve the values of the equation at these indices
+            let val0  = this.values[ p    ],
+                val1  = this.values[ px   ],
+                val2  = this.values[ py   ],
+                val3  = this.values[ pxy  ],
+                val4  = this.values[ pz   ],
+                val5  = this.values[ pxz  ],
+                val6  = this.values[ pyz  ],
+                val7  = this.values[ pxyz ];
+
+
+            const isolevel = 0; // This is the value the equation is compared to
+
+            // Determine which points are in less than the isolevel
+            let cubeIndex = 0;
+            if ( val0 < isolevel) cubeIndex |= 1;
+            if ( val1 < isolevel) cubeIndex |= 2;
+            if ( val2 < isolevel) cubeIndex |= 8;
+            if ( val3 < isolevel) cubeIndex |= 4;
+            if ( val4 < isolevel) cubeIndex |= 16;
+            if ( val5 < isolevel) cubeIndex |= 32;
+            if ( val6 < isolevel) cubeIndex |= 128;
+            if ( val7 < isolevel) cubeIndex |= 64;
+
+            // cubeIndex indicates which vertices are less than the isolevel.
+            // We can use the edgeTable2D to determine which edges in the square
+            // were crossed (a 4-bit number).
+            let bits = edgeTable3D[cubeIndex];
+
+            // If bits == 0, then all the vertices of the square lie outside the
+            // isolevel.
+            if (bits == 0) continue;
+
+            let mu = 0.5; // The value used for interpolation
+
+            // Using the edges that were crossed, interpolate the value along the
+            // edge where the isolevel is.
+            if ( bits & 1 ) {
+              mu = ( isolevel - val0 ) / ( val1 - val0 );
+              vlist[0] = this.interpolate(this.points[p], this.points[px], mu);
+            }
+            if ( bits & 2 ) {
+              mu = ( isolevel - val1 ) / ( val3 - val1 );
+              vlist[1] = this.interpolate(this.points[px], this.points[pxy], mu);
+            }
+            if ( bits & 4 ) {
+              mu = ( isolevel - val2 ) / ( val3 - val2 );
+              vlist[2] = this.interpolate(this.points[py], this.points[pxy], mu);
+            }
+            if ( bits & 8 ) {
+              mu = ( isolevel - val0 ) / ( val2 - val0 );
+              vlist[3] = this.interpolate(this.points[p], this.points[py], mu);
+            }
+            if ( bits & 16 ) {
+              mu = ( isolevel - val4 ) / ( val5 - val4 );
+              vlist[4] = this.interpolate(this.points[pz], this.points[pxz], mu);
+            }
+            if ( bits & 32 ) {
+              mu = ( isolevel - val5 ) / ( val7 - val5 );
+              vlist[5] = this.interpolate(this.points[pxz], this.points[pxyz], mu);
+            }
+            if ( bits & 64 ) {
+              mu = ( isolevel - val6 ) / ( val7 - val6 );
+              vlist[6] = this.interpolate(this.points[pyz], this.points[pxyz], mu);
+            }
+            if ( bits & 128 ) {
+              mu = ( isolevel - val4 ) / ( val6 - val4 );
+              vlist[7] = this.interpolate(this.points[pz], this.points[pyz], mu);
+            }
+            if ( bits & 256 ) {
+              mu = ( isolevel - val0 ) / ( val4 - val0 );
+              vlist[8] = this.interpolate(this.points[p], this.points[pz], mu);
+            }
+            if ( bits & 512 ) {
+              mu = ( isolevel - val1 ) / ( val5 - val1 );
+              vlist[9] = this.interpolate(this.points[px], this.points[pxz], mu);
+            }
+            if ( bits & 1024 ) {
+              mu = ( isolevel - val3 ) / ( val7 - val3 );
+              vlist[10] = this.interpolate(this.points[pxy], this.points[pxyz], mu);
+            }
+            if ( bits & 2048 ) {
+              mu = ( isolevel - val2 ) / ( val6 - val2 );
+              vlist[11] = this.interpolate(this.points[py], this.points[pyz], mu);
+            }
+
+            // Use the lineTable2D to lookup which points in vlist to draw a line
+            // segment between
+            let ind = 0;
+            cubeIndex *= 16; // repurpose cubeIndex to lookup in triTable3D
+
+            while (triTable3D[ cubeIndex + ind ] != -1) {
+              let vert1 = triTable3D[ cubeIndex + ind ],
+                  vert2 = triTable3D[ cubeIndex + ind + 1 ],
+                  vert3 = triTable3D[ cubeIndex + ind + 2 ];
+
+              // Add the vertices to the geometry to be returned. Calling slice
+              // causes the array to be passed by value, rather than by reference.
+              this.geom.push( vlist[vert1].slice() );
+              this.geom.push( vlist[vert2].slice() );
+              this.geom.push( vlist[vert3].slice() );
+
+              ind += 3;
+            }
+          } // End for loop over z
+        } // End for loop over y
+      } // End for loop over x
     },
 
     // A helper function for linear interpolation between two points
