@@ -88,46 +88,96 @@ view.array({
 });
 
 var pointsArray = []
-// 4d Cube 
-for(var x=-1;x<=1;x++){
-	for(var y=-1;y<=1;y++){
-		for(var z=-1;z<=1;z++){
-			//for(var w=-1;w<=1;w++){
-				pointsArray.push([x*5,y*5,z*5])	
-			//}
-			
-		}
-	}
+
+function DrawCube(){
+  var arr = []
+  for(var x=-1;x<=1;x++){
+    for(var y=-1;y<=1;y++){
+      for(var z=-1;z<=1;z++){
+        //for(var w=-1;w<=1;w++){
+          arr.push([x*5,y*5,z*5]) 
+        //}
+        
+      }
+    }
+  }
+  return arr; 
 }
+
+function Eq(x,y,z){
+  return Math.pow(x,2) + Math.pow(y,2) + Math.pow(z,2) - 50; 
+}
+
+function DrawSphere(){
+  var arr = [];
+  var step = 0.5;
+
+  for(var x=-10;x<=10;x+=step){
+    for(var y=-10;y<=10;y+=step){
+      for(var z=-10;z<=10;z+=step){
+        if(Eq(x,y,z) < 0) arr.push([x,y,z])
+      }
+    }
+  }
+
+  return arr;
+}
+
+//pointsArray = DrawCube();
+pointsArray = DrawSphere();
 
 // Generate convex hull
 var instance = new QuickHull(pointsArray);
 instance.build()
 var vertices = instance.collectFaces()
 
-//Draw the viewing object 
-view.array({
-	expr: function (emit, i, t) {
-		var v1 = pointsArray[vertices[i][0]];
-		var v2 = pointsArray[vertices[i][1]];
-		var v3 = pointsArray[vertices[i][2]];
+var hull = true;
 
-		emit(v1[0],v1[1],v1[2],0)
-		emit(v2[0],v2[1],v2[2],0)
-		emit(v3[0],v3[1],v3[2],0)
-    },
-    width: vertices.length,
-    items: 3,
-    channels: 4,
-    id:'hull_data'
-})
+if(hull){
+  //Draw the viewing object 
+  view.array({
+    expr: function (emit, i, t) {
+      var v1 = pointsArray[vertices[i][0]];
+      var v2 = pointsArray[vertices[i][1]];
+      var v3 = pointsArray[vertices[i][2]];
 
-view.face({
-	color:'red',
-	id:'hull_view',
-	points:'#hull_data',
-	//size:15,
-})
+      emit(v1[0],v1[1],v1[2],0)
+      emit(v2[0],v2[1],v2[2],0)
+      emit(v3[0],v3[1],v3[2],0)
+      },
+      width: vertices.length,
+      items: 3,
+      channels: 4,
+      id:'hull_data'
+  })
+
+  view.face({
+    color:'red',
+    id:'hull_view',
+    points:'#hull_data',
+    //size:15,
+  })  
+} else {
+  view.array({
+    expr: function (emit, i, t) {
+      for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0],pointsArray[j][1],pointsArray[j][2],0)
+      },
+      width: 1,
+      items: pointsArray.length,
+      channels: 4,
+      id:'hull_data'
+  })
+
+  view.point({
+    color:'red',
+    id:'hull_view',
+    points:'#hull_data',
+    //size:15,
+  })
+}
+
+
+
 
 
 </script>
