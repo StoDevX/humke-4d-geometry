@@ -2,18 +2,19 @@
 <html>
 <head>
 	<title>4D Geometry Viewer</title>
+	 <meta charset="UTF-8"> 
 	<link rel="stylesheet" type="text/css" href="src/css/index.css">
 </head>
 <body>
 
+<div id="main-menu">
 <center>
 	<h1>4D Geometry Viewer</h1>
 	<p><i>Created at St. Olaf College for Professor Paule Humke. <a href="about.html">More about this project.</a></i></p>
-
 <!-- mode buttons -->
 <div id="mode_buttons">
 	<!-- 2D -->
-	<div class="button_base b_3d_roll btn_2d">
+	<div class="button_base b_3d_roll" id="btn_2d">
 	    <div>
 	    	<svg width="100" height="100">
 			  <rect x="37" y="1" width="25" height="25"
@@ -25,7 +26,7 @@
 	</div>
 
 	<!-- 3D -->
-	<div class="button_base b_3d_roll btn_3d">
+	<div class="button_base b_3d_roll" id="btn_3d">
 	    <div>
 	    	<img src="src/img/cube.svg" alt="Cube" style="width:45%; height:auto; margin-top:-15px;">
 	    </div>
@@ -33,15 +34,56 @@
 	</div>
 
 	<!-- 4D --> 
-	<div class="button_base b_3d_roll btn_4d">
+	<div class="button_base b_3d_roll" id="btn_4d">
 	    <div>
 	    	<img src="src/img/tesseract.svg" alt="Tesseract" style="width:32%; height:auto; margin-top:-8px;">
 	    </div>
 	    <div>4D</div>
 	</div>
-
-
 </center>
+</div>
+
+<!-- This is where the actual program will live. It's hidden until you select a mode --> 
+<div id="mode_container" style="display: none;">
+	<div id="header">
+		<center>
+			<p><span id="world_title"></span> - <span id="back_to_menu_btn">Back to Menu</span></p>
+
+		</center>
+	</div>
+	<div id="display"></div>
+
+</div>
+
+<script type="text/javascript">
+	// Listen for clicks on any of the mode buttons to:
+	//	- Hide the menu
+	//	- Init the mode 
+	//	- Init the gui 
+	//	- Create the top bar with the back button
+	var buttons = ['btn_2d','btn_3d','btn_4d']
+	var text_map = {'btn_2d':'2D','btn_3d':'3D','btn_4d':'4D'}
+	for(var i=0;i<buttons.length;i++){
+		var b_name = "#" + buttons[i];
+		document.querySelector(b_name).onclick = function(e){
+			var clicked_name = e.target.id.replace("#","");
+			// Hide main menu
+			document.querySelector("#main-menu").style.display = "none";
+			// Show the display container div 
+			document.querySelector("#mode_container").style.display = "block";
+			document.querySelector("#world_title").innerHTML = text_map[clicked_name] + " World"
+			// Init the mode 
+		}
+	}
+
+	// Back to menu button 
+	document.querySelector("#back_to_menu_btn").onclick = function(e){
+		// Switch back to main menu 
+		document.querySelector("#main-menu").style.display = "block";
+		document.querySelector("#mode_container").style.display = "none";
+	}
+	
+</script>
 
 </body>
 </html>

@@ -6,6 +6,11 @@ body {
     margin-top: 50px;
 }
 
+#back_to_menu_btn:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
 .button_base {
     margin: 0;
     border: 0;
@@ -100,14 +105,15 @@ body {
 
 */
 
-.btn_2d div:nth-child(2) {
+#btn_2d div:nth-child(2) {
     color: #ed3237;
 }
 
-.btn_3d div:nth-child(2) {
+#btn_3d div:nth-child(2) {
     color: #00afef;
 }
 
-.btn_4d div:nth-child(2) {
+#btn_4d div:nth-child(2) {
     color: #815aa4;
 }
+
