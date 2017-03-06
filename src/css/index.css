@@ -1,0 +1,113 @@
+body {
+    font-family: sans-serif;
+}
+
+#mode_buttons {
+    margin-top: 50px;
+}
+
+.button_base {
+    margin: 0;
+    border: 0;
+    font-size: 18px;
+    width: 150px;
+    height: 50px;
+    text-align: center;
+    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-user-select: none;
+    cursor: default;
+    display: inline-block;
+}
+
+.button_base:hover {
+    cursor: pointer;
+}
+
+/* 3d roll effect from: https://codepen.io/bartekd/pen/qFsDf; */
+.b_3d_roll {
+    perspective: 500px;
+    -webkit-perspective: 500px;
+    -moz-perspective: 500px;
+}
+
+.b_3d_roll div {
+    position: absolute;
+    text-align: center;
+    width: 100%;
+    height: 50px;
+    padding: 10px;
+    pointer-events: none;
+    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+}
+
+.b_3d_roll div:nth-child(1) {
+    color: #000000;
+    background-color: rgb(70,70,70);
+    transform: rotateX(90deg);
+    -webkit-transform: rotateX(90deg);
+    -moz-transform: rotateX(90deg);
+    transition: all 0.2s ease;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
+    transform-origin: 50% 50% -25px;
+    -webkit-transform-origin: 50% 50% -25px;
+    -moz-transform-origin: 50% 50% -25px;
+}
+
+.b_3d_roll div:nth-child(2) {
+    color: #000000;
+    background-color: #ffffff;
+    transform: rotateX(0deg);
+    -webkit-transform: rotateX(0deg);
+    -moz-transform: rotateX(0deg);
+    transition: all 0.2s ease;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
+    transform-origin: 50% 50% -25px;
+    -webkit-transform-origin: 50% 50% -25px;
+    -moz-transform-origin: 50% 50% -25px;
+}
+
+.b_3d_roll:hover div:nth-child(1) {
+    color: #ffffff;
+    transition: all 0.2s ease;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
+    transform: rotateX(0deg);
+    -webkit-transform: rotateX(0deg);
+    -moz-transform: rotateX(0deg);
+}
+
+.b_3d_roll:hover div:nth-child(2) {
+    background-color: #000000;
+    transition: all 0.2s ease;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
+    transform: rotateX(-90deg);
+    -webkit-transform: rotateX(-90deg);
+    -moz-transform: rotateX(-90deg);
+}
+
+/* Custom Colors 
+
+2d: #ed3237;
+3d: #00afef;
+4d: #815aa4;
+
+*/
+
+.btn_2d div:nth-child(2) {
+    color: #ed3237;
+}
+
+.btn_3d div:nth-child(2) {
+    color: #00afef;
+}
+
+.btn_4d div:nth-child(2) {
+    color: #815aa4;
+}
