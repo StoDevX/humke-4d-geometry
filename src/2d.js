@@ -1,10 +1,24 @@
 // All logic & rendering of the 2D mode is contained here
 // depends on Mathbox existing in the scope as well as the gui class
 
+/* 
+todo:
+- Thickness callback
+- Draw cartesian shape (with resolution)
+- Make render shape work
+- Switch source to convex hull correctly
+- Draw parametric 
+- Make intersection work (with samples)
+- Apply same to 3D 
+- Create barebones 4D
+- Apply hash when clicking on any of the modes 
+*/
+
 var Mode2D = (function (scope) {
 	//Constructor 
 	function Mode2D(document){
 		this.document = document; 
+		this.thicknessValuesTable = {'thin':0.2,'medium':0.5,'thick':1}
 	}
 
 	// Creates the scene and everything
@@ -67,6 +81,7 @@ var Mode2D = (function (scope) {
 		});
 
 		this.leftView = leftView;
+		this.CreateViewLine();
 
 		// Set up right view
 		rightView = rightView.cartesian({
@@ -103,7 +118,26 @@ var Mode2D = (function (scope) {
 	      id:'viewing_1d_axis_label',
 	    });
 
-	    this.rightView = rightView
+	}
+
+	Mode2D.prototype.CreateViewLine = function(){
+		//The line on the left to show you what it's intersecting 
+		var params = this.gui.params
+		var thickness = this.thicknessValuesTable[params.thickness]
+		this.leftView.interval({
+			expr: function(emit,x,i,t){
+				if(params.axis == "Y")
+					emit(x,params.axis_value);
+				else
+					emit(params.axis_value,x);
+			},
+			width:2,
+			channels:2,
+			id:"viewing_axis"
+		}).line({
+			width:5 + 5 * thickness,
+			color:this.gui.colors.viewing
+		})
 	}
 
 	// define a function to be called when each param is updated
