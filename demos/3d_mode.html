@@ -112,11 +112,11 @@
 	}
 
 	function initParametric(){
-		var param_input = gui_controls['shape_folder'].add(params, 'param_y').name('y = ').onChange(function(val){
+		var param_input = gui_controls['shape_folder'].add(params, 'param_x').name('x = ').onChange(function(val){
 
 		});
 
-		var param_input2 = gui_controls['shape_folder'].add(params, 'param_x').name('x = ').onChange(function(val){
+		var param_input2 = gui_controls['shape_folder'].add(params, 'param_y').name('y = ').onChange(function(val){
 
 		});
 
@@ -124,7 +124,11 @@
 
 		});
 
-		var param_input4 = gui_controls['shape_folder'].add(params, 'param_a').name('a = ').onChange(function(val){
+		var param_input4 = gui_controls['shape_folder'].add(params, 'param_u').name('u = ').onChange(function(val){
+			DrawParamEq();
+		});
+
+		var param_input5 = gui_controls['shape_folder'].add(params, 'param_v').name('v = ').onChange(function(val){
 			DrawParamEq();
 		});
 
@@ -132,6 +136,7 @@
 		gui_controls['param_input2'] = param_input2;
 		gui_controls['param_input3'] = param_input3;
 		gui_controls['param_input4'] = param_input4;
+		gui_controls['param_input5'] = param_input4;
 
 		DrawParamEq();
 	}
@@ -144,10 +149,12 @@
 			gui_controls['shape_folder'].remove(gui_controls['param_input2']);
 			gui_controls['shape_folder'].remove(gui_controls['param_input3']);
 			gui_controls['shape_folder'].remove(gui_controls['param_input4']);
+			gui_controls['shape_folder'].remove(gui_controls['param_input5']);
 			gui_controls['param_input'] = undefined;
 			gui_controls['param_input2'] = undefined;
 			gui_controls['param_input3'] = undefined;
 			gui_controls['param_input4'] = undefined;
+			gui_controls['param_input5'] = undefined;
 		}
 	}
 
@@ -174,10 +181,11 @@
 
 	function initGUI(){
 		params = {
-			'param_y': 'cos(a) * 5 ',
-			'param_x': 'sin(a) * 5',
-			'param_z': 'sin(a) * 5',
-			'param_a': '0 < a < 2 * PI',
+			'param_x': '5 * sin(u) * cos(v)',
+			'param_y': '5 * cos(u) * cos(v) ',
+			'param_z': '5 * sin(v)',
+			'param_u': '0 < u < 2 * PI',
+			'param_v': '0 < v < 2 * PI',
 			'equation': 'x^2+y^2 = 30',
 			'points': '(5,5),(5,-5),(-5,-5),(-5,5)',
 			'source': 'cartesian',
@@ -337,24 +345,6 @@
 		id: "shape_view"
 	});
 
-	// // Draw viewing axis
-	// view.interval({
-	// 	expr: function(emit,x,i,t){
-	// 		if(params.axis == "Y")
-	// 		emit(x,params.axis_value);
-	// 		else
-	// 		emit(params.axis_value,x);
-	// 	},
-	// 	width:2,
-	// 	channels:2,
-	// 	id:"viewing_axis"
-	// }).line({
-	// 	width:5,
-	// 	color:colors.viewing_axis
-	// })
-
-	//mathbox.set('focus', 2);
-
 	view.array({
 			id: "viewing_plane",
 			channels: 3,
@@ -368,16 +358,10 @@
 					[10,-10,params.axis_value]
 				];
 
-
 				var order = {"Z":[0,1,2],"Y":[0,2,1],"X":[2,1,0]}
 				for(var j=0;j<points.length;j++){
 					emit(points[j][order[params.axis][0]],points[j][order[params.axis][1]],points[j][order[params.axis][2]])
 				}
-
-				// emit(10,10,params.axis_value);
-				// emit(-10,10,params.axis_value);
-				// emit(-10,-10,params.axis_value);
-				// emit(10,-10,params.axis_value);
 			}
 	})
 
@@ -440,31 +424,42 @@
 		mathbox.remove("#param_view");
 
 		var total_samples = 256;
-		var a_range = [0,1];
-		// get range from string
-		var splitArray = params.param_a.split("<"); // should return 3 pieces. We want the first and last
-		a_range[0] = Parser.evaluate(splitArray[0]);
-		a_range[1] = Parser.evaluate(splitArray[2]);
+		var u_range = [0,1];
+		var v_range = [0,1];
+		// get range from a string
+		var splitArray = params.param_u.split("<"); // should return 3 pieces. We want the first and last
+		u_range[0] = Parser.evaluate(splitArray[0]);
+		u_range[1] = Parser.evaluate(splitArray[2]);
+		// get range from b string
+		splitArray = params.param_v.split("<"); // should return 3 pieces. We want the first and last
+		v_range[0] = Parser.evaluate(splitArray[0]);
+		v_range[1] = Parser.evaluate(splitArray[2]);
 
-		view.array({
-			expr: function(emit, i, t){
-				var a = (i / total_samples) * (a_range[1] - a_range[0]) + a_range[0]
-				var x = Parser.evaluate(params.param_x,{a:a});
-				var y = Parser.evaluate(params.param_y,{a:a});
-				var z = Parser.evaluate(params.param_z,{a:a});
-				emit(x,y, z);
-			},
-			width: total_samples,
-			channels:3,
-			id:'param_data'
-		})
+		view.area({
+      width: Math.sqrt(total_samples),
+      height: Math.sqrt(total_samples),
+      axes: [1, 2],
+			rangeX: [u_range[0], u_range[1]],
+			rangeY: [v_range[0], v_range[1]],
+      expr: function (emit, x, y, i, j, time) {
+				var x_val = Parser.evaluate(params.param_x,{u:x,v:y});
+				var y_val = Parser.evaluate(params.param_y,{u:x,v:y});
+				var z_val = Parser.evaluate(params.param_z,{u:x,v:y});
+				emit(x_val,y_val,z_val);
+      },
+      items: 1,
+      channels: 3,
+			id: 'param_data'
+    });
 
-		view.line({
-			color:colors.data,
-			width:5,
-			id:'param_view',
-			points:'#param_data'
-		})
+		view.surface({
+      shaded: true,
+      lineX: true,
+      lineY: true,
+      points: '#param_data',
+      color: colors.data,
+      width: 5,
+    });
 	}
 
 	function CreateViewAxis(axis_a, axis_b, pos,label_a, label_b){
