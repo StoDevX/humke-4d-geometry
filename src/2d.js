@@ -25,6 +25,10 @@ var Mode2D = (function (scope) {
 		this.leftView = leftView;
 		this.rightView = rightView;
 
+		// Init gui 
+	    gui.init("2D",this.callbacks,this);
+	    this.gui = gui;
+
 		// Set up left view
 		var camera = leftView.camera({
 		  proxy: true, // this alows interactive camera controls to override the position
@@ -62,6 +66,8 @@ var Mode2D = (function (scope) {
 		  color: 0x000000,
 		});
 
+		this.leftView = leftView;
+
 		// Set up right view
 		rightView = rightView.cartesian({
 		  range: [[-10, 10],[-10,10]],
@@ -72,12 +78,10 @@ var Mode2D = (function (scope) {
 		  proxy: true, // this alows interactive camera controls to override the position
 		  position: [0, 0, 3],
 		})
+		this.rightView = rightView
 
 	    this.CreateViewAxis(1,[11,1],"x")
-
-	    // Init gui 
-	    gui.init("2D");
-	    this.gui = gui;
+	    
 	}
 
 	Mode2D.prototype.CreateViewAxis = function(axisNum,pos,labelName){
@@ -98,7 +102,19 @@ var Mode2D = (function (scope) {
 	      color: 0x000000,
 	      id:'viewing_1d_axis_label',
 	    });
+
+	    this.rightView = rightView
 	}
+
+	// define a function to be called when each param is updated
+	Mode2D.prototype.callbacks = {
+		'axis': function(self,val){
+			self.rightView.remove("#viewing_1d_axis")
+	    	self.rightView.remove("#viewing_1d_axis_label")
+			if(val == "Y") self.CreateViewAxis(1,[11,1],"x")
+			if(val == "X") self.CreateViewAxis(2,[0,12],"y")
+		}
+	};
 
 	// Creates a new mathbox view
 	Mode2D.prototype.createView = function(el,width){

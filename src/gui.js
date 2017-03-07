@@ -58,12 +58,15 @@ var GUI = (function (scope) {
 			'param_b':'0 < b < 1',
 			'param_c':'0 < c < 1'
 		}
+
+		this.mode_obj = null;
 	}
 
-	GUI.prototype.init = function(mode){
+	GUI.prototype.init = function(mode,callbacks,mode_obj){
 		// Creates the scene and everything
 		this.gui = new dat.GUI();
 		this.mode = mode;
+		this.mode_obj = mode_obj;
 		// Create the two folders
 		var shapeProperties = this.gui.addFolder('Shape Properties');
 	    var viewingControls = this.gui.addFolder('Viewing Controls');
@@ -110,6 +113,7 @@ var GUI = (function (scope) {
 	    this.viewingControls.add(params, 'axis', axes_list ).onChange(function(val){
 	    	axis_value_control.name(val + " = ")
 	    	params.axis_value = 0;
+	    	if(callbacks['axis']) callbacks['axis'](mode_obj,val);
 	    });
 
 	    this.viewingControls.add(params, 'samples', 200, 10000).name('Samples');
