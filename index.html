@@ -4,6 +4,19 @@
 	<title>4D Geometry Viewer</title>
 	 <meta charset="UTF-8"> 
 	<link rel="stylesheet" type="text/css" href="src/css/index.css">
+	<!-- For parsing mathematical expressions. Used by the gui -->
+	<script src="src/lib/parser.js"></script>
+	<!-- Dat.gui library -->
+	<script src="src/lib/datgui/dat.gui.js"></script>
+	<!-- Mathbox -->
+	<script src="src/lib/mathbox-src/build/mathbox-bundle.js"></script>
+  	<link rel="stylesheet" href="src/lib/mathbox-src/build/mathbox.css">
+  	<!-- Nick Nooney's Polygonize, used in the modes to convert an equation to a set of points/faces -->
+	<script src="src/polygonize.js"></script>
+	<!-- Our common gui interface -->
+	<script src="src/gui.js"></script>
+	<!-- All of our 2d/3d/4d modes -->
+	<script src="src/2d.js"></script>
 </head>
 <body>
 
@@ -51,7 +64,9 @@
 
 		</center>
 	</div>
-	<div id="display"></div>
+	<div id="display">
+		
+	</div>
 
 </div>
 
@@ -63,16 +78,23 @@
 	//	- Create the top bar with the back button
 	var buttons = ['btn_2d','btn_3d','btn_4d']
 	var text_map = {'btn_2d':'2D','btn_3d':'3D','btn_4d':'4D'}
+	var mode_objects = {};
+	var current_mode = "";
+	mode_objects['2D'] = new Mode2D(document);
+	var gui = new GUI();
+
 	for(var i=0;i<buttons.length;i++){
 		var b_name = "#" + buttons[i];
 		document.querySelector(b_name).onclick = function(e){
 			var clicked_name = e.target.id.replace("#","");
+			current_mode = text_map[clicked_name];
 			// Hide main menu
 			document.querySelector("#main-menu").style.display = "none";
 			// Show the display container div 
 			document.querySelector("#mode_container").style.display = "block";
 			document.querySelector("#world_title").innerHTML = text_map[clicked_name] + " World"
-			// Init the mode 
+			// Init the mode (the mode inits the gui with its own options)
+			mode_objects[current_mode].init(document.querySelector("#display"),gui);
 		}
 	}
 
@@ -81,6 +103,8 @@
 		// Switch back to main menu 
 		document.querySelector("#main-menu").style.display = "block";
 		document.querySelector("#mode_container").style.display = "none";
+		// Destory the mode 
+		mode_objects[current_mode].cleanup();
 	}
 	
 </script>
