@@ -3,7 +3,7 @@
 
 /* 
 todo:
-- Thickness callback
+
 - Draw cartesian shape (with resolution)
 - Make render shape work
 - Switch source to convex hull correctly
@@ -136,7 +136,8 @@ var Mode2D = (function (scope) {
 			id:"viewing_axis"
 		}).line({
 			width:5 + 5 * thickness,
-			color:this.gui.colors.viewing
+			color:this.gui.colors.viewing,
+			id:"viewing_axis_line"
 		})
 	}
 
@@ -147,6 +148,10 @@ var Mode2D = (function (scope) {
 	    	self.rightView.remove("#viewing_1d_axis_label")
 			if(val == "Y") self.CreateViewAxis(1,[11,1],"x")
 			if(val == "X") self.CreateViewAxis(2,[0,12],"y")
+		},
+		'thickness': function(self,val){
+			// need to change the line's property when thickness changes
+			self.leftView.select("#viewing_axis_line").set("width",5+5*self.thicknessValuesTable[self.gui.params.thickness])
 		}
 	};
 

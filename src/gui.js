@@ -117,7 +117,9 @@ var GUI = (function (scope) {
 	    });
 
 	    this.viewingControls.add(params, 'samples', 200, 10000).name('Samples');
-	    this.viewingControls.add(params, 'thickness', ['thin','medium','thick']).name('Thickness');
+	    this.viewingControls.add(params, 'thickness', ['thin','medium','thick']).name('Thickness').onChange(function(val){
+	    	if(callbacks['thickness']) callbacks['thickness'](mode_obj,val);
+	    });
 
 	    // Turn all sliders orange after the first one (the first one is the resolution one)
 	    var sliders = document.querySelectorAll(".slider-fg")
