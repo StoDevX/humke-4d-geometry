@@ -4,7 +4,6 @@
 /* 
 todo:
 
-- Draw cartesian shape (with resolution)
 - Make render shape work
 - Switch source to convex hull correctly
 - Draw parametric 
@@ -159,12 +158,16 @@ var Mode2D = (function (scope) {
 			// need to change the line's property when thickness changes
 			self.leftView.select("#viewing_axis_line").set("width",5+5*self.thicknessValuesTable[self.gui.params.thickness])
 		},
-		'equation': function(self,val){
+		'source': function(self,val){
+			self.setMode();
+		}, 
+		'resolution': function(self,val){
 			self.parseCartesian();
 			self.polygonizeCartesian();
 		},
-		'source': function(self,val){
-			self.setMode();
+		'equation': function(self,val){
+			self.parseCartesian();
+			self.polygonizeCartesian();
 		}
 	};
 

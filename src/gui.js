@@ -145,7 +145,10 @@ var GUI = (function (scope) {
 			if(callbacks['equation']) callbacks['equation'](mode_obj,val);
 		});
 		arr.push(eq)
-		arr.push(this.shapeProperties.add(this.params, 'resolution', 20, 200).name('Resolution').step(1));
+		var res = this.shapeProperties.add(this.params, 'resolution', 20, 200).name('Resolution').step(1).onChange(function(val){
+			if(callbacks['resolution']) callbacks['resolution'](mode_obj,val);
+		});
+		arr.push(res)
 
 		this.cartesianSourceItems = arr;
 	}
