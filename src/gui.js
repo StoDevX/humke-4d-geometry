@@ -100,6 +100,8 @@ var GUI = (function (scope) {
 	    		current_scope.initConvexSource();
 	    	}
 	    	current_scope.last_source = val
+
+	    	if(callbacks['source']) callbacks['source'](mode_obj,val);
 	    });
 
 	    shapeProperties.add(params, 'render_shape').name("Render Shape");

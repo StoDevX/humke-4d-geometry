@@ -22,6 +22,7 @@ var Mode2D = (function (scope) {
 
 		// Cartesian properties
 		this.edgeArray = [];
+		this.current_mode = null;
 	}
 
 	// Creates the scene and everything
@@ -87,9 +88,7 @@ var Mode2D = (function (scope) {
 		this.CreateViewLine();
 
 		// Draw our main shape
-		this.initCartesian();
-		this.parseCartesian();
-		this.polygonizeCartesian();
+		this.setMode()
 
 		// Set up right view
 		rightView = rightView.cartesian({
@@ -104,8 +103,6 @@ var Mode2D = (function (scope) {
 		this.rightView = rightView
 
 	    this.CreateViewAxis(1,[11,1],"x")
-	    
-
 	}
 
 	Mode2D.prototype.CreateViewAxis = function(axisNum,pos,labelName){
@@ -165,8 +162,29 @@ var Mode2D = (function (scope) {
 		'equation': function(self,val){
 			self.parseCartesian();
 			self.polygonizeCartesian();
+		},
+		'source': function(self,val){
+			self.setMode();
 		}
 	};
+
+	Mode2D.prototype.setMode = function(){
+		var params = this.gui.params
+		console.log(params.source)
+		//Switch the mode based on the gui value 
+		if(this.current_mode != null){
+			//Clean up previous 
+			if(this.current_mode == "cartesian") this.cleanupCartesian();
+			if(this.current_mode == "parametric") this.cleanupParametric();
+			if(this.current_mode == "convex-hull") this.cleanupConvexHull();
+		}
+		this.current_mode = params.source;
+		//Init new 
+		if(this.current_mode == "cartesian") this.initCartesian();
+		if(this.current_mode == "parametric") this.initParametric();
+		if(this.current_mode == "convex-hull") this.initConvexHull();
+
+	}
 
 	// >>>>>>>>>> Cartesian mode functions 
 	Mode2D.prototype.initCartesian = function(){
@@ -187,6 +205,9 @@ var Mode2D = (function (scope) {
 			opacity:1,
 			id: "cartesian_geometry"
 		});
+
+		this.parseCartesian();
+		this.polygonizeCartesian();
 	}
 	Mode2D.prototype.parseCartesian = function(){
 		var equation_string = this.gui.params.equation;
@@ -211,11 +232,19 @@ var Mode2D = (function (scope) {
 			console.log("Error rendering equation",err)
 		}
 	}
+	Mode2D.prototype.cleanupCartesian = function(){
+		this.leftView.remove("#cartesian_edge_data");
+		this.leftView.remove("#cartesian_geometry");
+	}
 	
 
 	// >>>>>>>>>>> Parametric mode functions
+	Mode2D.prototype.initParametric = function(){}
+	Mode2D.prototype.cleanupParametric = function(){}
 
 	//  >>>>>>>>>>> Convex Hull mode functions
+	Mode2D.prototype.initConvexHull = function(){}
+	Mode2D.prototype.cleanupConvexHull = function(){}
 
 	// Creates a new mathbox view
 	Mode2D.prototype.createView = function(el,width){
