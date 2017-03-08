@@ -60,6 +60,7 @@ var GUI = (function (scope) {
 		}
 
 		this.mode_obj = null;
+		this.callbacks = null;
 	}
 
 	GUI.prototype.init = function(mode,callbacks,mode_obj){
@@ -67,6 +68,7 @@ var GUI = (function (scope) {
 		this.gui = new dat.GUI();
 		this.mode = mode;
 		this.mode_obj = mode_obj;
+		this.callbacks = callbacks;
 		// Create the two folders
 		var shapeProperties = this.gui.addFolder('Shape Properties');
 	    var viewingControls = this.gui.addFolder('Viewing Controls');
@@ -134,9 +136,13 @@ var GUI = (function (scope) {
 	// Functions for creating the controls for the 3 different inputs (cartesian, parametric and convex hull)
 	GUI.prototype.initCartesianSource = function(){
 		var arr = [];
-		
+		var callbacks = this.callbacks;
+		var mode_obj = this.mode_obj;
 
-		arr.push(this.shapeProperties.add(this.params, 'equation').name('Equation'));
+		var eq = this.shapeProperties.add(this.params, 'equation').name('Equation').onChange(function(val){
+			if(callbacks['equation']) callbacks['equation'](mode_obj,val);
+		});
+		arr.push(eq)
 		arr.push(this.shapeProperties.add(this.params, 'resolution', 20, 200).name('Resolution').step(1));
 
 		this.cartesianSourceItems = arr;

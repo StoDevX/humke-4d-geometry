@@ -19,6 +19,9 @@ var Mode2D = (function (scope) {
 	function Mode2D(document){
 		this.document = document; 
 		this.thicknessValuesTable = {'thin':0.2,'medium':0.5,'thick':1}
+
+		// Cartesian properties
+		this.edgeArray = [];
 	}
 
 	// Creates the scene and everything
@@ -83,6 +86,11 @@ var Mode2D = (function (scope) {
 		this.leftView = leftView;
 		this.CreateViewLine();
 
+		// Draw our main shape
+		this.initCartesian();
+		this.parseCartesian();
+		this.polygonizeCartesian();
+
 		// Set up right view
 		rightView = rightView.cartesian({
 		  range: [[-10, 10],[-10,10]],
@@ -97,6 +105,7 @@ var Mode2D = (function (scope) {
 
 	    this.CreateViewAxis(1,[11,1],"x")
 	    
+
 	}
 
 	Mode2D.prototype.CreateViewAxis = function(axisNum,pos,labelName){
@@ -152,8 +161,61 @@ var Mode2D = (function (scope) {
 		'thickness': function(self,val){
 			// need to change the line's property when thickness changes
 			self.leftView.select("#viewing_axis_line").set("width",5+5*self.thicknessValuesTable[self.gui.params.thickness])
+		},
+		'equation': function(self,val){
+			self.parseCartesian();
+			self.polygonizeCartesian();
 		}
 	};
+
+	// >>>>>>>>>> Cartesian mode functions 
+	Mode2D.prototype.initCartesian = function(){
+		// Create the edge data 
+		this.edgeData = this.leftView.array({
+			width: this.edgeArray.length/2,
+			items: 2,
+			channels: 2,
+			data: this.edgeArray,
+			id: "cartesian_edge_data"
+		});
+		// Draw the geometry
+		this.leftView.vector({
+			points: this.edgeData,
+			color: this.gui.colors.data,
+			width: 5,
+			start: false,
+			opacity:1,
+			id: "cartesian_geometry"
+		});
+	}
+	Mode2D.prototype.parseCartesian = function(){
+		var equation_string = this.gui.params.equation;
+		let sides = equation_string.split('=');
+		let LHS = sides[0];
+		let RHS = sides[1];
+		let LHSfunc = Parser.parse(LHS).toJSFunction(['x','y']);
+		let RHSfunc = Parser.parse(RHS).toJSFunction(['x','y']);
+		this.cartesian_equation =  function(x,y) { return LHSfunc(x,y) - RHSfunc(x,y); };
+	}
+	Mode2D.prototype.polygonizeCartesian = function(){
+		var params = this.gui.params
+		if(this.cartesian_equation == null) return; //Cannot draw without a parsed equation
+		//Parses the equation, and polygonizes it 
+		try {
+			this.edgeArray = [];
+			this.edgeArray = Polygonize.generate(this.cartesian_equation, [[-10, 10], [-10, 10]], params.resolution);
+
+			this.edgeData.set("width", this.edgeArray.length/2);
+			this.edgeData.set("data", this.edgeArray);
+		} catch(err){
+			console.log("Error rendering equation",err)
+		}
+	}
+	
+
+	// >>>>>>>>>>> Parametric mode functions
+
+	//  >>>>>>>>>>> Convex Hull mode functions
 
 	// Creates a new mathbox view
 	Mode2D.prototype.createView = function(el,width){
