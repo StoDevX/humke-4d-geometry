@@ -4,9 +4,8 @@
 /* 
 todo:
 
-- Make render shape work
-- Switch source to convex hull correctly
 - Draw parametric 
+- Make render shape work
 - Make intersection work (with samples)
 - Apply same to 3D 
 - Create barebones 4D
@@ -22,6 +21,8 @@ var Mode2D = (function (scope) {
 		// Cartesian properties
 		this.edgeArray = [];
 		this.current_mode = null;
+		// Convex Hull points
+		this.pointsArray = [];
 	}
 
 	// Creates the scene and everything
@@ -168,6 +169,9 @@ var Mode2D = (function (scope) {
 		'equation': function(self,val){
 			self.parseCartesian();
 			self.polygonizeCartesian();
+		},
+		'points': function(self,val){
+			self.updateConvexHull()
 		}
 	};
 
@@ -246,8 +250,62 @@ var Mode2D = (function (scope) {
 	Mode2D.prototype.cleanupParametric = function(){}
 
 	//  >>>>>>>>>>> Convex Hull mode functions
-	Mode2D.prototype.initConvexHull = function(){}
-	Mode2D.prototype.cleanupConvexHull = function(){}
+	Mode2D.prototype.initConvexHull = function(){
+		this.parseConvexPoints()
+		var pointsArray = this.pointsArray;
+
+		// Set the data
+		this.leftView.array({
+			expr: function (emit, i, t) {
+				for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
+		    },
+		    width: 1,
+		    items:pointsArray.length,
+		    channels: 2,
+		    id:'hull_data'
+		})
+		// Draw the geometry 
+		this.leftView.face({
+			color:this.gui.colors.data,
+			id:'hull_geometry',
+			points:'#hull_data',
+		})
+	}
+	Mode2D.prototype.parseConvexPoints = function(){
+		var params = this.gui.params
+		// Get string of points and parse it 
+		// Remove whitespace 
+		var points_str = params.points.replace(/\s+/g, '');
+		// Split based on the pattern (digits,digits)
+		var points_split = points_str.match(/\(-*\d+,-*\d+\)/g);
+		this.pointsArray = []
+
+		for(var i=0;i<points_split.length;i++){
+			var p = points_split[i];
+			// Remove parenthesis 
+			p = p.replace(/[\(\)]/g,'');
+			// Split by comma
+			var comma_split = p.split(",") 
+			var point = []
+			for(var j=0;j<comma_split.length;j++) point.push(Number(comma_split[j]))
+			this.pointsArray.push(point)
+		}
+		
+	}
+	Mode2D.prototype.updateConvexHull = function(){
+		// Re-parse
+		this.parseConvexPoints();
+		var pointsArray = this.pointsArray;
+		// Update the data 
+		this.leftView.select("#hull_data").set("items",pointsArray.length)
+		this.leftView.select("#hull_data").set("expr",function(emit,i,t){
+			for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
+		})
+	}
+	Mode2D.prototype.cleanupConvexHull = function(){
+		this.leftView.remove("#hull_data")
+		this.leftView.remove("#hull_geometry")
+	}
 
 	// Creates a new mathbox view
 	Mode2D.prototype.createView = function(el,width){

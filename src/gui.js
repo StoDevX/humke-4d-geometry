@@ -186,9 +186,14 @@ var GUI = (function (scope) {
 	}
 	GUI.prototype.initConvexSource = function(){
 		var arr = [];
+		var callbacks = this.callbacks;
+		var mode_obj = this.mode_obj;
 		
-		arr.push(this.shapeProperties.add(this.params, 'points'));
+		var points = this.shapeProperties.add(this.params, 'points').onChange(function(val){
+			if(callbacks['points']) callbacks['points'](mode_obj,val);
+		});
 
+		arr.push(points)
 		this.convexSourceItems = arr;
 	}
 	GUI.prototype.destroyConvexSource = function(){
