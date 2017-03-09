@@ -124,11 +124,15 @@
 
 		});
 
-		var param_input4 = gui_controls['shape_folder'].add(params, 'param_u').name('u = ').onChange(function(val){
+		var param_input4 = gui_controls['shape_folder'].add(params, 'param_r').name('r = ').onChange(function(val){
 			DrawParamEq();
 		});
 
-		var param_input5 = gui_controls['shape_folder'].add(params, 'param_v').name('v = ').onChange(function(val){
+		var param_input5 = gui_controls['shape_folder'].add(params, 'param_s').name('s = ').onChange(function(val){
+			DrawParamEq();
+		});
+
+		var param_input6 = gui_controls['shape_folder'].add(params, 'param_t').name('t = ').onChange(function(val){
 			DrawParamEq();
 		});
 
@@ -136,7 +140,8 @@
 		gui_controls['param_input2'] = param_input2;
 		gui_controls['param_input3'] = param_input3;
 		gui_controls['param_input4'] = param_input4;
-		gui_controls['param_input5'] = param_input4;
+		gui_controls['param_input5'] = param_input5;
+		gui_controls['param_input6'] = param_input6;
 
 		DrawParamEq();
 	}
@@ -150,11 +155,13 @@
 			gui_controls['shape_folder'].remove(gui_controls['param_input3']);
 			gui_controls['shape_folder'].remove(gui_controls['param_input4']);
 			gui_controls['shape_folder'].remove(gui_controls['param_input5']);
+			gui_controls['shape_folder'].remove(gui_controls['param_input6']);
 			gui_controls['param_input'] = undefined;
 			gui_controls['param_input2'] = undefined;
 			gui_controls['param_input3'] = undefined;
 			gui_controls['param_input4'] = undefined;
 			gui_controls['param_input5'] = undefined;
+			gui_controls['param_input6'] = undefined;
 		}
 	}
 
@@ -181,11 +188,12 @@
 
 	function initGUI(){
 		params = {
-			'param_x': '5 * sin(u) * cos(v)',
-			'param_y': '5 * cos(u) * cos(v) ',
-			'param_z': '5 * sin(v)',
-			'param_u': '0 < u < 2 * PI',
-			'param_v': '0 < v < 2 * PI',
+			'param_x': '5 * sin(r) * cos(s)',
+			'param_y': '5 * cos(r) * cos(s) ',
+			'param_z': '5 * sin(s)',
+			'param_r': '0 < r < 2 * PI',
+			'param_s': '0 < s < 2 * PI',
+			'param_t': '0 < t < 2 * PI',
 			'equation': 'x^2+y^2 = 30',
 			'points': '(5,5),(5,-5),(-5,-5),(-5,5)',
 			'source': 'cartesian',
@@ -424,27 +432,32 @@
 		mathbox.remove("#param_view");
 
 		var total_samples = 256;
-		var u_range = [0,1];
-		var v_range = [0,1];
+		var r_range = [0,1];
+		var s_range = [0,1];
+		var t_range = [0,1];
 		// get range from a string
-		var splitArray = params.param_u.split("<"); // should return 3 pieces. We want the first and last
-		u_range[0] = Parser.evaluate(splitArray[0]);
-		u_range[1] = Parser.evaluate(splitArray[2]);
+		var splitArray = params.param_r.split("<"); // should return 3 pieces. We want the first and last
+		r_range[0] = Parser.evaluate(splitArray[0]);
+		r_range[1] = Parser.evaluate(splitArray[2]);
 		// get range from b string
-		splitArray = params.param_v.split("<"); // should return 3 pieces. We want the first and last
-		v_range[0] = Parser.evaluate(splitArray[0]);
-		v_range[1] = Parser.evaluate(splitArray[2]);
+		splitArray = params.param_s.split("<"); // should return 3 pieces. We want the first and last
+		s_range[0] = Parser.evaluate(splitArray[0]);
+		s_range[1] = Parser.evaluate(splitArray[2]);
+
+		splitArray = params.param_t.split("<"); // should return 3 pieces. We want the first and last
+		t_range[0] = Parser.evaluate(splitArray[0]);
+		t_range[1] = Parser.evaluate(splitArray[2]);
 
 		view.area({
       width: Math.sqrt(total_samples),
       height: Math.sqrt(total_samples),
       axes: [1, 2],
-			rangeX: [u_range[0], u_range[1]],
-			rangeY: [v_range[0], v_range[1]],
+			rangeX: [r_range[0], r_range[1]],
+			rangeY: [s_range[0], s_range[1]],
       expr: function (emit, x, y, i, j, time) {
-				var x_val = Parser.evaluate(params.param_x,{u:x,v:y});
-				var y_val = Parser.evaluate(params.param_y,{u:x,v:y});
-				var z_val = Parser.evaluate(params.param_z,{u:x,v:y});
+				var x_val = Parser.evaluate(params.param_x,{r:x,s:y});
+				var y_val = Parser.evaluate(params.param_y,{r:x,s:y});
+				var z_val = Parser.evaluate(params.param_z,{r:x,s:y});
 				emit(x_val,y_val,z_val);
       },
       items: 1,
