@@ -188,12 +188,12 @@
 
 	function initGUI(){
 		params = {
-			'param_x': '5 * sin(r) * cos(s)',
-			'param_y': '5 * cos(r) * cos(s) ',
-			'param_z': '5 * sin(s)',
+			'param_x': 'r * cos(4*PI*t) - s * sin(4*PI*t)',
+			'param_y': 'r * sin(4*PI*t) + s * cos(4*PI*t)',
+			'param_z': '5*t',
 			'param_r': '0 < r < 2 * PI',
 			'param_s': '0 < s < 2 * PI',
-			'param_t': '0 < t < 2 * PI',
+			'param_t': '-1 < t < 1',
 			'equation': 'x^2+y^2 = 30',
 			'points': '(5,5),(5,-5),(-5,-5),(-5,5)',
 			'source': 'cartesian',
@@ -431,7 +431,7 @@
 		mathbox.remove("#param_data");
 		mathbox.remove("#param_view");
 
-		var total_samples = 256;
+		var total_samples = 1000; // 10^3
 		var r_range = [0,1];
 		var s_range = [0,1];
 		var t_range = [0,1];
@@ -448,16 +448,18 @@
 		t_range[0] = Parser.evaluate(splitArray[0]);
 		t_range[1] = Parser.evaluate(splitArray[2]);
 
-		view.area({
-      width: Math.sqrt(total_samples),
-      height: Math.sqrt(total_samples),
-      axes: [1, 2],
+		view.volume({
+      width: Math.cbrt(total_samples),
+      height: Math.cbrt(total_samples),
+			depth: Math.cbrt(total_samples),
+      axes: [1, 2, 3],
 			rangeX: [r_range[0], r_range[1]],
 			rangeY: [s_range[0], s_range[1]],
-      expr: function (emit, x, y, i, j, time) {
-				var x_val = Parser.evaluate(params.param_x,{r:x,s:y});
-				var y_val = Parser.evaluate(params.param_y,{r:x,s:y});
-				var z_val = Parser.evaluate(params.param_z,{r:x,s:y});
+			rangeZ: [t_range[0], t_range[1]],
+      expr: function (emit, x, y, z, i, j, time) {
+				var x_val = Parser.evaluate(params.param_x,{r:x,s:y,t:z});
+				var y_val = Parser.evaluate(params.param_y,{r:x,s:y,t:z});
+				var z_val = Parser.evaluate(params.param_z,{r:x,s:y,t:z});
 				emit(x_val,y_val,z_val);
       },
       items: 1,
