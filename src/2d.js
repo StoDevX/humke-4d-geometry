@@ -4,7 +4,6 @@
 /* 
 todo:
 
-- Draw parametric 
 - Make render shape work
 - Make intersection work (with samples)
 - Apply same to 3D 
@@ -148,6 +147,11 @@ var Mode2D = (function (scope) {
 	}
 
 	// define a function to be called when each param is updated
+	function updateParametricCallback(self,val){
+		self.cleanupParametric();
+		self.initParametric()
+	}
+
 	Mode2D.prototype.callbacks = {
 		'axis': function(self,val){
 			self.rightView.remove("#viewing_1d_axis")
@@ -172,7 +176,11 @@ var Mode2D = (function (scope) {
 		},
 		'points': function(self,val){
 			self.updateConvexHull()
-		}
+		},
+		'param_eq_x': updateParametricCallback, 
+		'param_eq_y': updateParametricCallback, 
+		'param_a': updateParametricCallback, 
+		'param_b': updateParametricCallback, 
 	};
 
 	Mode2D.prototype.setMode = function(){
@@ -246,8 +254,52 @@ var Mode2D = (function (scope) {
 	
 
 	// >>>>>>>>>>> Parametric mode functions
-	Mode2D.prototype.initParametric = function(){}
-	Mode2D.prototype.cleanupParametric = function(){}
+	Mode2D.prototype.initParametric = function(){
+		var a_range = [0,1];
+		var b_range = [0,1];
+		var params = this.gui.params
+		// get range from string 
+		var splitArrayA = params.param_a.split("<"); // should return 3 pieces. We want the first and last 
+		a_range[0] = Parser.evaluate(splitArrayA[0]);
+		a_range[1] = Parser.evaluate(splitArrayA[2]);
+		var splitArrayB = params.param_b.split("<");
+		b_range[0] = Parser.evaluate(splitArrayB[0]);
+		b_range[1] = Parser.evaluate(splitArrayB[2]);
+
+		this.leftView.area({
+			rangeX: a_range,
+			rangeY: b_range,
+			width: 30,
+			height: 30,
+			expr: function(emit, a,b,i,j){
+				var x = Parser.evaluate(params.param_eq_x,{a:a,b:b});
+				var y = Parser.evaluate(params.param_eq_y,{a:a,b:b});
+
+				emit(x,y);
+			},
+			channels:2,
+			id:'param_data',
+			live:false
+		})
+
+		this.leftView.surface({
+			color:this.gui.colors.data,
+			id:'param_geometry'
+		})
+
+		// this.leftView.line({
+		// 	color:this.gui.colors.data,
+		// 	width:5,
+		// 	id:'param_geometry',
+		// 	points:'#param_data'
+		// })
+
+	}
+
+	Mode2D.prototype.cleanupParametric = function(){
+		this.leftView.remove("#param_data");
+		this.leftView.remove("#param_geometry");
+	}
 
 	//  >>>>>>>>>>> Convex Hull mode functions
 	Mode2D.prototype.initConvexHull = function(){

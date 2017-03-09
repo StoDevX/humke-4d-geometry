@@ -42,8 +42,8 @@ var GUI = (function (scope) {
 		this.defaults['2D'] = {
 			'equation':'x^2+y^2 = 10', // Circle
 			'points':'(5,5),(5,-5),(-5,-5),(-5,5)', // Square
-			'param_eq_x':'cos(a) * b', // butterfly wings
-			'param_eq_y':'cos(a * 2) * b',
+			'param_eq_x':'sin(a) * b * 5', // butterfly wings
+			'param_eq_y':'sin(a * 2) * b * 5',
 			'param_a':'0 < a < 2 * PI',
 			'param_b':'0 < b < 1'
 		}
@@ -161,9 +161,12 @@ var GUI = (function (scope) {
 	}
 	GUI.prototype.initParamSource = function(){
 		var arr = [];
+		var names = ["param_eq_x","param_eq_y","param_a","param_b","param_eq_z","param_c","param_eq_w","param_d"]
+		var callbacks = this.callbacks;
+		var mode_obj = this.mode_obj;
 
 		arr.push(this.shapeProperties.add(this.params, 'param_eq_x').name('x = '));
-		arr.push(this.shapeProperties.add(this.params, 'param_eq_x').name('y = '));
+		arr.push(this.shapeProperties.add(this.params, 'param_eq_y').name('y = '));
 		arr.push(this.shapeProperties.add(this.params, 'param_a').name('a = '));
 		arr.push(this.shapeProperties.add(this.params, 'param_b').name('b = '));
 		if(this.mode == "3D" || this.mode  == "4D"){
@@ -173,6 +176,14 @@ var GUI = (function (scope) {
 		if(this.mode == "4D"){
 			arr.push(this.shapeProperties.add(this.params, 'param_eq_w').name('w = '));
 			arr.push(this.shapeProperties.add(this.params, 'param_d').name('d = '));
+		}
+
+		for(var i=0;i<arr.length;i++){
+			// Use a closure to capture the value of the current names[i]
+			var changeFunc = (function(name){ return function(val){ if(callbacks[name]) callbacks[name](mode_obj,val); } })(names[i]);
+			arr[i].onChange(function(val){
+				changeFunc(val)
+			})
 		}
 
 		this.paramSourceItems = arr;
