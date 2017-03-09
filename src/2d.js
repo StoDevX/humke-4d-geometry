@@ -4,7 +4,6 @@
 /* 
 todo:
 
-- Make render shape work
 - Make intersection work (with samples)
 - Apply same to 3D 
 - Create barebones 4D
@@ -16,6 +15,8 @@ var Mode2D = (function (scope) {
 	function Mode2D(document){
 		this.document = document; 
 		this.thicknessValuesTable = {'thin':0.2,'medium':0.5,'thick':1}
+
+		this.geometry_id = "" //ID of active geometry in the left view
 
 		// Cartesian properties
 		this.edgeArray = [];
@@ -165,6 +166,7 @@ var Mode2D = (function (scope) {
 		},
 		'source': function(self,val){
 			self.setMode();
+			self.gui.params.render_shape = true; //Reset this back to true
 		}, 
 		'resolution': function(self,val){
 			self.parseCartesian();
@@ -181,6 +183,12 @@ var Mode2D = (function (scope) {
 		'param_eq_y': updateParametricCallback, 
 		'param_a': updateParametricCallback, 
 		'param_b': updateParametricCallback, 
+		'render_shape': function(self,val){
+			// Toggle opacity 
+			if(self.geometry_id == "") return;
+			var flipped_opacity = self.leftView.select('#'+self.geometry_id).get("opacity") == 1 ? 0 : 1 ;
+			self.leftView.select('#'+self.geometry_id).set("opacity",flipped_opacity)
+		}
 	};
 
 	Mode2D.prototype.setMode = function(){
@@ -220,6 +228,7 @@ var Mode2D = (function (scope) {
 			opacity:1,
 			id: "cartesian_geometry"
 		});
+		this.geometry_id = "cartesian_geometry"
 
 		this.parseCartesian();
 		this.polygonizeCartesian();
@@ -250,6 +259,7 @@ var Mode2D = (function (scope) {
 	Mode2D.prototype.cleanupCartesian = function(){
 		this.leftView.remove("#cartesian_edge_data");
 		this.leftView.remove("#cartesian_geometry");
+		this.geometry_id = ""
 	}
 	
 
@@ -284,8 +294,11 @@ var Mode2D = (function (scope) {
 
 		this.leftView.surface({
 			color:this.gui.colors.data,
-			id:'param_geometry'
+			id:'param_geometry',
+			opacity:1
 		})
+
+		this.geometry_id = "param_geometry"
 
 		// this.leftView.line({
 		// 	color:this.gui.colors.data,
@@ -299,6 +312,7 @@ var Mode2D = (function (scope) {
 	Mode2D.prototype.cleanupParametric = function(){
 		this.leftView.remove("#param_data");
 		this.leftView.remove("#param_geometry");
+		this.geometry_id = ""
 	}
 
 	//  >>>>>>>>>>> Convex Hull mode functions
@@ -321,7 +335,10 @@ var Mode2D = (function (scope) {
 			color:this.gui.colors.data,
 			id:'hull_geometry',
 			points:'#hull_data',
+			opacity:1,
 		})
+
+		this.geometry_id = "hull_geometry"
 	}
 	Mode2D.prototype.parseConvexPoints = function(){
 		var params = this.gui.params
@@ -357,6 +374,7 @@ var Mode2D = (function (scope) {
 	Mode2D.prototype.cleanupConvexHull = function(){
 		this.leftView.remove("#hull_data")
 		this.leftView.remove("#hull_geometry")
+		this.geometry_id = ""
 	}
 
 	// Creates a new mathbox view

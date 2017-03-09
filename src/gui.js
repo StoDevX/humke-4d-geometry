@@ -104,7 +104,9 @@ var GUI = (function (scope) {
 	    	if(callbacks['source']) callbacks['source'](mode_obj,val);
 	    });
 
-	    shapeProperties.add(params, 'render_shape').name("Render Shape");
+	    shapeProperties.add(params, 'render_shape').name("Render Shape").listen().onChange(function(val){
+	    	if(callbacks['render_shape']) callbacks['render_shape'](mode_obj,val);
+	    });
 
 	    // Init cartesian by default 
 	    this.initCartesianSource();
