@@ -43,6 +43,8 @@ var GUI = (function (scope) {
 		// Alternative parametric: (a: [0,2pi],b:[0.5,1])
 		//b * (1-cos(a))*sin(a) * 5
 		//b * (1-cos(a))*cos(a) * 5
+		// Alternative square:
+		// (0,5),(5,0),(0,-5),(-5,0)
 		this.defaults['2D'] = {
 			'equation':'x^2+y^2 = 10', // Circle
 			'points':'(5,5),(5,-5),(-5,-5),(-5,5)', // Square
@@ -129,10 +131,12 @@ var GUI = (function (scope) {
 	    	if(callbacks['axis']) callbacks['axis'](mode_obj,val);
 	    });
 
+	    /*
 	    this.viewingControls.add(params, 'samples', 200, 10000).name('Samples');
 	    this.viewingControls.add(params, 'thickness', ['thin','medium','thick']).name('Thickness').onChange(function(val){
 	    	if(callbacks['thickness']) callbacks['thickness'](mode_obj,val);
 	    });
+	    */
 
 	    // Turn all sliders orange after the first one (the first one is the resolution one)
 	    var sliders = document.querySelectorAll(".slider-fg")
