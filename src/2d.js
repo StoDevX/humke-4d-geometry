@@ -120,7 +120,7 @@ var Mode2D = (function (scope) {
 		var ratio = w/h;
 
 		function checkPixel(x,y){
-			var index = Math.round((x + w * (h - y)) * 4);
+			var index = Math.round((x + w * (y)) * 4);
 			var r = data[index];
 			var g = data[index+1];
 			var b = data[index+2];
