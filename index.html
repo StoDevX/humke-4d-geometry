@@ -11,7 +11,7 @@
 	<!-- Quickhull implementation -->
 	<script src="src/lib/quickhull.js"></script>
 	<!-- Mathbox -->
-	<script src="src/lib/mathbox-src/build/mathbox-bundle.js"></script>
+	<script src="src/lib/mathbox-src/build/mathbox-bundle.min.js"></script>
   	<link rel="stylesheet" href="src/lib/mathbox-src/build/mathbox.css">
   	<!-- Nick Nooney's Polygonize, used in the modes to convert an equation to a set of points/faces -->
 	<script src="src/polygonize.js"></script>
@@ -19,6 +19,8 @@
 	<script src="src/gui.js"></script>
 	<!-- All of our 2d/3d/4d modes -->
 	<script src="src/2d.js"></script>
+	<script src="src/3d.js"></script>
+	<script src="src/4d.js"></script>
 
 </head>
 <body>
@@ -70,7 +72,7 @@
 	<div id="display">
 		
 	</div>
-	<canvas id="debug_canvas" style="border:1px solid black; width:100px; height:100px;"></canvas>
+	<!-- <canvas id="debug_canvas" style="border:1px solid black; width:100px; height:100px;"></canvas> -->
 
 </div>
 
@@ -85,6 +87,8 @@
 	var mode_objects = {};
 	var current_mode = "";
 	mode_objects['2D'] = new Mode2D(document);
+	mode_objects['3D'] = new Mode3D(document);
+	mode_objects['4D'] = new Mode4D(document);
 	var gui = new GUI();
 
 	for(var i=0;i<buttons.length;i++){

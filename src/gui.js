@@ -65,6 +65,18 @@ var GUI = (function (scope) {
 			'param_c':'0 < c < 1'
 		}
 
+		// 3D defaults 
+		this.defaults['4D'] = {
+			'equation':'x^2+y^2+z^2 = 100', 
+			'points':'(5,0,5),(5,0,-5),(-5,0,-5),(-5,0,5),(5,5,5),(5,5,-5),(-5,5,-5),(-5,5,5)', 
+			'param_eq_x':'b * cos(a) - c * sin(a)',
+			'param_eq_y':'b * sin(a) + c * cos(a)',
+			'param_eq_z':'a/3',
+			'param_a':'-4 * PI < a < 4 * PI',
+			'param_b':'0 < b < 1',
+			'param_c':'0 < c < 1'
+		}
+
 		this.mode_obj = null;
 		this.callbacks = null;
 	}
