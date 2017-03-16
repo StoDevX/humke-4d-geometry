@@ -143,6 +143,10 @@ var Mode3D = (function (scope) {
 			self.cleanupCartesian();
 			self.initCartesian();
 		},
+		'points': function(self,val){
+			self.cleanupConvexHull()
+			self.initConvexHull()
+		},
 	};
 
 	Mode3D.prototype.setMode = function(){
@@ -219,10 +223,60 @@ var Mode3D = (function (scope) {
 
 
 	Mode3D.prototype.initConvexHull = function(){
+		this.parseConvexPoints()
+		var pointsArray = this.pointsArray;
+
+		// Generate convex hull
+		var instance = new QuickHull(pointsArray);
+		instance.build()
+		var vertices = instance.collectFaces()
+
+		this.leftView.array({
+		    expr: function (emit, i, t) {
+		      var v1 = pointsArray[vertices[i][0]];
+		      var v2 = pointsArray[vertices[i][1]];
+		      var v3 = pointsArray[vertices[i][2]];
+		      emit(v1[0],v1[1],v1[2],0)
+		      emit(v2[0],v2[1],v2[2],0)
+		      emit(v3[0],v3[1],v3[2],0)
+		      },
+	        width: vertices.length,
+	        items: 3,
+	        channels: 4,
+	        id:'hull_data'
+		  })
+	  this.leftView.face({
+	    color:this.gui.colors.data,
+	    shaded: true,
+	    id:'hull_geometry',
+	    points:'#hull_data',
+	  })  
+
+	}
+	Mode3D.prototype.parseConvexPoints = function(){
+		var params = this.gui.params
+		// Get string of points and parse it 
+		// Remove whitespace 
+		var points_str = params.points.replace(/\s+/g, '');
+		// Split based on the pattern (digits,digits)
+		var points_split = points_str.match(/\(-*[.\d]+,-*[.\d]+,-*[.\d]+\)/g);
+		this.pointsArray = []
+
+		for(var i=0;i<points_split.length;i++){
+			var p = points_split[i];
+			// Remove parenthesis 
+			p = p.replace(/[\(\)]/g,'');
+			// Split by comma
+			var comma_split = p.split(",") 
+			var point = []
+			for(var j=0;j<comma_split.length;j++) point.push(Number(comma_split[j]))
+			this.pointsArray.push(point)
+		}
 		
 	}
 	Mode3D.prototype.cleanupConvexHull = function(){
-		
+		this.leftView.remove("#hull_data")
+		this.leftView.remove("#hull_geometry")
 	}
 
 	//Destroys everything created
