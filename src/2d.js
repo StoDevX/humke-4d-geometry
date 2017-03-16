@@ -19,9 +19,8 @@ var Mode2D = (function (scope) {
 		this.geometry_id = "" //ID of active geometry in the left view
 
 		// Cartesian properties
-		this.edgeArray = [];
+		this.edgeArray = null;
 		this.current_mode = null;
-		this.cartesianFill = false;
 		// Convex Hull points
 		this.pointsArray = [];
 		
@@ -171,12 +170,16 @@ var Mode2D = (function (scope) {
 			self.gui.params.render_shape = true; //Reset this back to true
 		}, 
 		'resolution': function(self,val){
-			self.parseCartesian();
-			self.polygonizeCartesian();
+			self.cleanupCartesian();
+			self.initCartesian();
+		},
+		'fill': function(self,val){
+			self.cleanupCartesian();
+			self.initCartesian();
 		},
 		'equation': function(self,val){
-			self.parseCartesian();
-			self.polygonizeCartesian();
+			self.cleanupCartesian();
+			self.initCartesian();
 		},
 		'points': function(self,val){
 			self.updateConvexHull()
@@ -212,7 +215,10 @@ var Mode2D = (function (scope) {
 
 	// >>>>>>>>>> Cartesian mode functions 
 	Mode2D.prototype.initCartesian = function(){
-		if(this.cartesianFill==false){
+		this.polygonizeCartesian();
+		if(this.edgeArray == null) return; //Failed to parse 
+		var params = this.gui.params
+		if(params.fill==false){
 			// Create the edge data 
 			this.leftView.array({
 				width: this.edgeArray.length/2,
@@ -244,6 +250,7 @@ var Mode2D = (function (scope) {
 				live:false,
 				id:'cartesian_edge_data'
 			})
+
 			this.leftView.face({
 				color:this.gui.colors.data,
 				points:'#cartesian_edge_data',
@@ -254,13 +261,11 @@ var Mode2D = (function (scope) {
 
 
 		this.geometry_id = "cartesian_geometry"
-
-		this.parseCartesian();
-		this.polygonizeCartesian();
-		
-
 	}
-	Mode2D.prototype.parseCartesian = function(){
+	
+	Mode2D.prototype.polygonizeCartesian = function(){
+		var params = this.gui.params
+
 		var equation_string = this.gui.params.equation;
 		let sides = equation_string.split('=');
 		let LHS = sides[0];
@@ -268,30 +273,15 @@ var Mode2D = (function (scope) {
 		let LHSfunc = Parser.parse(LHS).toJSFunction(['x','y']);
 		let RHSfunc = Parser.parse(RHS).toJSFunction(['x','y']);
 		this.cartesian_equation =  function(x,y) { return LHSfunc(x,y) - RHSfunc(x,y); };
-	}
-	Mode2D.prototype.polygonizeCartesian = function(){
-		var params = this.gui.params
-		if(this.cartesian_equation == null) return; //Cannot draw without a parsed equation
+
 		//Parses the equation, and polygonizes it 
 		try {
 			this.edgeArray = [];
 			this.edgeArray = Polygonize.generate(this.cartesian_equation, [[-10, 10], [-10, 10]], params.resolution);
-
-			if(this.cartesianFill == false){
-				// Just the outline
-				this.leftView.select("#cartesian_edge_data").set("width", this.edgeArray.length/2);
-				this.leftView.select("#cartesian_edge_data").set("data", this.edgeArray);
-			} else {
-				// Actual fill
-				var edgeArray = this.edgeArray;
-				this.leftView.select("#cartesian_edge_data").set("items", this.edgeArray.length);
-				this.leftView.select("#cartesian_edge_data").set("expr", function(emit,i){
-					for(var j=0;j<edgeArray.length;j++) emit(edgeArray[j][0],edgeArray[j][1])
-				});
-			}
 			
 		} catch(err){
-			console.log("Error rendering equation",err)
+			console.log("Error rendering equation",err);
+			this.edgeArray = null;
 		}
 	}
 	Mode2D.prototype.cleanupCartesian = function(){

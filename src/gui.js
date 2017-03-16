@@ -26,6 +26,7 @@ var GUI = (function (scope) {
 			'param_eq_w':'',
 			'render_shape':true,
 			'resolution':60, // For the marching squares/cubes 
+			'fill':true,
 
 			// Viewing Controls
 			'axis_value':0,
@@ -145,6 +146,11 @@ var GUI = (function (scope) {
 		var arr = [];
 		var callbacks = this.callbacks;
 		var mode_obj = this.mode_obj;
+
+		var fill = this.shapeProperties.add(this.params, 'fill').name('Fill').onChange(function(val){
+			if(callbacks['fill']) callbacks['fill'](mode_obj,val);
+		});
+		arr.push(fill)
 
 		var eq = this.shapeProperties.add(this.params, 'equation').name('Equation').onChange(function(val){
 			if(callbacks['equation']) callbacks['equation'](mode_obj,val);
