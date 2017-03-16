@@ -130,6 +130,12 @@ var Mode3D = (function (scope) {
 		return mathbox;
 	}
 
+	// define a function to be called when each param is updated
+	function updateParametricCallback(self,val){
+		self.cleanupParametric();
+		self.initParametric()
+	}
+
 	Mode3D.prototype.callbacks = {
 		'source': function(self,val){
 			self.setMode();
@@ -147,6 +153,12 @@ var Mode3D = (function (scope) {
 			self.cleanupConvexHull()
 			self.initConvexHull()
 		},
+		'param_eq_x': updateParametricCallback, 
+		'param_eq_y': updateParametricCallback, 
+		'param_eq_z': updateParametricCallback, 
+		'param_a': updateParametricCallback, 
+		'param_b': updateParametricCallback, 
+		'param_c': updateParametricCallback, 
 	};
 
 	Mode3D.prototype.setMode = function(){
@@ -215,10 +227,50 @@ var Mode3D = (function (scope) {
 	}
 
 	Mode3D.prototype.initParametric = function(){
-		
+		var params = this.gui.params
+		var a_range = [0,1];
+		var b_range = [0,1];
+		var c_range = [0,1];
+		// get range from string 
+		var splitArrayA = params.param_a.split("<"); // should return 3 pieces. We want the first and last 
+		a_range[0] = Parser.evaluate(splitArrayA[0]);
+		a_range[1] = Parser.evaluate(splitArrayA[2]);
+		var splitArrayB = params.param_b.split("<");
+		b_range[0] = Parser.evaluate(splitArrayB[0]);
+		b_range[1] = Parser.evaluate(splitArrayB[2]);
+		var splitArrayC = params.param_c.split("<");
+		c_range[0] = Parser.evaluate(splitArrayC[0]);
+		c_range[1] = Parser.evaluate(splitArrayC[2]);
+
+		this.leftView.volume({
+			rangeX: a_range,
+			rangeY: b_range,
+			rangeZ: c_range,
+			width: 20,
+			height: 20,
+			depth: 20,
+			expr: function(emit, a,b,c,i,j,k){
+				var x = Parser.evaluate(params.param_eq_x,{a:a,b:b,c:c});
+				var y = Parser.evaluate(params.param_eq_y,{a:a,b:b,c:c});
+				var z = Parser.evaluate(params.param_eq_z,{a:a,b:b,c:c});
+
+				emit(x,y,z);
+			},
+			channels:3,
+			id:'param_data',
+			live:false
+		})
+
+		this.leftView.surface({
+			color:this.gui.colors.data,
+			id:'param_geometry',
+			shaded:true,
+			opacity:1
+		})
 	}
 	Mode3D.prototype.cleanupParametric = function(){
-		
+		this.leftView.remove("#param_data");
+		this.leftView.remove("#param_geometry");
 	}
 
 

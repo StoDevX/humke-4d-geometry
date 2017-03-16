@@ -198,14 +198,18 @@ var GUI = (function (scope) {
 
 		arr.push(this.shapeProperties.add(this.params, 'param_eq_x').name('x = '));
 		arr.push(this.shapeProperties.add(this.params, 'param_eq_y').name('y = '));
-		arr.push(this.shapeProperties.add(this.params, 'param_a').name('a = '));
-		arr.push(this.shapeProperties.add(this.params, 'param_b').name('b = '));
 		if(this.mode == "3D" || this.mode  == "4D"){
 			arr.push(this.shapeProperties.add(this.params, 'param_eq_z').name('z = '));
-			arr.push(this.shapeProperties.add(this.params, 'param_c').name('c = '));
 		}
 		if(this.mode == "4D"){
 			arr.push(this.shapeProperties.add(this.params, 'param_eq_w').name('w = '));
+		}
+		arr.push(this.shapeProperties.add(this.params, 'param_a').name('a = '));
+		arr.push(this.shapeProperties.add(this.params, 'param_b').name('b = '));
+		if(this.mode == "3D" || this.mode  == "4D"){
+			arr.push(this.shapeProperties.add(this.params, 'param_c').name('c = '));
+		}
+		if(this.mode == "4D"){
 			arr.push(this.shapeProperties.add(this.params, 'param_d').name('d = '));
 		}
 
