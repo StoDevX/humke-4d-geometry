@@ -185,6 +185,62 @@ var Mode2D = (function (scope) {
 		'points': function(self,val){
 			self.updateConvexHull()
 		},
+		'axis_value': function(self,val){
+			if(self.readback == null) return;
+			var data = self.readback.get('data');
+			var w = self.readback.get('width');
+			var h = self.readback.get('height');
+
+			// Check if there is at least one hit on this the horizontal axis 
+			var hit = false; 
+			var y = Math.round( ((val + 10) / 20) * h );
+			for(var x=0;x<w;x++){
+				var index = Math.round((x + w * (h - y)) * 4);
+				var r = data[index];
+				var g = data[index+1];
+				var b = data[index+2];
+				var avg = (r+g+b)/3;
+				//console.log("Alpha: " + String(alpha) + " at pixel (" + String(x) + "," + String(y) + ")")
+				if(avg == 0){ // 0 is black, so there is something there
+					hit = true;
+					console.log("HIT! at (" + String(x) + "," + String(y) + ")")
+					break;
+				}
+			}
+
+			// Create canvas and draw the thing 
+			var canvas  = document.querySelector("#debug_canvas")
+			var ctx = canvas.getContext('2d');
+			canvas.width = w
+			canvas.height = h
+			canvas.style.width = w + "px"; 
+			canvas.style.height = h + "px";
+			var id = ctx.getImageData(0, 0, 1, 1);
+
+			for(var x=0;x<w;x+=5){
+				for(y=0;y<h;y+=5){
+					var index = Math.round((x + w * (h - y)) * 4);
+					var r = data[index];
+					var g = data[index+1];
+					var b = data[index+2];
+					var a = data[index+3];
+					id.data[0] = r;
+					id.data[1] = g;
+					id.data[2] = b;
+					id.data[3] = a;
+					ctx.putImageData(id,x,y);
+				}
+			}			
+
+			for(var x=0;x<w;x++){
+				id.data[0] = 0;
+				id.data[1] = 0;
+				id.data[2] = 0;
+				id.data[3] = 255;
+				ctx.putImageData(id,x,0);
+			}
+
+		},
 		'param_eq_x': updateParametricCallback, 
 		'param_eq_y': updateParametricCallback, 
 		'param_a': updateParametricCallback, 
@@ -368,6 +424,38 @@ var Mode2D = (function (scope) {
 			opacity:1
 		})
 
+		// Render to texture 
+		var scale = 1 / 4;
+		this.leftView
+		.rtt({
+			size:   'relative',
+			width:  scale,
+			height: scale,
+		})
+		.camera({
+		  position: [0, 0, 17],
+		})
+		.surface({
+			points:'#param_data',
+			color: '#000000',
+        	blending: 'no',
+		})
+		.end();
+		// Readback RTT pixels
+	    var readback =
+	      this.leftView
+	      .readback({
+	        id: 'indexbuffer',
+	        type: 'unsignedByte',
+	      });
+	      
+	    //Render RTT for debugging
+	    // readback.compose({
+	    //   zTest: false,
+	    // });
+
+	    this.readback = readback;
+
 		this.geometry_id = "param_geometry"
 
 		// this.leftView.line({
@@ -382,6 +470,7 @@ var Mode2D = (function (scope) {
 	Mode2D.prototype.cleanupParametric = function(){
 		this.leftView.remove("#param_data");
 		this.leftView.remove("#param_geometry");
+		this.leftView.remove("#indexbuffer");
 		this.geometry_id = ""
 	}
 

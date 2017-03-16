@@ -117,6 +117,9 @@ var GUI = (function (scope) {
 
 	    // Now the viewing controls 
 	    var axis_value_control = this.viewingControls.add(params, 'axis_value').min(-10).max(10).step(0.01).name('Y = ').listen();
+	    axis_value_control.onChange(function(val){
+	    	if(callbacks['axis_value']) callbacks['axis_value'](mode_obj,val);
+	    })
 	    var axes_list = ['X','Y'];
 	    if(mode == "3D" || mode == "4D") axes_list.push("Z");
 	    if(mode == "4D") axes_list.push("W");
