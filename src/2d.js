@@ -2,12 +2,7 @@
 // depends on Mathbox existing in the scope as well as the gui class
 
 /* 
-todo:
 
-- Make intersection work (with samples)
-- Apply same to 3D 
-- Create barebones 4D
-- Apply hash when clicking on any of the modes 
 */
 
 var Mode2D = (function (scope) {
@@ -145,7 +140,9 @@ var Mode2D = (function (scope) {
 			for(var y=0;y<h;y+=5){
 				var p = checkPixel(x,y);
 				if(p){
-					if(points.length == 0) points.push(p); else points[1] = p;
+					p[0] = p[1];
+					p[1] = 1;
+					points.push(p);
 				}
 			}
 		}
@@ -154,7 +151,8 @@ var Mode2D = (function (scope) {
 			for(var x=0;x<w;x+=5) {
 				var p = checkPixel(x,y);
 				if(p){
-					if(points.length == 0) points.push(p); else points[1] = p;
+					p[1] = 1;
+					points.push(p);
 				}
 			}
 		}
@@ -178,16 +176,38 @@ var Mode2D = (function (scope) {
 		// 	}
 		// }
 
+		// Split into lines 
+		var dist_to_split = 1;
+		var new_points = []
+		new_points.push(points[0]);
+		var last_point = points[0];
+		for(var i=1;i<points.length;i++){
+			var curr_p = points[i];
+			if(Math.abs(curr_p[0] - last_point[0]) > dist_to_split){
+				new_points.push(last_point);
+				last_point = curr_p;
+				new_points.push(curr_p);
+			} else {
+				if(i == points.length-1) new_points.push(curr_p)
+				last_point = curr_p;
+			}
+		}
+		points = new_points;
+
 		this.rightView.array({
 			channels:2,
+			items:2,
+			width:points.length/2,
 			live:false,
-			data:[points],
+			data:points,
 			id:'intersection_data'
 		})
-		.line({
+		.vector({
 			color:this.gui.colors.data,
+			points:"#intersection_data",
 			id:'intersection_plot',
-			width:10
+			width:10,
+			start:false
 		})
 	}
 
