@@ -26,7 +26,7 @@ var GUI = (function (scope) {
 			'param_eq_w':'',
 			'render_shape':true,
 			'resolution':60, // For the marching squares/cubes 
-			'fill':true,
+			'fill':false,
 
 			// Viewing Controls
 			'axis_value':0,

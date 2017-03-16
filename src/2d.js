@@ -19,7 +19,8 @@ var Mode2D = (function (scope) {
 		this.geometry_id = "" //ID of active geometry in the left view
 
 		// Cartesian properties
-		this.edgeArray = null;
+		this.objectArray = null;
+		this.numCartesianObjects = 0; //Allow drawing multiple equations at the same time 
 		this.current_mode = null;
 		// Convex Hull points
 		this.pointsArray = [];
@@ -191,8 +192,18 @@ var Mode2D = (function (scope) {
 		'render_shape': function(self,val){
 			// Toggle opacity 
 			if(self.geometry_id == "") return;
-			var flipped_opacity = self.leftView.select('#'+self.geometry_id).get("opacity") == 1 ? 0 : 1 ;
-			self.leftView.select('#'+self.geometry_id).set("opacity",flipped_opacity)
+			// If it's cartesian, there might be more objects 
+			if(self.current_mode == "cartesian"){
+				for(var i=0;i<self.numCartesianObjects;i++){
+					var flipped_opacity = self.leftView.select('#'+self.geometry_id + String(i)).get("opacity") == 1 ? 0 : 1 ;
+					self.leftView.select('#'+self.geometry_id+ String(i)).set("opacity",flipped_opacity)
+				}
+				
+			} else {
+				var flipped_opacity = self.leftView.select('#'+self.geometry_id).get("opacity") == 1 ? 0 : 1 ;
+				self.leftView.select('#'+self.geometry_id).set("opacity",flipped_opacity)
+			}
+			
 		}
 	};
 
@@ -216,26 +227,32 @@ var Mode2D = (function (scope) {
 	// >>>>>>>>>> Cartesian mode functions 
 	Mode2D.prototype.initCartesian = function(){
 		this.polygonizeCartesian();
-		if(this.edgeArray == null) return; //Failed to parse 
+		if(this.objectArray == null) return; //Failed to parse 
 		var params = this.gui.params
 		if(params.fill==false){
 			// Create the edge data 
-			this.leftView.array({
-				width: this.edgeArray.length/2,
-				items: 2,
-				channels: 2,
-				data: this.edgeArray,
-				id: "cartesian_edge_data"
-			});
-			// Draw the geometry
-			this.leftView.vector({
-				points: "#cartesian_edge_data",
-				color: this.gui.colors.data,
-				width: 5,
-				start: false,
-				opacity:1,
-				id: "cartesian_geometry"
-			});
+			for(var i=0;i<this.objectArray.length;i++){
+				var edgeArray = this.objectArray[i];
+				this.leftView.array({
+					width: edgeArray.length/2,
+					items: 2,
+					channels: 2,
+					data: edgeArray,
+					live:false,
+					id: "cartesian_edge_data" + String(i)
+				});
+				// Draw the geometry
+				this.leftView.vector({
+					points: "#cartesian_edge_data" + String(i),
+					color: this.gui.colors.data,
+					width: 5,
+					start: false,
+					opacity:1,
+					id: "cartesian_geometry" + String(i)
+				});
+			}
+			this.numCartesianObjects = this.objectArray.length;
+			
 		} else {
 			// Filled in 
 			var edgeArray = this.edgeArray
@@ -267,26 +284,39 @@ var Mode2D = (function (scope) {
 		var params = this.gui.params
 
 		var equation_string = this.gui.params.equation;
-		let sides = equation_string.split('=');
-		let LHS = sides[0];
-		let RHS = sides[1];
-		let LHSfunc = Parser.parse(LHS).toJSFunction(['x','y']);
-		let RHSfunc = Parser.parse(RHS).toJSFunction(['x','y']);
-		this.cartesian_equation =  function(x,y) { return LHSfunc(x,y) - RHSfunc(x,y); };
+		var equations = equation_string.split(",");
+		var equationFuncArray = [];
+		for(var i=0;i<equations.length;i++){
+			let sides = equations[i].split('=');
+			let LHS = sides[0];
+			let RHS = sides[1];
+			let LHSfunc = Parser.parse(LHS).toJSFunction(['x','y']);
+			let RHSfunc = Parser.parse(RHS).toJSFunction(['x','y']);
+			equationFuncArray.push(function(x,y) { return LHSfunc(x,y) - RHSfunc(x,y); });
+		}
+		
 
 		//Parses the equation, and polygonizes it 
 		try {
-			this.edgeArray = [];
-			this.edgeArray = Polygonize.generate(this.cartesian_equation, [[-10, 10], [-10, 10]], params.resolution);
+			this.objectArray = [];
+			for(var i=0;i<equationFuncArray.length;i++){
+				var edgeArray = Polygonize.generate(equationFuncArray[i], [[-10, 10], [-10, 10]], params.resolution);
+				this.objectArray.push(edgeArray);
+			}
+		
 			
+
 		} catch(err){
 			console.log("Error rendering equation",err);
-			this.edgeArray = null;
+			this.objectArray = null;
 		}
 	}
 	Mode2D.prototype.cleanupCartesian = function(){
-		this.leftView.remove("#cartesian_edge_data");
-		this.leftView.remove("#cartesian_geometry");
+		for(var i=0;i<this.numCartesianObjects;i++){
+			this.leftView.remove("#cartesian_edge_data" + String(i));
+			this.leftView.remove("#cartesian_geometry" + String(i));
+		}
+		
 		this.geometry_id = ""
 	}
 	
