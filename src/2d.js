@@ -193,7 +193,7 @@ var Mode2D = (function (scope) {
 			// Toggle opacity 
 			if(self.geometry_id == "") return;
 			// If it's cartesian, there might be more objects 
-			if(self.current_mode == "cartesian"){
+			if(self.numCartesianObjects != 0){
 				for(var i=0;i<self.numCartesianObjects;i++){
 					var flipped_opacity = self.leftView.select('#'+self.geometry_id + String(i)).get("opacity") == 1 ? 0 : 1 ;
 					self.leftView.select('#'+self.geometry_id+ String(i)).set("opacity",flipped_opacity)
@@ -254,8 +254,11 @@ var Mode2D = (function (scope) {
 			this.numCartesianObjects = this.objectArray.length;
 			
 		} else {
-			// Filled in 
-			var edgeArray = this.edgeArray
+			// To draw filled in, put all the edges into one big edge array!
+			var edgeArray = [];
+			for(var i=0;i<this.objectArray.length;i++){
+				for(var j=0;j<this.objectArray[i].length;j++) edgeArray.push(this.objectArray[i][j])
+			}
 
 			this.leftView.array({
 				items:edgeArray.length,
@@ -274,6 +277,8 @@ var Mode2D = (function (scope) {
 				opacity:1,
 				id:'cartesian_geometry'
 			})
+
+			this.numCartesianObjects = 0;
 		}
 
 
@@ -312,12 +317,19 @@ var Mode2D = (function (scope) {
 		}
 	}
 	Mode2D.prototype.cleanupCartesian = function(){
-		for(var i=0;i<this.numCartesianObjects;i++){
-			this.leftView.remove("#cartesian_edge_data" + String(i));
-			this.leftView.remove("#cartesian_geometry" + String(i));
+		if(this.numCartesianObjects != 0){
+			for(var i=0;i<this.numCartesianObjects;i++){
+				this.leftView.remove("#cartesian_edge_data" + String(i));
+				this.leftView.remove("#cartesian_geometry" + String(i));
+			}
+		} else {
+			this.leftView.remove("#cartesian_edge_data" );
+			this.leftView.remove("#cartesian_geometry" );
 		}
 		
+		
 		this.geometry_id = ""
+		this.numCartesianObjects = 0;
 	}
 	
 
