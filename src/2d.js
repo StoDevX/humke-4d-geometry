@@ -625,7 +625,7 @@ var Mode2D = (function (scope) {
 		// Remove whitespace 
 		var points_str = params.points.replace(/\s+/g, '');
 		// Split based on the pattern (digits,digits)
-		var points_split = points_str.match(/\(-*\d+,-*\d+\)/g);
+		var points_split = points_str.match(/\(-*[.\d]+,-*[.\d]+\)/g);
 		this.pointsArray = []
 
 		for(var i=0;i<points_split.length;i++){
