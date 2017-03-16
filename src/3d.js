@@ -110,6 +110,8 @@ var Mode3D = (function (scope) {
 
 		// Draw our main shape
 		this.setMode()
+
+		this.CreateViewAxis();
 	}
 
 	Mode3D.prototype.createView = function(el,width){
@@ -175,6 +177,37 @@ var Mode3D = (function (scope) {
 		if(this.current_mode == "cartesian") this.initCartesian();
 		if(this.current_mode == "parametric") this.initParametric();
 		if(this.current_mode == "convex-hull") this.initConvexHull();
+	}
+
+	Mode3D.prototype.CreateViewAxis = function(){
+		var params = this.gui.params; 
+		this.leftView.array({
+				id: "viewing_plane_data",
+				channels: 3,
+				items: 4,
+				width: 1,
+				expr: function(emit,i,t){
+					var points = [
+						[10,10,params.axis_value],
+						[-10,10,params.axis_value],
+						[-10,-10,params.axis_value],
+						[10,-10,params.axis_value]
+					];
+
+					var order = {"Z":[0,1,2],"Y":[0,2,1],"X":[2,1,0]}
+					for(var j=0;j<points.length;j++){
+						emit(points[j][order[params.axis][0]],points[j][order[params.axis][1]],points[j][order[params.axis][2]])
+					}
+				}
+		})
+
+		this.leftView.face({
+			color: this.gui.colors.viewing,
+			shaded:true,
+			points: "#viewing_plane_data",
+			id:'viewing_plane_geometry'
+		})
+
 	}
 
 	Mode3D.prototype.initCartesian = function(){
