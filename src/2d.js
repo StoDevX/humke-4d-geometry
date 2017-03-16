@@ -49,6 +49,7 @@ var Mode2D = (function (scope) {
 	    gui.init("2D",this.callbacks,this);
 	    this.gui = gui;
 
+
 		// Set up left view
 		var camera = leftView.camera({
 		  proxy: true, // this alows interactive camera controls to override the position
@@ -97,7 +98,6 @@ var Mode2D = (function (scope) {
 		  range: [[-10, 10],[-10,10]],
 		  scale: [1, 1],
 		});
-
 		rightView.camera({
 		  proxy: true, // this alows interactive camera controls to override the position
 		  position: [0, 0, 3],
@@ -105,6 +105,90 @@ var Mode2D = (function (scope) {
 		this.rightView = rightView
 
 	    this.CreateViewAxis(1,[11,1],"x")
+	    this.CalculateIntersection();
+	}
+
+	Mode2D.prototype.CalculateIntersection = function(){
+		var params = this.gui.params;
+		if(this.readback == undefined) return;
+		// Remove if it already exists
+		if(this.rightView.select("#intersection_plot")){
+			this.rightView.remove("#intersection_plot");
+			this.rightView.remove("#intersection_data");
+		}
+
+		var points = [];
+		// Calculate intersection from pixel data
+		var data = this.readback.get('data');
+		var w = this.readback.get('width');
+		var h = this.readback.get('height');
+		var ratio = w/h;
+
+		function checkPixel(x,y){
+			var index = Math.round((x + w * (h - y)) * 4);
+			var r = data[index];
+			var g = data[index+1];
+			var b = data[index+2];
+			var avg = (r+g+b)/3;
+			if(avg == 0) {
+				var p = [x,y];
+				//Convert back to grid coordinates 
+				p[0] = (p[0] / w) * ratio * 20 - 10;
+				p[1] = (p[1] / h) * 20 - 10;
+				return p;
+			}
+			return false;
+		}
+
+		if(params.axis == "X"){
+			var x = Math.round( ((params.axis_value + 10) / 20) * (w-35) );
+			for(var y=0;y<h;y+=5){
+				var p = checkPixel(x,y);
+				if(p){
+					if(points.length == 0) points.push(p); else points[1] = p;
+				}
+			}
+		}
+		if(params.axis == "Y"){
+			var y = Math.round( ((params.axis_value + 10) / 20) * h );
+			for(var x=0;x<w;x+=5) {
+				var p = checkPixel(x,y);
+				if(p){
+					if(points.length == 0) points.push(p); else points[1] = p;
+				}
+			}
+		}
+
+		
+
+		// for(var y=0;y<h;y++){
+		// 	for(var x=0;x<w;x++){
+		// 		var index = Math.round((x + w * (h - y)) * 4);
+		// 		var r = data[index];
+		// 		var g = data[index+1];
+		// 		var b = data[index+2];
+		// 		var avg = (r+g+b)/3;
+		// 		if(avg == 0) {
+		// 			var p = [x,y];
+		// 			//Convert back to grid coordinates 
+		// 			p[0] = (p[0] / w) * ratio * 20 - 10;
+		// 			p[1] = (p[1] / h) * 20 - 10;
+		// 			points.push(p)
+		// 		}
+		// 	}
+		// }
+
+		this.rightView.array({
+			channels:2,
+			live:false,
+			data:[points],
+			id:'intersection_data'
+		})
+		.line({
+			color:this.gui.colors.data,
+			id:'intersection_plot',
+			width:10
+		})
 	}
 
 	Mode2D.prototype.CreateViewAxis = function(axisNum,pos,labelName){
@@ -186,59 +270,60 @@ var Mode2D = (function (scope) {
 			self.updateConvexHull()
 		},
 		'axis_value': function(self,val){
-			if(self.readback == null) return;
-			var data = self.readback.get('data');
-			var w = self.readback.get('width');
-			var h = self.readback.get('height');
+			self.CalculateIntersection();
+			// if(self.readback == null) return;
+			// var data = self.readback.get('data');
+			// var w = self.readback.get('width');
+			// var h = self.readback.get('height');
 
-			// Check if there is at least one hit on this the horizontal axis 
-			var hit = false; 
-			var y = Math.round( ((val + 10) / 20) * h );
-			for(var x=0;x<w;x++){
-				var index = Math.round((x + w * (h - y)) * 4);
-				var r = data[index];
-				var g = data[index+1];
-				var b = data[index+2];
-				var avg = (r+g+b)/3;
-				//console.log("Alpha: " + String(alpha) + " at pixel (" + String(x) + "," + String(y) + ")")
-				if(avg == 0){ // 0 is black, so there is something there
-					hit = true;
-					console.log("HIT! at (" + String(x) + "," + String(y) + ")")
-					break;
-				}
-			}
+			// // Check if there is at least one hit on this the horizontal axis 
+			// var hit = false; 
+			// var y = Math.round( ((val + 10) / 20) * h );
+			// for(var x=0;x<w;x++){
+			// 	var index = Math.round((x + w * (h - y)) * 4);
+			// 	var r = data[index];
+			// 	var g = data[index+1];
+			// 	var b = data[index+2];
+			// 	var avg = (r+g+b)/3;
+			// 	//console.log("Alpha: " + String(alpha) + " at pixel (" + String(x) + "," + String(y) + ")")
+			// 	if(avg == 0){ // 0 is black, so there is something there
+			// 		hit = true;
+			// 		console.log("HIT! at (" + String(x) + "," + String(y) + ")")
+			// 		break;
+			// 	}
+			// }
 
-			// Create canvas and draw the thing 
-			var canvas  = document.querySelector("#debug_canvas")
-			var ctx = canvas.getContext('2d');
-			canvas.width = w
-			canvas.height = h
-			canvas.style.width = w + "px"; 
-			canvas.style.height = h + "px";
-			var id = ctx.getImageData(0, 0, 1, 1);
+			// // Create canvas and draw the thing 
+			// var canvas  = document.querySelector("#debug_canvas")
+			// var ctx = canvas.getContext('2d');
+			// canvas.width = w
+			// canvas.height = h
+			// canvas.style.width = w + "px"; 
+			// canvas.style.height = h + "px";
+			// var id = ctx.getImageData(0, 0, 1, 1);
 
-			for(var x=0;x<w;x+=5){
-				for(y=0;y<h;y+=5){
-					var index = Math.round((x + w * (h - y)) * 4);
-					var r = data[index];
-					var g = data[index+1];
-					var b = data[index+2];
-					var a = data[index+3];
-					id.data[0] = r;
-					id.data[1] = g;
-					id.data[2] = b;
-					id.data[3] = a;
-					ctx.putImageData(id,x,y);
-				}
-			}			
+			// for(var x=0;x<w;x+=5){
+			// 	for(y=0;y<h;y+=5){
+			// 		var index = Math.round((x + w * (h - y)) * 4);
+			// 		var r = data[index];
+			// 		var g = data[index+1];
+			// 		var b = data[index+2];
+			// 		var a = data[index+3];
+			// 		id.data[0] = r;
+			// 		id.data[1] = g;
+			// 		id.data[2] = b;
+			// 		id.data[3] = a;
+			// 		ctx.putImageData(id,x,y);
+			// 	}
+			// }			
 
-			for(var x=0;x<w;x++){
-				id.data[0] = 0;
-				id.data[1] = 0;
-				id.data[2] = 0;
-				id.data[3] = 255;
-				ctx.putImageData(id,x,0);
-			}
+			// for(var y=0;y<h;y++){
+			// 	id.data[0] = 0;
+			// 	id.data[1] = 0;
+			// 	id.data[2] = 0;
+			// 	id.data[3] = 255;
+			// 	ctx.putImageData(id,w-35,y);
+			// }
 
 		},
 		'param_eq_x': updateParametricCallback, 
@@ -301,13 +386,28 @@ var Mode2D = (function (scope) {
 				this.leftView.vector({
 					points: "#cartesian_edge_data" + String(i),
 					color: this.gui.colors.data,
-					width: 5,
+					width: 10,
 					start: false,
 					opacity:1,
 					id: "cartesian_geometry" + String(i)
 				});
 			}
 			this.numCartesianObjects = this.objectArray.length;
+			// Save to pixels 
+			var objectArray = this.objectArray;
+			this.readback =  this.convertToPixels(function(v){
+				for(var i=0;i<objectArray.length;i++){
+					var edgeArray = objectArray[i];
+					v = v.vector({
+						points: "#cartesian_edge_data" + String(i),
+						color: '#000000',
+						width: 5,
+						start: false,
+						id: "cartesian_pixel_geometry" + String(i)
+					});
+				}
+				return v; 
+			},"indexbuffer")
 			
 		} else {
 			// To draw filled in, put all the edges into one big edge array!
@@ -333,6 +433,14 @@ var Mode2D = (function (scope) {
 				opacity:1,
 				id:'cartesian_geometry'
 			})
+
+			this.readback =  this.convertToPixels(function(v){
+				return v.face({
+					color:'#000000',
+					points:'#cartesian_edge_data',
+					id:'cartesian_pixel_geometry'
+				})
+			},"indexbuffer")
 
 			this.numCartesianObjects = 0;
 		}
@@ -377,13 +485,15 @@ var Mode2D = (function (scope) {
 			for(var i=0;i<this.numCartesianObjects;i++){
 				this.leftView.remove("#cartesian_edge_data" + String(i));
 				this.leftView.remove("#cartesian_geometry" + String(i));
+				this.leftView.remove("#cartesian_pixel_geometry" + String(i));
 			}
 		} else {
 			this.leftView.remove("#cartesian_edge_data" );
 			this.leftView.remove("#cartesian_geometry" );
+			this.leftView.remove("#cartesian_pixel_geometry" );
 		}
 		
-		
+		this.leftView.remove("#indexbuffer");
 		this.geometry_id = ""
 		this.numCartesianObjects = 0;
 	}
@@ -425,36 +535,15 @@ var Mode2D = (function (scope) {
 		})
 
 		// Render to texture 
-		var scale = 1 / 4;
-		this.leftView
-		.rtt({
-			size:   'relative',
-			width:  scale,
-			height: scale,
-		})
-		.camera({
-		  position: [0, 0, 17],
-		})
-		.surface({
-			points:'#param_data',
-			color: '#000000',
-        	blending: 'no',
-		})
-		.end();
-		// Readback RTT pixels
-	    var readback =
-	      this.leftView
-	      .readback({
-	        id: 'indexbuffer',
-	        type: 'unsignedByte',
-	      });
-	      
-	    //Render RTT for debugging
-	    // readback.compose({
-	    //   zTest: false,
-	    // });
-
-	    this.readback = readback;
+		this.readback =  this.convertToPixels(function(v){
+			return v.surface({
+				points:'#param_data',
+				id:'param_pixel_geometry',
+				color: '#000000',
+	        	blending: 'no',
+			})
+		},"indexbuffer")
+		
 
 		this.geometry_id = "param_geometry"
 
@@ -470,6 +559,7 @@ var Mode2D = (function (scope) {
 	Mode2D.prototype.cleanupParametric = function(){
 		this.leftView.remove("#param_data");
 		this.leftView.remove("#param_geometry");
+		this.leftView.remove("#param_pixel_geometry");
 		this.leftView.remove("#indexbuffer");
 		this.geometry_id = ""
 	}
@@ -497,6 +587,16 @@ var Mode2D = (function (scope) {
 			opacity:1,
 		})
 
+		// Render to texture 
+		this.readback =  this.convertToPixels(function(v){
+			return v.face({
+				points:'#hull_data',
+				id:'hull_pixel_geometry',
+				color: '#000000',
+	        	blending: 'no',
+			})
+		},"indexbuffer")
+
 		this.geometry_id = "hull_geometry"
 	}
 	Mode2D.prototype.parseConvexPoints = function(){
@@ -521,6 +621,7 @@ var Mode2D = (function (scope) {
 		
 	}
 	Mode2D.prototype.updateConvexHull = function(){
+		/*
 		// Re-parse
 		this.parseConvexPoints();
 		var pointsArray = this.pointsArray;
@@ -528,12 +629,41 @@ var Mode2D = (function (scope) {
 		this.leftView.select("#hull_data").set("items",pointsArray.length)
 		this.leftView.select("#hull_data").set("expr",function(emit,i,t){
 			for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
-		})
+		}) */
+		this.cleanupConvexHull();
+		this.initConvexHull();
 	}
 	Mode2D.prototype.cleanupConvexHull = function(){
 		this.leftView.remove("#hull_data")
 		this.leftView.remove("#hull_geometry")
+		this.leftView.remove("#hull_pixel_geometry")
+		this.leftView.remove("#indexbuffer");
 		this.geometry_id = ""
+	}
+
+	Mode2D.prototype.convertToPixels = function(geom_func,id){
+		//This converts some geometry to pixel data by rendering it to a texture and grabbing that data 
+		var scale = 1 / 4;
+		var view = this.leftView
+		.rtt({
+			size:   'relative',
+			width:  scale,
+			height: scale,
+		})
+		.camera({
+		  position: [2, 0, 18],// I just found this experimentally, seems to make it fit the best? 
+		})
+		view = geom_func(view);
+		view
+		.end();
+		// Readback RTT pixels
+	    var readback =
+	      this.leftView
+	      .readback({
+	        id: id,
+	        type: 'unsignedByte',
+	      });
+	   return readback;
 	}
 
 	// Creates a new mathbox view
@@ -570,6 +700,7 @@ var Mode2D = (function (scope) {
 		// Destroy gui 
 		this.gui.cleanup();
 	}
+
 
 	scope.Mode2D = Mode2D;
 	return Mode2D;
