@@ -55,7 +55,8 @@ var GUI = (function (scope) {
 		}
 		// 3D defaults 
 		this.defaults['3D'] = {
-			'equation':'x^2+y^2+z^2 = 100', // Sphere
+			'equation':'x^2+y^2+z^2 = 10', // Sphere
+			'resolution':20,
 			'points':'(5,0,5),(5,0,-5),(-5,0,-5),(-5,0,5),(5,5,5),(5,5,-5),(-5,5,-5),(-5,5,5)', // Cube
 			'param_eq_x':'b * cos(a) - c * sin(a)', // Spiral tube
 			'param_eq_y':'b * sin(a) + c * cos(a)',

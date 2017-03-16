@@ -133,6 +133,10 @@ var Mode4D = (function (scope) {
 		return mathbox;
 	}
 
+	Mode4D.prototype.callbacks = {
+
+	};
+
 	//Destroys everything created
 	Mode4D.prototype.cleanup = function(){
 		// Destroy mathbox overlays

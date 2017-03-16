@@ -107,6 +107,9 @@ var Mode3D = (function (scope) {
 		});
 
 		this.rightView = rightView
+
+		// Draw our main shape
+		this.setMode()
 	}
 
 	Mode3D.prototype.createView = function(el,width){
@@ -125,6 +128,101 @@ var Mode3D = (function (scope) {
 	    // Set the renderer color 
 		mathbox.three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
 		return mathbox;
+	}
+
+	Mode3D.prototype.callbacks = {
+		'source': function(self,val){
+			self.setMode();
+			self.gui.params.render_shape = true; //Reset this back to true
+		}, 
+		'resolution': function(self,val){
+			self.cleanupCartesian();
+			self.initCartesian();
+		},
+		'equation': function(self,val){
+			self.cleanupCartesian();
+			self.initCartesian();
+		},
+	};
+
+	Mode3D.prototype.setMode = function(){
+		var params = this.gui.params
+		//Switch the mode based on the gui value 
+		if(this.current_mode != null){
+			//Clean up previous 
+			if(this.current_mode == "cartesian") this.cleanupCartesian();
+			if(this.current_mode == "parametric") this.cleanupParametric();
+			if(this.current_mode == "convex-hull") this.cleanupConvexHull();
+		}
+		this.current_mode = params.source;
+		//Init new 
+		if(this.current_mode == "cartesian") this.initCartesian();
+		if(this.current_mode == "parametric") this.initParametric();
+		if(this.current_mode == "convex-hull") this.initConvexHull();
+	}
+
+	Mode3D.prototype.initCartesian = function(){
+		this.polygonizeCartesian();
+		if(this.triangleArray == null) return; //Failed to parse 
+		var triangleArray = this.triangleArray;
+		this.leftView.array({
+			width: triangleArray.length/3,
+			items: 3,
+			channels: 3,
+			data: triangleArray,
+			id: "cartesian_triangle_data"
+		});
+
+		this.leftView.face({
+			points: "#cartesian_triangle_data",
+			color: this.gui.colors.data,
+			width: 5,
+			opacity: 1,
+			shaded: true,
+			id: "cartesian_geometry"
+		});
+	}
+	Mode3D.prototype.polygonizeCartesian = function(){
+		var params = this.gui.params
+
+		var equation_string = params.equation;
+		let sides = equation_string.split('=');
+		let LHS = sides[0];
+		let RHS = sides[1];
+		let LHSfunc = Parser.parse(LHS).toJSFunction(['x','y','z']);
+		let RHSfunc = Parser.parse(RHS).toJSFunction(['x','y','z']);
+		var eq = function(x,y,z) { return LHSfunc(x,y,z) - RHSfunc(x,y,z); };
+
+		//Parses the equation, and polygonizes it 
+		try {
+			var triangleArray = [];
+			triangleArray = Polygonize.generate(eq, [[-10, 10], [-10, 10], [-10, 10]], params.resolution);
+			this.triangleArray = triangleArray;
+			
+
+		} catch(err){
+			console.log("Error rendering equation",err);
+		}
+	}
+
+	Mode3D.prototype.cleanupCartesian = function(){
+		this.leftView.remove("#cartesian_triangle_data");
+		this.leftView.remove("#cartesian_geometry");
+	}
+
+	Mode3D.prototype.initParametric = function(){
+		
+	}
+	Mode3D.prototype.cleanupParametric = function(){
+		
+	}
+
+
+	Mode3D.prototype.initConvexHull = function(){
+		
+	}
+	Mode3D.prototype.cleanupConvexHull = function(){
+		
 	}
 
 	//Destroys everything created
