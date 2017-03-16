@@ -160,7 +160,7 @@ var Mode2D = (function (scope) {
 			self.rightView.remove("#viewing_1d_axis")
 	    	self.rightView.remove("#viewing_1d_axis_label")
 			if(val == "Y") self.CreateViewAxis(1,[11,1],"x")
-			if(val == "X") self.CreateViewAxis(2,[0,12],"y")
+			if(val == "X") self.CreateViewAxis(1,[11,1],"y")
 		},
 		'thickness': function(self,val){
 			// need to change the line's property when thickness changes
