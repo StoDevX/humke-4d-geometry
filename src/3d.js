@@ -1,13 +1,13 @@
 var Mode3D = (function (scope) {
-	//Constructor 
+	//Constructor
 	function Mode3D(document){
-		this.document = document; 
-		
+		this.document = document;
+
 	}
 
 	// Creates the scene and everything
 	Mode3D.prototype.init = function(div,gui){
-		// Create two child divs 
+		// Create two child divs
 		var leftChild = document.createElement("div");
 		var rightChild = document.createElement("div");
 		div.appendChild(leftChild); leftChild.id = "left-view";
@@ -23,7 +23,7 @@ var Mode3D = (function (scope) {
 		this.leftView = leftView;
 		this.rightView = rightView;
 
-		// Init gui 
+		// Init gui
 	    gui.init("3D",this.callbacks,this);
 	    this.gui = gui;
 
@@ -54,9 +54,9 @@ var Mode3D = (function (scope) {
 		  })
 		  .grid({
 		    axes: [1,3],
-		    width: 1, 
+		    width: 1,
 		    divideX: 10,
-		    divideY: 10        
+		    divideY: 10
 		  });
 
 		 // Add text
@@ -81,37 +81,12 @@ var Mode3D = (function (scope) {
 		  proxy: true, // this alows interactive camera controls to override the position
 		  position: [0, 0, 3],
 		})
-		 .axis({
-		    axis: 1,
-		    width: 4,
-		    color:'black',
-		  })
-		  .axis({
-		    axis: 2,
-		    width: 4,
-		    color:'black',
-		  })
-		  .grid({
-		    width: 1,
-		    divideX: 10,
-		    divideY: 10
-		  })
-		  .array({
-		  data: [[11,1], [0,12]],
-		  channels: 2, // necessary
-		  live: false,
-		}).text({
-		  data: ["x", "z"],
-		}).label({
-		  color: 0x000000,
-		});
-
 		this.rightView = rightView
 
 		// Draw our main shape
-		this.setMode()
+		this.setMode();
 
-		this.CreateViewAxis();
+		this.CreateViewAxis("X","Z");
 	}
 
 	Mode3D.prototype.createView = function(el,width){
@@ -127,7 +102,7 @@ var Mode3D = (function (scope) {
 	      },
 	    });
 	    if (mathbox.fallback) throw "WebGL not supported"
-	    // Set the renderer color 
+	    // Set the renderer color
 		mathbox.three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
 		return mathbox;
 	}
@@ -139,10 +114,21 @@ var Mode3D = (function (scope) {
 	}
 
 	Mode3D.prototype.callbacks = {
+		'axis': function(self,val) {
+			self.rightView.remove("#viewing_2d_axis_1")
+			self.rightView.remove("#viewing_2d_axis_2")
+	    self.rightView.remove("#viewing_2d_axis_label")
+			self.leftView.remove("#viewing_plane_data");
+			self.leftView.remove("#viewing_plane_geometry");
+
+			if(val == "Y") self.CreateViewAxis("X","Z")
+			if(val == "X") self.CreateViewAxis("Z", "Y")
+			if(val == "Z") self.CreateViewAxis("X","Y")
+		},
 		'source': function(self,val){
 			self.setMode();
 			self.gui.params.render_shape = true; //Reset this back to true
-		}, 
+		},
 		'resolution': function(self,val){
 			self.cleanupCartesian();
 			self.initCartesian();
@@ -155,32 +141,61 @@ var Mode3D = (function (scope) {
 			self.cleanupConvexHull()
 			self.initConvexHull()
 		},
-		'param_eq_x': updateParametricCallback, 
-		'param_eq_y': updateParametricCallback, 
-		'param_eq_z': updateParametricCallback, 
-		'param_a': updateParametricCallback, 
-		'param_b': updateParametricCallback, 
-		'param_c': updateParametricCallback, 
+		'param_eq_x': updateParametricCallback,
+		'param_eq_y': updateParametricCallback,
+		'param_eq_z': updateParametricCallback,
+		'param_a': updateParametricCallback,
+		'param_b': updateParametricCallback,
+		'param_c': updateParametricCallback,
 	};
 
 	Mode3D.prototype.setMode = function(){
 		var params = this.gui.params
-		//Switch the mode based on the gui value 
+		//Switch the mode based on the gui value
 		if(this.current_mode != null){
-			//Clean up previous 
+			//Clean up previous
 			if(this.current_mode == "cartesian") this.cleanupCartesian();
 			if(this.current_mode == "parametric") this.cleanupParametric();
 			if(this.current_mode == "convex-hull") this.cleanupConvexHull();
 		}
 		this.current_mode = params.source;
-		//Init new 
+		//Init new
 		if(this.current_mode == "cartesian") this.initCartesian();
 		if(this.current_mode == "parametric") this.initParametric();
 		if(this.current_mode == "convex-hull") this.initConvexHull();
 	}
 
-	Mode3D.prototype.CreateViewAxis = function(){
-		var params = this.gui.params; 
+	Mode3D.prototype.CreateViewAxis = function(labelName1,labelName2){
+		this.rightView.axis({
+			 axis: 1,
+			 width: 4,
+			 color:'black',
+			 id:'viewing_2d_axis_1'
+		 })
+		 .axis({
+			 axis: 2,
+			 width: 4,
+			 color:'black',
+			 id:'viewing_2d_axis_2'
+		 })
+		 .grid({
+			 width: 1,
+			 divideX: 10,
+			 divideY: 10
+		 })
+		 .array({
+		 data: [[11,1], [0,12]],
+		 channels: 2, // necessary
+		 live: false,
+	 }).text({
+		 data: [labelName1,labelName2],
+	 }).label({
+		 color: 0x000000,
+		 id:'viewing_2d_axis_label'
+	 });
+
+
+		var params = this.gui.params;
 		this.leftView.array({
 				id: "viewing_plane_data",
 				channels: 3,
@@ -212,7 +227,7 @@ var Mode3D = (function (scope) {
 
 	Mode3D.prototype.initCartesian = function(){
 		this.polygonizeCartesian();
-		if(this.triangleArray == null) return; //Failed to parse 
+		if(this.triangleArray == null) return; //Failed to parse
 		var triangleArray = this.triangleArray;
 		this.leftView.array({
 			width: triangleArray.length/3,
@@ -242,12 +257,12 @@ var Mode3D = (function (scope) {
 		let RHSfunc = Parser.parse(RHS).toJSFunction(['x','y','z']);
 		var eq = function(x,y,z) { return LHSfunc(x,y,z) - RHSfunc(x,y,z); };
 
-		//Parses the equation, and polygonizes it 
+		//Parses the equation, and polygonizes it
 		try {
 			var triangleArray = [];
 			triangleArray = Polygonize.generate(eq, [[-10, 10], [-10, 10], [-10, 10]], params.resolution);
 			this.triangleArray = triangleArray;
-			
+
 
 		} catch(err){
 			console.log("Error rendering equation",err);
@@ -264,8 +279,8 @@ var Mode3D = (function (scope) {
 		var a_range = [0,1];
 		var b_range = [0,1];
 		var c_range = [0,1];
-		// get range from string 
-		var splitArrayA = params.param_a.split("<"); // should return 3 pieces. We want the first and last 
+		// get range from string
+		var splitArrayA = params.param_a.split("<"); // should return 3 pieces. We want the first and last
 		a_range[0] = Parser.evaluate(splitArrayA[0]);
 		a_range[1] = Parser.evaluate(splitArrayA[2]);
 		var splitArrayB = params.param_b.split("<");
@@ -335,13 +350,13 @@ var Mode3D = (function (scope) {
 	    shaded: true,
 	    id:'hull_geometry',
 	    points:'#hull_data',
-	  })  
+	  })
 
 	}
 	Mode3D.prototype.parseConvexPoints = function(){
 		var params = this.gui.params
-		// Get string of points and parse it 
-		// Remove whitespace 
+		// Get string of points and parse it
+		// Remove whitespace
 		var points_str = params.points.replace(/\s+/g, '');
 		// Split based on the pattern (digits,digits)
 		var points_split = points_str.match(/\(-*[.\d]+,-*[.\d]+,-*[.\d]+\)/g);
@@ -349,15 +364,15 @@ var Mode3D = (function (scope) {
 
 		for(var i=0;i<points_split.length;i++){
 			var p = points_split[i];
-			// Remove parenthesis 
+			// Remove parenthesis
 			p = p.replace(/[\(\)]/g,'');
 			// Split by comma
-			var comma_split = p.split(",") 
+			var comma_split = p.split(",")
 			var point = []
 			for(var j=0;j<comma_split.length;j++) point.push(Number(comma_split[j]))
 			this.pointsArray.push(point)
 		}
-		
+
 	}
 	Mode3D.prototype.cleanupConvexHull = function(){
 		this.leftView.remove("#hull_data")
@@ -369,14 +384,14 @@ var Mode3D = (function (scope) {
 		// Destroy mathbox overlays
 		var overlays = this.document.querySelector(".mathbox-overlays");
 		overlays.parentNode.removeChild(overlays);
-		// Destroy the canvas element 
+		// Destroy the canvas element
 		var canvas = this.document.querySelector("canvas");
 		canvas.parentNode.removeChild(canvas);
-		// Remove the two child divs 
+		// Remove the two child divs
 		this.leftChild.parentNode.removeChild(this.leftChild);
 		this.rightChild.parentNode.removeChild(this.rightChild);
 
-		// Destroy gui 
+		// Destroy gui
 		this.gui.cleanup();
 	}
 
