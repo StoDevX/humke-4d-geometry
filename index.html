@@ -1,26 +1,122 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>4D Geometry App</title>
-	<style type="text/css">
-		body {
-			font-family: sans-serif;
-		}
-	</style>
+	<title>4D Geometry Viewer</title>
+	 <meta charset="UTF-8"> 
+	<link rel="stylesheet" type="text/css" href="src/css/index.css">
+	<!-- For parsing mathematical expressions. Used by the gui -->
+	<script src="src/lib/parser.js"></script>
+	<!-- Dat.gui library -->
+	<script src="src/lib/datgui/dat.gui.js"></script>
+	<!-- Quickhull implementation -->
+	<script src="src/lib/quickhull.js"></script>
+	<!-- Mathbox -->
+	<script src="src/lib/mathbox-src/build/mathbox-bundle.min.js"></script>
+  	<link rel="stylesheet" href="src/lib/mathbox-src/build/mathbox.css">
+  	<!-- Nick Nooney's Polygonize, used in the modes to convert an equation to a set of points/faces -->
+	<script src="src/polygonize.js"></script>
+	<!-- Our common gui interface -->
+	<script src="src/gui.js"></script>
+	<!-- All of our 2d/3d/4d modes -->
+	<script src="src/2d.js"></script>
+	<script src="src/3d.js"></script>
+	<script src="src/4d.js"></script>
+
 </head>
 <body>
+
+<div id="main-menu">
 <center>
-	<h1>Examples</h1>
+	<h1>4D Geometry Viewer</h1>
+	<p><i>Created at St. Olaf College for Professor Paule Humke. <a href="about.html">More about this project.</a></i></p>
+<!-- mode buttons -->
+<div id="mode_buttons">
+	<!-- 2D -->
+	<div class="button_base b_3d_roll" id="btn_2d">
+	    <div>
+	    	<svg width="100" height="100">
+			  <rect x="37" y="1" width="25" height="25"
+			  style="stroke:#ffa0a3;stroke-width:2px;fill:none;" />
+			</svg> 
+		
+	    </div>
+	    <div>2D</div>
+	</div>
+
+	<!-- 3D -->
+	<div class="button_base b_3d_roll" id="btn_3d">
+	    <div>
+	    	<img src="src/img/cube.svg" alt="Cube" style="width:45%; height:auto; margin-top:-15px;">
+	    </div>
+	    <div>3D</div>
+	</div>
+
+	<!-- 4D --> 
+	<div class="button_base b_3d_roll" id="btn_4d">
+	    <div>
+	    	<img src="src/img/tesseract.svg" alt="Tesseract" style="width:32%; height:auto; margin-top:-8px;">
+	    </div>
+	    <div>4D</div>
+	</div>
 </center>
+</div>
 
-<h3>Modes</h3>
-<h4><a href="demos/2d_mode.html">2D Mode</a></h4>
-<h4><a href="demos/3d_mode.html">3D Mode</a></h4>
+<!-- This is where the actual program will live. It's hidden until you select a mode --> 
+<div id="mode_container" style="display: none;">
+	<div id="header">
+		<center>
+			<p><span id="world_title"></span> - <span id="back_to_menu_btn">Back to Menu</span></p>
 
+		</center>
+	</div>
+	<div id="display">
+		
+	</div>
+	<!-- <canvas id="debug_canvas" style="border:1px solid black; width:100px; height:100px;"></canvas> -->
 
-<h3>Misc Examples</h3>
-<h4><a href="demos/cartesian.html">2D Mode - Full Cartesian Equation</a></h4>
+</div>
 
+<script type="text/javascript">
+	// Listen for clicks on any of the mode buttons to:
+	//	- Hide the menu
+	//	- Init the mode 
+	//	- Init the gui 
+	//	- Create the top bar with the back button
+	var buttons = ['btn_2d','btn_3d','btn_4d']
+	var text_map = {'btn_2d':'2D','btn_3d':'3D','btn_4d':'4D'}
+	var mode_objects = {};
+	var current_mode = "";
+	mode_objects['2D'] = new Mode2D(document);
+	mode_objects['3D'] = new Mode3D(document);
+	mode_objects['4D'] = new Mode4D(document);
+	var gui = new GUI();
+
+	for(var i=0;i<buttons.length;i++){
+		var b_name = "#" + buttons[i];
+		document.querySelector(b_name).onclick = function(e){
+			var clicked_name = e.target.id.replace("#","");
+			current_mode = text_map[clicked_name];
+			// Hide main menu
+			document.querySelector("#main-menu").style.display = "none";
+			// Show the display container div 
+			document.querySelector("#mode_container").style.display = "block";
+			document.querySelector("#world_title").innerHTML = text_map[clicked_name] + " World"
+			// Init the mode (the mode inits the gui with its own options)
+			mode_objects[current_mode].init(document.querySelector("#display"),gui);
+			window.location.hash = "#" + current_mode
+		}
+	}
+
+	// Back to menu button 
+	document.querySelector("#back_to_menu_btn").onclick = function(e){
+		// Switch back to main menu 
+		document.querySelector("#main-menu").style.display = "block";
+		document.querySelector("#mode_container").style.display = "none";
+		// Destory the mode 
+		mode_objects[current_mode].cleanup();
+	}
+	
+</script>
 
 </body>
 </html>
