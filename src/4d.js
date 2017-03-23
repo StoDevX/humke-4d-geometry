@@ -1,13 +1,13 @@
 var Mode4D = (function (scope) {
-	//Constructor 
+	//Constructor
 	function Mode4D(document){
-		this.document = document; 
-		
+		this.document = document;
+
 	}
 
 	// Creates the scene and everything
 	Mode4D.prototype.init = function(div,gui){
-		// Create two child divs 
+		// Create two child divs
 		var leftChild = document.createElement("div");
 		var rightChild = document.createElement("div");
 		div.appendChild(leftChild); leftChild.id = "left-view";
@@ -23,7 +23,7 @@ var Mode4D = (function (scope) {
 		this.leftView = leftView;
 		this.rightView = rightView;
 
-		// Init gui 
+		// Init gui
 	    gui.init("4D",this.callbacks,this);
 	    this.gui = gui;
 
@@ -32,10 +32,26 @@ var Mode4D = (function (scope) {
 		  proxy: true, // this alows interactive camera controls to override the position
 		  position: [0, 1, 3],
 		})
-		leftView = leftView.cartesian({
-		  range: [[-10, 10], [-10, 10],[-10,10]],
-		  scale: [1, 1,1],
+		leftView = leftView.cartesian4({
+		  range: [[-10,10], [-10,10],[-10,10], [-10,10]],
+		  scale: [1,1,1,1],
 		});
+
+		leftView = leftView.transform({
+		  position: [0, 0, 0,0],
+		  rotation: [0.1,0.3,0]
+		})
+
+		// need to rotate in 4D to see the 4th axis
+		leftView = leftView.transform4({
+			matrix: [
+				1, 0, 0, .577,
+		    0, 1, 0, .577,
+		    0, 0, 1, .577,
+		    0, 0, 0, 1,
+			],
+		})
+
 		leftView
 		  .axis({
 		    axis: 1,
@@ -52,20 +68,25 @@ var Mode4D = (function (scope) {
 		    width: 4,
 		    color:'black',
 		  })
+			.axis({
+		    axis: 4,
+		    width: 4,
+		    color:'black',
+		  })
 		  .grid({
 		    axes: [1,3],
-		    width: 1, 
+		    width: 1,
 		    divideX: 10,
-		    divideY: 10        
+		    divideY: 10
 		  });
 
 		 // Add text
 		leftView.array({
-		  data: [[11,1,0], [0,12,0],[0,0,11]],
-		  channels: 3, // necessary
+			data: [[11,0,0,0], [0,11,0,0], [0,0,11,0], [0,0,0,11]],
+		  channels: 4, // necessary
 		  live: false,
 		}).text({
-		  data: ["x", "y","z"],
+		  data: ["x", "y","z","w"],
 		}).label({
 		  color: 0x000000,
 		});
@@ -77,9 +98,15 @@ var Mode4D = (function (scope) {
 		  range: [[-10, 10],[-10,10],[-10,10]],
 		  scale: [1, 1,1],
 		});
+
+		rightView = rightView.transform({
+		  position: [0, 0, 0,0],
+		  rotation: [0.1,0.3,0]
+		});
+
 		rightView.camera({
 		  proxy: true, // this alows interactive camera controls to override the position
-		  position: [0, 0, 3],
+		  position: [0, 1, 3],
 		})
 		 .axis({
 		    axis: 1,
@@ -98,9 +125,9 @@ var Mode4D = (function (scope) {
 		  })
 		  .grid({
 		    axes: [1,3],
-		    width: 1, 
+		    width: 1,
 		    divideX: 10,
-		    divideY: 10        
+		    divideY: 10
 		  })
 		  .array({
 		  data: [[11,1,0], [0,12,0],[0,0,11]],
@@ -128,7 +155,7 @@ var Mode4D = (function (scope) {
 	      },
 	    });
 	    if (mathbox.fallback) throw "WebGL not supported"
-	    // Set the renderer color 
+	    // Set the renderer color
 		mathbox.three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
 		return mathbox;
 	}
@@ -142,14 +169,14 @@ var Mode4D = (function (scope) {
 		// Destroy mathbox overlays
 		var overlays = this.document.querySelector(".mathbox-overlays");
 		overlays.parentNode.removeChild(overlays);
-		// Destroy the canvas element 
+		// Destroy the canvas element
 		var canvas = this.document.querySelector("canvas");
 		canvas.parentNode.removeChild(canvas);
-		// Remove the two child divs 
+		// Remove the two child divs
 		this.leftChild.parentNode.removeChild(this.leftChild);
 		this.rightChild.parentNode.removeChild(this.rightChild);
 
-		// Destroy gui 
+		// Destroy gui
 		this.gui.cleanup();
 	}
 
