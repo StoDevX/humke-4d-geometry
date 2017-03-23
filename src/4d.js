@@ -82,7 +82,7 @@ var Mode4D = (function (scope) {
 
 		 // Add text
 		leftView.array({
-			data: [[11,0,0,0], [0,11,0,0], [0,0,11,0], [0,0,0,11]],
+			data: [[12,0,0,0], [0,12,0,0], [0,0,12,0], [0,0,0,12]],
 		  channels: 4, // necessary
 		  live: false,
 		}).text({
@@ -90,6 +90,76 @@ var Mode4D = (function (scope) {
 		}).label({
 		  color: 0x000000,
 		});
+
+		var pointsArray = []
+
+		function Eq(x,y,z){
+		  return Math.pow(x,2) + Math.pow(y,2) + Math.pow(z,2) - 50;
+		}
+
+		function DrawCube(){
+		  var arr = []
+		  for(var x=-1;x<=1;x++){
+		    for(var y=-1;y<=1;y++){
+		      for(var z=-1;z<=1;z++){
+		        //for(var w=-1;w<=1;w++){
+		          arr.push([x*5,y*5,z*5])
+		        //}
+
+		      }
+		    }
+		  }
+		  return arr;
+		}
+
+		function DrawSphere(){
+		  var arr = [];
+		  var step = 0.5;
+
+		  for(var x=-10;x<=10;x+=step){
+		    for(var y=-10;y<=10;y+=step){
+		      for(var z=-10;z<=10;z+=step){
+		        if(Eq(x,y,z) < 0) arr.push([x/9,y/9,z/9])
+		      }
+		    }
+		  }
+
+		  return arr;
+		}
+
+		//var pointsArray = DrawCube();
+		var pointsArray = [5,0,5,0,5,0,-5,0,-5,0,-5,0,-5,0,5,0,5,5,5,0,5,5,-5,0,-5,5,-5,0,-5,5,5,0,  5,0,5,5,5,0,-5,5,-5,0,-5,5,-5,0,5,5,5,5,5,5,5,5,-5,5,-5,5,-5,5,-5,5,5,5]
+		console.log("Points: " + pointsArray.length);
+
+		// var instance = new QuickHull(pointsArray);
+		// instance.build()
+		// var vertices = instance.collectFaces()
+
+		this.leftView.array({
+		    expr: function (emit, i, t) {
+		      //var v1 = pointsArray[vertices[i][0]];
+		      //var v2 = pointsArray[vertices[i][1]];
+		      //var v3 = pointsArray[vertices[i][2]];
+					//var v4 = pointsArray[vertices[i][3]];
+		      emit(pointsArray[4*i],pointsArray[4*i+1],pointsArray[4*i+2],pointsArray[4*i+3])
+					// emit(v1[0],v1[1],v1[2],0)
+		      // emit(v2[0],v2[1],v2[2],0)
+		      // emit(v3[0],v3[1],v3[2],0)
+					//emit(v4[0],v4[1],v4[2],v4[3])
+		      },
+	        width: vertices.length,
+	        items: 1,
+	        channels: 4,
+	        id:'hull_data'
+		  })
+	  this.leftView.face({
+	    color:this.gui.colors.data,
+	    shaded: false,
+			line: true,
+			//size: 60,
+	    id:'hull_geometry',
+	    points:'#hull_data',
+	  })
 
 		this.leftView = leftView;
 
