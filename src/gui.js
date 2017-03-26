@@ -4,6 +4,10 @@
 var GUI = (function (scope) {
 	//Constructor 
 	function GUI(){
+		
+	}
+
+	GUI.prototype.init = function(mode,callbacks,mode_obj){
 		// Colors to use throughout 
 		this.colors = {
 			'viewing':'#e59a1c', // For the line/place of intersection
@@ -80,9 +84,7 @@ var GUI = (function (scope) {
 
 		this.mode_obj = null;
 		this.callbacks = null;
-	}
 
-	GUI.prototype.init = function(mode,callbacks,mode_obj){
 		// Creates the scene and everything
 		this.gui = new dat.GUI();
 		this.mode = mode;
@@ -254,6 +256,10 @@ var GUI = (function (scope) {
 	GUI.prototype.cleanup = function(){
 		//Destroys everything created
 		this.gui.destroy();
+		// Reset all stuff 
+		this.convexSourceItems = null;
+		this.paramSourceItems = null;
+		this.cartesianSourceItems = null;
 	}
 
 
