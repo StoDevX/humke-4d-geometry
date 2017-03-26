@@ -147,16 +147,16 @@ var Mode4D = (function (scope) {
 		      // emit(v3[0],v3[1],v3[2],0)
 					//emit(v4[0],v4[1],v4[2],v4[3])
 		      },
-	        width: vertices.length,
+	        width: pointsArray.length/4,
 	        items: 1,
 	        channels: 4,
 	        id:'hull_data'
 		  })
-	  this.leftView.face({
+	  this.leftView.point({
 	    color:this.gui.colors.data,
-	    shaded: false,
-			line: true,
-			//size: 60,
+	    //shaded: false,
+		//	line: true,
+			size: 60,
 	    id:'hull_geometry',
 	    points:'#hull_data',
 	  })
