@@ -20,6 +20,7 @@ var Mode4D = (function (scope) {
 		var viewWidth = (window.innerWidth-20)/2;
 		var leftView = this.createView(leftChild,viewWidth);
 		var rightView = this.createView(rightChild,viewWidth);
+		this.originalLeftView = leftView;
 		this.leftView = leftView;
 		this.rightView = rightView;
 
@@ -32,25 +33,28 @@ var Mode4D = (function (scope) {
 		  proxy: true, // this alows interactive camera controls to override the position
 		  position: [0, 1, 3],
 		})
-		leftView = leftView.cartesian4({
+		// need to rotate in 4D to see the 4th axis
+		var rot_matrix = [
+				1, 0, 0, 0,
+		    0, 1, 0, 0,
+		    0, 0, 1, 0,
+		    0, 0, 0, 1,
+			];
+
+		leftView = leftView.transform4({
+			matrix: rot_matrix,
+			id:'transform4d',
+		}).cartesian4({
 		  range: [[-10,10], [-10,10],[-10,10], [-10,10]],
 		  scale: [1,1,1,1],
 		});
 
-		leftView = leftView.transform({
-		  position: [0, 0, 0,0],
-		  rotation: [0.1,0.3,0]
-		})
+		// leftView = leftView.transform({
+		//   position: [0, 0, 0,0],
+		//   rotation: [0.1,0.3,0]
+		// })
 
-		// need to rotate in 4D to see the 4th axis
-		leftView = leftView.transform4({
-			matrix: [
-				1, 0, 0, .577,
-		    0, 1, 0, .577,
-		    0, 0, 1, .577,
-		    0, 0, 0, 1,
-			],
-		})
+		
 
 		leftView
 		  .axis({
@@ -97,13 +101,13 @@ var Mode4D = (function (scope) {
 		  return Math.pow(x,2) + Math.pow(y,2) + Math.pow(z,2) - 50;
 		}
 
-		function DrawCube(){
+		function DrawCube(size,step){
 		  var arr = []
-		  for(var x=-1;x<=1;x++){
-		    for(var y=-1;y<=1;y++){
-		      for(var z=-1;z<=1;z++){
+		  for(var x=0;x<=1;x+=step){
+		    for(var y=0;y<=1;y+=step){
+		      for(var z=0;z<=1;z+=step){
 		        //for(var w=-1;w<=1;w++){
-		          arr.push([x*5,y*5,z*5])
+		          arr.push([x*size,y*size,z*size])
 		        //}
 
 		      }
@@ -127,41 +131,120 @@ var Mode4D = (function (scope) {
 		  return arr;
 		}
 
-		//var pointsArray = DrawCube();
-		var pointsArray = [5,0,5,0,5,0,-5,0,-5,0,-5,0,-5,0,5,0,5,5,5,0,5,5,-5,0,-5,5,-5,0,-5,5,5,0,  5,0,5,5,5,0,-5,5,-5,0,-5,5,-5,0,5,5,5,5,5,5,5,5,-5,5,-5,5,-5,5,-5,5,5,5]
-		console.log("Points: " + pointsArray.length);
+		
+		var cube = DrawCube(10,1);
+	    var pointsArray = [];
+	    var edges = [];
 
-		// var instance = new QuickHull(pointsArray);
-		// instance.build()
-		// var vertices = instance.collectFaces()
+	    // Move one cube to w=0 and one to w=10
+	    for(var i=0;i<cube.length;i++){
+	      var p1 = [cube[i][0],cube[i][1],cube[i][2],0]
+	      var p2 = [cube[i][0],cube[i][1],cube[i][2],10]
+	      pointsArray.push(p1)
+	      pointsArray.push(p2)
+	    }
 
-		this.leftView.array({
-		    expr: function (emit, i, t) {
-		      //var v1 = pointsArray[vertices[i][0]];
-		      //var v2 = pointsArray[vertices[i][1]];
-		      //var v3 = pointsArray[vertices[i][2]];
-					//var v4 = pointsArray[vertices[i][3]];
-		      emit(pointsArray[4*i],pointsArray[4*i+1],pointsArray[4*i+2],pointsArray[4*i+3])
-					// emit(v1[0],v1[1],v1[2],0)
-		      // emit(v2[0],v2[1],v2[2],0)
-		      // emit(v3[0],v3[1],v3[2],0)
-					//emit(v4[0],v4[1],v4[2],v4[3])
-		      },
-	        width: pointsArray.length/4,
-	        items: 1,
-	        channels: 4,
-	        id:'hull_data'
-		  })
-	  this.leftView.point({
-	    color:this.gui.colors.data,
-	    //shaded: false,
-		//	line: true,
-			size: 60,
-	    id:'hull_geometry',
-	    points:'#hull_data',
-	  })
+	    // Create the edges 
+	    for(var i=0;i<pointsArray.length;i++){
+	      var p = pointsArray[i];
+	      for(var j=0;j<pointsArray.length;j++){
+	        var p2 = pointsArray[j];
+	        // To connect an edge, p and p2 must differ by only one coordinate 
+	        var diff = 0; 
+	        for(var k=0;k<p.length;k++){
+	          if(p[k] != p2[k]) diff++;
+	        }
+	        if(diff == 1){
+	          edges.push([p,p2])
+	        }
+	      }
+	    }
+
+	    // Define colors for the points (the farther it is on the w, the redder it is)
+	    leftView.array({
+	      id:'colors',
+	      width: pointsArray.length,
+	      expr: function (emit,i, time) {
+	        var p = pointsArray[i];
+	        var x = p[0];
+	        var y = p[1];
+	        var z = p[2];
+	        var w = p[3];
+
+	        emit(w/10, 0, 0, 1);
+	      },
+	      channels: 4,
+	    })
+	    // Define colors for the edges
+	    leftView.array({
+	      id:'edge_colors',
+	      width: edges.length,
+	      expr: function (emit,i, time) {
+	        var p1 = edges[i][0];
+	        var p2 = edges[i][1];
+	        var w1 = p1[3]/10;
+	        var w2 = p2[3]/10;
+	        emit((w1+w2)/2, 0, 0, 1);
+	        
+	      },
+	      channels: 4,
+	    })
+
+	    // Draw the vertices
+	    leftView.array({
+	      width: pointsArray.length,
+	      expr: function (emit,i, time) {
+	        var p = pointsArray[i];
+	        var x = p[0];
+	        var y = p[1];
+	        var z = p[2];
+	        var w = p[3];
+
+	        emit(x, y, z, w);
+	      },
+	      channels: 4,
+	    });
+
+	    leftView.point({
+	      colors: '#colors',
+	      size: 40,
+	    });
+
+	    // Draw the edges 
+	    leftView.array({
+	      width: edges.length,
+	      expr: function(emit,i,time){
+	        var p1 = edges[i][0];
+	        var p2 = edges[i][1];
+	        emit(p1[0],p1[1],p1[2],p1[3]);
+	        emit(p2[0],p2[1],p2[2],p2[3]);
+	      },
+	      channels:4,
+	      items:2,
+	    })
+	    leftView.vector({
+	      colors: '#edge_colors',
+	      width:10,
+	      start:false
+	    })
+
+		leftView.print()
+		
 
 		this.leftView = leftView;
+
+		// Rotate it along the w 
+		var count = 0;
+		var original = this.originalLeftView;
+	    setInterval(function(){
+	      count += 0.04;
+	      rot_matrix[3] = Math.sin(count);
+	      rot_matrix[7] = rot_matrix[3];
+	      rot_matrix[11] = rot_matrix[3];
+
+	      original.select("#transform4d").set("matrix",rot_matrix)
+	      original.print();
+	    },1000/60)
 
 		// Set up right view
 		rightView = rightView.cartesian({
