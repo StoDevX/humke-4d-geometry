@@ -100,7 +100,38 @@ var Mode2D = (function (scope) {
 		this.rightView = rightView
 
 	    this.CreateViewAxis(1,[11,1],"x")
-	    this.CalculateIntersection();
+	    //this.CalculateIntersection();
+	}
+
+	Mode2D.prototype.SetupIntersection = function(){
+		var params = this.gui.params
+		// Apply the intersection shader 
+		// Run vertex shader to get fragment positions, then fragment shader to discard pixels 
+		var view = this.rightView.shader({
+			code : [
+			"#define POSITION_STPQ",
+			"void getPosition(inout vec4 xyzw, inout vec4 stpq) {",
+			"stpq = xyzw;",
+			"}"
+			].join("\n")
+		}).vertex({pass: 'data'})
+		
+		view = view.shader({
+				code: [
+				"#define POSITION_STPQ",
+				"uniform float axis_value;",
+				"uniform float axis;",
+				"vec4 getColor(vec4 rgba, inout vec4 stpq) {",
+				"if(abs(stpq.y - axis_value) > 0.1) discard;",
+				"return vec4(1.0,0.0,0.0,1.0);",
+				"}"
+				].join("\n")
+			}, {
+					axis_value: function(){ return params.axis_value },
+					axis: function(){ return params.axis }
+				})
+			.fragment()
+		return view;
 	}
 
 	Mode2D.prototype.CalculateIntersection = function(){
@@ -276,21 +307,24 @@ var Mode2D = (function (scope) {
 		}, 
 		'resolution': function(self,val){
 			self.cleanupCartesian();
-			self.initCartesian();
+			self.initCartesian(self.leftView);
+			self.initCartesian(self.rightView,true);
 		},
 		'fill': function(self,val){
 			self.cleanupCartesian();
-			self.initCartesian();
+			self.initCartesian(self.leftView);
+			self.initCartesian(self.rightView,true);
 		},
 		'equation': function(self,val){
 			self.cleanupCartesian();
-			self.initCartesian();
+			self.initCartesian(self.leftView);
+			self.initCartesian(self.rightView,true);
 		},
 		'points': function(self,val){
 			self.updateConvexHull()
 		},
 		'axis_value': function(self,val){
-			self.CalculateIntersection();
+			//self.CalculateIntersection();
 			// if(self.readback == null) return;
 			// var data = self.readback.get('data');
 			// var w = self.readback.get('width');
@@ -379,22 +413,28 @@ var Mode2D = (function (scope) {
 		}
 		this.current_mode = params.source;
 		//Init new 
-		if(this.current_mode == "cartesian") this.initCartesian();
+		if(this.current_mode == "cartesian") {
+			this.initCartesian(this.leftView);
+			this.initCartesian(this.rightView,true);
+		}
 		if(this.current_mode == "parametric") this.initParametric();
 		if(this.current_mode == "convex-hull") this.initConvexHull();
 
 	}
 
 	// >>>>>>>>>> Cartesian mode functions 
-	Mode2D.prototype.initCartesian = function(){
+	Mode2D.prototype.initCartesian = function(view,intersection){
 		this.polygonizeCartesian();
 		if(this.objectArray == null) return; //Failed to parse 
 		var params = this.gui.params
+
+		if(intersection) view = this.SetupIntersection();
+
 		if(params.fill==false){
 			// Create the edge data 
 			for(var i=0;i<this.objectArray.length;i++){
 				var edgeArray = this.objectArray[i];
-				this.leftView.array({
+				view.array({
 					width: edgeArray.length/2,
 					items: 2,
 					channels: 2,
@@ -403,7 +443,7 @@ var Mode2D = (function (scope) {
 					id: "cartesian_edge_data" + String(i)
 				});
 				// Draw the geometry
-				this.leftView.vector({
+				view.vector({
 					points: "#cartesian_edge_data" + String(i),
 					color: this.gui.colors.data,
 					width: 10,
@@ -414,20 +454,20 @@ var Mode2D = (function (scope) {
 			}
 			this.numCartesianObjects = this.objectArray.length;
 			// Save to pixels 
-			var objectArray = this.objectArray;
-			this.readback =  this.convertToPixels(function(v){
-				for(var i=0;i<objectArray.length;i++){
-					var edgeArray = objectArray[i];
-					v = v.vector({
-						points: "#cartesian_edge_data" + String(i),
-						color: '#000000',
-						width: 5,
-						start: false,
-						id: "cartesian_pixel_geometry" + String(i)
-					});
-				}
-				return v; 
-			},"indexbuffer")
+			// var objectArray = this.objectArray;
+			// this.readback =  this.convertToPixels(function(v){
+			// 	for(var i=0;i<objectArray.length;i++){
+			// 		var edgeArray = objectArray[i];
+			// 		v = v.vector({
+			// 			points: "#cartesian_edge_data" + String(i),
+			// 			color: '#000000',
+			// 			width: 5,
+			// 			start: false,
+			// 			id: "cartesian_pixel_geometry" + String(i)
+			// 		});
+			// 	}
+			// 	return v; 
+			// },"indexbuffer")
 			
 		} else {
 			// To draw filled in, put all the edges into one big edge array!
@@ -436,7 +476,7 @@ var Mode2D = (function (scope) {
 				for(var j=0;j<this.objectArray[i].length;j++) edgeArray.push(this.objectArray[i][j])
 			}
 
-			this.leftView.array({
+			view.array({
 				items:edgeArray.length,
 				width: 1,
 				channels:2,
@@ -447,20 +487,20 @@ var Mode2D = (function (scope) {
 				id:'cartesian_edge_data'
 			})
 
-			this.leftView.face({
+			view.face({
 				color:this.gui.colors.data,
 				points:'#cartesian_edge_data',
 				opacity:1,
 				id:'cartesian_geometry'
 			})
 
-			this.readback =  this.convertToPixels(function(v){
-				return v.face({
-					color:'#000000',
-					points:'#cartesian_edge_data',
-					id:'cartesian_pixel_geometry'
-				})
-			},"indexbuffer")
+			// this.readback =  this.convertToPixels(function(v){
+			// 	return v.face({
+			// 		color:'#000000',
+			// 		points:'#cartesian_edge_data',
+			// 		id:'cartesian_pixel_geometry'
+			// 	})
+			// },"indexbuffer")
 
 			this.numCartesianObjects = 0;
 		}
@@ -500,20 +540,24 @@ var Mode2D = (function (scope) {
 			this.objectArray = null;
 		}
 	}
-	Mode2D.prototype.cleanupCartesian = function(){
+	Mode2D.prototype.cleanupCartesian = function(view){
 		if(this.numCartesianObjects != 0){
 			for(var i=0;i<this.numCartesianObjects;i++){
-				this.leftView.remove("#cartesian_edge_data" + String(i));
-				this.leftView.remove("#cartesian_geometry" + String(i));
-				this.leftView.remove("#cartesian_pixel_geometry" + String(i));
+				this.leftView.remove("#cartesian_edge_data" + String(i)); this.rightView.remove("#cartesian_edge_data" + String(i));
+				this.leftView.remove("#cartesian_geometry" + String(i)); this.rightView.remove("#cartesian_geometry" + String(i));
+				this.leftView.remove("#cartesian_pixel_geometry" + String(i)); this.rightView.remove("#cartesian_pixel_geometry" + String(i));
 			}
 		} else {
 			this.leftView.remove("#cartesian_edge_data" );
 			this.leftView.remove("#cartesian_geometry" );
 			this.leftView.remove("#cartesian_pixel_geometry" );
+			this.rightView.remove("#cartesian_edge_data" );
+			this.rightView.remove("#cartesian_geometry" );
+			this.rightView.remove("#cartesian_pixel_geometry" );
 		}
 		
 		this.leftView.remove("#indexbuffer");
+		this.rightView.remove("#indexbuffer");
 		this.geometry_id = ""
 		this.numCartesianObjects = 0;
 	}

@@ -18,6 +18,19 @@
 	<!-- Our common gui interface -->
 	<script src="src/gui.js"></script>
 	<!-- All of our 2d/3d/4d modes -->
+	<script type="application/glsl" id="vertex-warp">
+  uniform float time;
+  uniform float intensity;
+
+  vec4 warpVertex(vec4 xyzw, inout vec4 stpq) {
+    xyzw +=   0.2 * intensity * (sin(xyzw.yzwx * 1.91 + time + sin(xyzw.wxyz * 1.74 + time)));
+    xyzw +=   0.1 * intensity * (sin(xyzw.yzwx * 4.03 + time + sin(xyzw.wxyz * 2.74 + time)));
+    xyzw +=  0.05 * intensity * (sin(xyzw.yzwx * 8.39 + time + sin(xyzw.wxyz * 4.18 + time)));
+    xyzw += 0.025 * intensity * (sin(xyzw.yzwx * 15.1 + time + sin(xyzw.wxyz * 9.18 + time)));
+    
+    return xyzw;
+  }
+  </script>
 	<script src="src/2d.js"></script>
 	<script src="src/3d.js"></script>
 	<script src="src/4d.js"></script>
@@ -76,6 +89,8 @@
 
 </div>
 
+
+
 <script type="text/javascript">
 	// Listen for clicks on any of the mode buttons to:
 	//	- Hide the menu
@@ -103,7 +118,6 @@
 			document.querySelector("#world_title").innerHTML = text_map[clicked_name] + " World"
 			// Init the mode (the mode inits the gui with its own options)
 			mode_objects[current_mode].init(document.querySelector("#display"),gui);
-			window.location.hash = "#" + current_mode
 		}
 	}
 
