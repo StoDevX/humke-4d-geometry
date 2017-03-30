@@ -87,7 +87,34 @@ var Mode3D = (function (scope) {
 		this.setMode();
 
 		this.CreateViewAxis("X","Z");
+		this.CalculateIntersection();
 	}
+
+	Mode3D.prototype.CalculateIntersection = function(){
+		console.log("Calculating...")
+		var params = this.gui.params;
+
+		var source = params.source;
+		var axis_value = params.axis_value;
+
+		if(source == "cartesian"){
+			triangleArray = this.triangleArray;
+			this.rightView.interval({
+				id: 'intersection_line_data'
+				expr: function (emit, x, i, t) {
+					emit(x, axis_value);
+				},
+				width: 64,
+				channels: 2,
+			});
+
+			this.rightView.line({
+				id: 'intersection_line'
+				width: 5,
+				color: '#3090FF'
+			});
+		}
+}
 
 	Mode3D.prototype.createView = function(el,width){
 		var mathbox = mathBox({
@@ -117,6 +144,8 @@ var Mode3D = (function (scope) {
 		'axis': function(self,val) {
 			self.rightView.remove("#viewing_2d_axis_1")
 			self.rightView.remove("#viewing_2d_axis_2")
+			self.rightView.remove("#intersection_line")
+			self.rightView.remove("#intersection_line_data")
 	    self.rightView.remove("#viewing_2d_axis_label")
 			self.leftView.remove("#viewing_plane_data");
 			self.leftView.remove("#viewing_plane_geometry");
@@ -124,6 +153,12 @@ var Mode3D = (function (scope) {
 			if(val == "Y") self.CreateViewAxis("X","Z")
 			if(val == "X") self.CreateViewAxis("Z", "Y")
 			if(val == "Z") self.CreateViewAxis("X","Y")
+			self.CalculateIntersection();
+		},
+		'axis_value': function(self,val){
+			self.rightView.remove("#intersection_line")
+			self.rightView.remove("#intersection_line_data")
+			self.CalculateIntersection();
 		},
 		'source': function(self,val){
 			self.setMode();
