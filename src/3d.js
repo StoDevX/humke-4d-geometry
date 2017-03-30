@@ -90,6 +90,26 @@ var Mode3D = (function (scope) {
 		this.CalculateIntersection();
 	}
 
+	// Mode3D.prototype.CalculateIntersectionPoint = function(p1,p2,p3,axis,axis_value) {
+	// 	var axis_conv = {'X':0, 'Y':1, 'Z':2}
+	//
+	// 	var intersection_point = [3];
+	// 	intersection_point[axis_conv[axis]] = axis_value;
+	//
+	// 	var above = [];
+	// 	var below = [];
+	// 	if (p1[axis_conv[axis]] > axis_value) above.push(p1);
+	// 	else below.push(p1);
+	//
+	// 	if (p2[axis_conv[axis]] > axis_value) above.push(p2);
+	// 	else below.push(p2);
+	//
+	// 	if (p3[axis_conv[axis]] > axis_value) above.push(p3);
+	// 	else below.push(p3);
+	//
+	//
+	// }
+
 	Mode3D.prototype.CalculateIntersection = function(){
 		var params = this.gui.params;
 
@@ -99,23 +119,56 @@ var Mode3D = (function (scope) {
 
 		var axis_conv = {'X':0, 'Y':1, 'Z':2}
 
+		var intersection_triangles = [];
+
 		if(source == "cartesian"){
 			triangleArray = this.triangleArray;
 
 			for (var i = 0; i < triangleArray.length; i+=3) {
+				// intersection_triangles.push(triangleArray[i]);
+				// intersection_triangles.push(triangleArray[i+1]);
+				// intersection_triangles.push(triangleArray[i+2]);
 
 				var max = Math.max(triangleArray[i][axis_conv[axis]],triangleArray[i+1][axis_conv[axis]],triangleArray[i+2][axis_conv[axis]]);
 
 				var min = Math.min(triangleArray[i][axis_conv[axis]],triangleArray[i+1][axis_conv[axis]],triangleArray[i+2][axis_conv[axis]]);
 
 				if(axis_value < max && axis_value > min) {
-					console.log("Inside of a triangle");
-					console.log(triangleArray[i]);
-					console.log(triangleArray[i+1]);
-					console.log(triangleArray[i+2]);
+					intersection_triangles.push(triangleArray[i]);
+					intersection_triangles.push(triangleArray[i+1]);
+					intersection_triangles.push(triangleArray[i+2]);
+					// console.log("Inside of a triangle");
+					// console.log(triangleArray[i]);
+					// console.log(triangleArray[i+1]);
+					// console.log(triangleArray[i+2]);
+					// intersection_triangles.push(triangleArray[i]);
+					// intersection_triangles.push(triangleArray[i+1]);
+					// intersection_triangles.push(triangleArray[i+2]);
+					//this.CalculateIntersectionPoint(triangelArray[i],triangleArray[i+1],triangleArray[i+2],axis,axis_value);
 				}
 
 			}
+			if (this.leftView.select("#intersection_triangle_data")){
+				this.leftView.remove("#intersection_triangle_data")
+				this.leftView.remove("#intersection_geometry")
+			}
+
+			this.leftView.array({
+				width: intersection_triangles.length/3,
+				items: 3,
+				channels: 3,
+				data: intersection_triangles,
+				id: "intersection_triangle_data"
+			});
+
+			this.leftView.face({
+				//points: "#intersection_triangle_data",
+				color: 'red',
+				width: 5,
+				opacity: 1,
+				shaded: true,
+				id: "intersection_geometry"
+			});
 
 			this.rightView.interval({
 				id: 'intersection_line_data',
