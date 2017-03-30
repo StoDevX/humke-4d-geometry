@@ -91,16 +91,34 @@ var Mode3D = (function (scope) {
 	}
 
 	Mode3D.prototype.CalculateIntersection = function(){
-		console.log("Calculating...")
 		var params = this.gui.params;
 
 		var source = params.source;
+		var axis = params.axis;
 		var axis_value = params.axis_value;
+
+		var axis_conv = {'X':0, 'Y':1, 'Z':2}
 
 		if(source == "cartesian"){
 			triangleArray = this.triangleArray;
+
+			for (var i = 0; i < triangleArray.length; i+=3) {
+
+				var max = Math.max(triangleArray[i][axis_conv[axis]],triangleArray[i+1][axis_conv[axis]],triangleArray[i+2][axis_conv[axis]]);
+
+				var min = Math.min(triangleArray[i][axis_conv[axis]],triangleArray[i+1][axis_conv[axis]],triangleArray[i+2][axis_conv[axis]]);
+
+				if(axis_value < max && axis_value > min) {
+					console.log("Inside of a triangle");
+					console.log(triangleArray[i]);
+					console.log(triangleArray[i+1]);
+					console.log(triangleArray[i+2]);
+				}
+
+			}
+
 			this.rightView.interval({
-				id: 'intersection_line_data'
+				id: 'intersection_line_data',
 				expr: function (emit, x, i, t) {
 					emit(x, axis_value);
 				},
@@ -109,7 +127,7 @@ var Mode3D = (function (scope) {
 			});
 
 			this.rightView.line({
-				id: 'intersection_line'
+				id: 'intersection_line',
 				width: 5,
 				color: '#3090FF'
 			});
