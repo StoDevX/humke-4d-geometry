@@ -85,9 +85,8 @@ var Mode2D = (function (scope) {
 		this.leftView = leftView;
 		this.CreateViewLine();
 
-		// Draw our main shape
-		this.setMode()
-
+		
+		
 		// Set up right view
 		rightView = rightView.cartesian({
 		  range: [[-10, 10],[-10,10]],
@@ -100,30 +99,60 @@ var Mode2D = (function (scope) {
 		this.rightView = rightView
 
 	    this.CreateViewAxis(1,[11,1],"x")
-	    //this.CalculateIntersection();
+
+	    // Set up right view intersection shader
+	    this.SetupIntersection();
+
+	    // Draw our main shape
+		this.setMode()
+
 	}
+
+	function hexToRgb(hex) {
+	// from: http://stackoverflow.com/a/5624139/1278023
+	    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+	    return result ? {
+	        r: parseInt(result[1], 16)/255,
+	        g: parseInt(result[2], 16)/255,
+	        b: parseInt(result[3], 16)/255
+	    } : null;
+	}
+
 
 	Mode2D.prototype.SetupIntersection = function(){
 		var params = this.gui.params
 		// Apply the intersection shader 
 		// Run vertex shader to get fragment positions, then fragment shader to discard pixels 
-		var view = this.rightView.shader({
+		this.rightView = this.rightView.shader({
 			code : [
 			"#define POSITION_STPQ",
+			"uniform float axis_value;",
+			"uniform float axis;",
 			"void getPosition(inout vec4 xyzw, inout vec4 stpq) {",
+			"xyzw.y -= axis_value - 1.0;",
 			"stpq = xyzw;",
 			"}"
 			].join("\n")
+		}, {
+			axis_value: function(){ return params.axis_value },
+			axis: function(){ return params.axis }
 		}).vertex({pass: 'data'})
 		
-		view = view.shader({
+		var rgb_color = hexToRgb(this.gui.colors.data)
+		// Make it a little darker 
+		var factor = 0.8;
+		rgb_color.r *= factor;
+		rgb_color.g *= factor;
+		rgb_color.b *= factor;
+
+		this.rightView = this.rightView.shader({
 				code: [
 				"#define POSITION_STPQ",
 				"uniform float axis_value;",
 				"uniform float axis;",
-				"vec4 getColor(vec4 rgba, inout vec4 stpq) {",
-				"if(abs(stpq.y - axis_value) > 0.1) discard;",
-				"return vec4(1.0,0.0,0.0,1.0);",
+				"vec4 getColor(vec4 xyzw, inout vec4 stpq) {",
+				"if(abs(stpq.y - 1.0) > 0.1) discard;",
+				"return vec4("+rgb_color.r+","+rgb_color.g+","+rgb_color.b+",1.0);",
 				"}"
 				].join("\n")
 			}, {
@@ -131,115 +160,7 @@ var Mode2D = (function (scope) {
 					axis: function(){ return params.axis }
 				})
 			.fragment()
-		return view;
-	}
-
-	Mode2D.prototype.CalculateIntersection = function(){
-		var params = this.gui.params;
-		if(this.readback == undefined) return;
-		// Remove if it already exists
-		if(this.rightView.select("#intersection_plot")){
-			this.rightView.remove("#intersection_plot");
-			this.rightView.remove("#intersection_data");
-		}
-
-		var points = [];
-		// Calculate intersection from pixel data
-		var data = this.readback.get('data');
-		var w = this.readback.get('width');
-		var h = this.readback.get('height');
-		var ratio = w/h;
-
-		function checkPixel(x,y){
-			var index = Math.round((x + w * (y)) * 4);
-			var r = data[index];
-			var g = data[index+1];
-			var b = data[index+2];
-			var avg = (r+g+b)/3;
-			if(avg == 0) {
-				var p = [x,y];
-				//Convert back to grid coordinates 
-				p[0] = (p[0] / w) * ratio * 20 - 10;
-				p[1] = (p[1] / h) * 20 - 10;
-				return p;
-			}
-			return false;
-		}
-
-		if(params.axis == "X"){
-			var x = Math.round( ((params.axis_value + 10) / 20) * (w-35) );
-			for(var y=0;y<h;y+=5){
-				var p = checkPixel(x,y);
-				if(p){
-					p[0] = p[1];
-					p[1] = 1;
-					points.push(p);
-				}
-			}
-		}
-		if(params.axis == "Y"){
-			var y = Math.round( ((params.axis_value + 10) / 20) * h );
-			for(var x=0;x<w;x+=5) {
-				var p = checkPixel(x,y);
-				if(p){
-					p[1] = 1;
-					points.push(p);
-				}
-			}
-		}
-
 		
-
-		// for(var y=0;y<h;y++){
-		// 	for(var x=0;x<w;x++){
-		// 		var index = Math.round((x + w * (h - y)) * 4);
-		// 		var r = data[index];
-		// 		var g = data[index+1];
-		// 		var b = data[index+2];
-		// 		var avg = (r+g+b)/3;
-		// 		if(avg == 0) {
-		// 			var p = [x,y];
-		// 			//Convert back to grid coordinates 
-		// 			p[0] = (p[0] / w) * ratio * 20 - 10;
-		// 			p[1] = (p[1] / h) * 20 - 10;
-		// 			points.push(p)
-		// 		}
-		// 	}
-		// }
-
-		// Split into lines 
-		var dist_to_split = 1;
-		var new_points = []
-		new_points.push(points[0]);
-		var last_point = points[0];
-		for(var i=1;i<points.length;i++){
-			var curr_p = points[i];
-			if(Math.abs(curr_p[0] - last_point[0]) > dist_to_split){
-				new_points.push(last_point);
-				last_point = curr_p;
-				new_points.push(curr_p);
-			} else {
-				if(i == points.length-1) new_points.push(curr_p)
-				last_point = curr_p;
-			}
-		}
-		points = new_points;
-
-		this.rightView.array({
-			channels:2,
-			items:2,
-			width:points.length/2,
-			live:false,
-			data:points,
-			id:'intersection_data'
-		})
-		.vector({
-			color:this.gui.colors.data,
-			points:"#intersection_data",
-			id:'intersection_plot',
-			width:10,
-			start:false
-		})
 	}
 
 	Mode2D.prototype.CreateViewAxis = function(axisNum,pos,labelName){
@@ -287,7 +208,8 @@ var Mode2D = (function (scope) {
 	// define a function to be called when each param is updated
 	function updateParametricCallback(self,val){
 		self.cleanupParametric();
-		self.initParametric()
+		self.initParametric(self.leftView);
+		self.initParametric(self.rightView);
 	}
 
 	Mode2D.prototype.callbacks = {
@@ -308,76 +230,29 @@ var Mode2D = (function (scope) {
 		'resolution': function(self,val){
 			self.cleanupCartesian();
 			self.initCartesian(self.leftView);
-			self.initCartesian(self.rightView,true);
+			self.initCartesian(self.rightView);
 		},
 		'fill': function(self,val){
 			self.cleanupCartesian();
+
+			// console.log(" == LEFT == ");
+			// self.leftView.print();
+			// console.log(" == RIGHT == ");
+			// self.rightView.print();
+
 			self.initCartesian(self.leftView);
-			self.initCartesian(self.rightView,true);
+			self.initCartesian(self.rightView);
 		},
 		'equation': function(self,val){
 			self.cleanupCartesian();
 			self.initCartesian(self.leftView);
-			self.initCartesian(self.rightView,true);
+			self.initCartesian(self.rightView);
 		},
 		'points': function(self,val){
 			self.updateConvexHull()
 		},
 		'axis_value': function(self,val){
-			//self.CalculateIntersection();
-			// if(self.readback == null) return;
-			// var data = self.readback.get('data');
-			// var w = self.readback.get('width');
-			// var h = self.readback.get('height');
-
-			// // Check if there is at least one hit on this the horizontal axis 
-			// var hit = false; 
-			// var y = Math.round( ((val + 10) / 20) * h );
-			// for(var x=0;x<w;x++){
-			// 	var index = Math.round((x + w * (h - y)) * 4);
-			// 	var r = data[index];
-			// 	var g = data[index+1];
-			// 	var b = data[index+2];
-			// 	var avg = (r+g+b)/3;
-			// 	//console.log("Alpha: " + String(alpha) + " at pixel (" + String(x) + "," + String(y) + ")")
-			// 	if(avg == 0){ // 0 is black, so there is something there
-			// 		hit = true;
-			// 		console.log("HIT! at (" + String(x) + "," + String(y) + ")")
-			// 		break;
-			// 	}
-			// }
-
-			// // Create canvas and draw the thing 
-			// var canvas  = document.querySelector("#debug_canvas")
-			// var ctx = canvas.getContext('2d');
-			// canvas.width = w
-			// canvas.height = h
-			// canvas.style.width = w + "px"; 
-			// canvas.style.height = h + "px";
-			// var id = ctx.getImageData(0, 0, 1, 1);
-
-			// for(var x=0;x<w;x+=5){
-			// 	for(y=0;y<h;y+=5){
-			// 		var index = Math.round((x + w * (h - y)) * 4);
-			// 		var r = data[index];
-			// 		var g = data[index+1];
-			// 		var b = data[index+2];
-			// 		var a = data[index+3];
-			// 		id.data[0] = r;
-			// 		id.data[1] = g;
-			// 		id.data[2] = b;
-			// 		id.data[3] = a;
-			// 		ctx.putImageData(id,x,y);
-			// 	}
-			// }			
-
-			// for(var y=0;y<h;y++){
-			// 	id.data[0] = 0;
-			// 	id.data[1] = 0;
-			// 	id.data[2] = 0;
-			// 	id.data[3] = 255;
-			// 	ctx.putImageData(id,w-35,y);
-			// }
+			
 
 		},
 		'param_eq_x': updateParametricCallback, 
@@ -415,20 +290,24 @@ var Mode2D = (function (scope) {
 		//Init new 
 		if(this.current_mode == "cartesian") {
 			this.initCartesian(this.leftView);
-			this.initCartesian(this.rightView,true);
+			this.initCartesian(this.rightView);
 		}
-		if(this.current_mode == "parametric") this.initParametric();
-		if(this.current_mode == "convex-hull") this.initConvexHull();
+		if(this.current_mode == "parametric") {
+			this.initParametric(this.leftView);
+			this.initParametric(this.rightView);
+		}
+		if(this.current_mode == "convex-hull") {
+			this.initConvexHull(this.leftView);
+			this.initConvexHull(this.rightView);
+		}
 
 	}
 
 	// >>>>>>>>>> Cartesian mode functions 
-	Mode2D.prototype.initCartesian = function(view,intersection){
+	Mode2D.prototype.initCartesian = function(view){
 		this.polygonizeCartesian();
 		if(this.objectArray == null) return; //Failed to parse 
 		var params = this.gui.params
-
-		if(intersection) view = this.SetupIntersection();
 
 		if(params.fill==false){
 			// Create the edge data 
@@ -560,11 +439,13 @@ var Mode2D = (function (scope) {
 		this.rightView.remove("#indexbuffer");
 		this.geometry_id = ""
 		this.numCartesianObjects = 0;
+
+
 	}
 	
 
 	// >>>>>>>>>>> Parametric mode functions
-	Mode2D.prototype.initParametric = function(){
+	Mode2D.prototype.initParametric = function(view){
 		var a_range = [0,1];
 		var b_range = [0,1];
 		var params = this.gui.params
@@ -576,7 +457,7 @@ var Mode2D = (function (scope) {
 		b_range[0] = Parser.evaluate(splitArrayB[0]);
 		b_range[1] = Parser.evaluate(splitArrayB[2]);
 
-		this.leftView.area({
+		view.area({
 			rangeX: a_range,
 			rangeY: b_range,
 			width: 30,
@@ -592,21 +473,12 @@ var Mode2D = (function (scope) {
 			live:false
 		})
 
-		this.leftView.surface({
+		view.surface({
 			color:this.gui.colors.data,
 			id:'param_geometry',
 			opacity:1
 		})
 
-		// Render to texture 
-		this.readback =  this.convertToPixels(function(v){
-			return v.surface({
-				points:'#param_data',
-				id:'param_pixel_geometry',
-				color: '#000000',
-	        	blending: 'no',
-			})
-		},"indexbuffer")
 		
 
 		this.geometry_id = "param_geometry"
@@ -624,17 +496,21 @@ var Mode2D = (function (scope) {
 		this.leftView.remove("#param_data");
 		this.leftView.remove("#param_geometry");
 		this.leftView.remove("#param_pixel_geometry");
-		this.leftView.remove("#indexbuffer");
+
+		this.rightView.remove("#param_data");
+		this.rightView.remove("#param_geometry");
+		this.rightView.remove("#param_pixel_geometry");
+
 		this.geometry_id = ""
 	}
 
 	//  >>>>>>>>>>> Convex Hull mode functions
-	Mode2D.prototype.initConvexHull = function(){
+	Mode2D.prototype.initConvexHull = function(view){
 		this.parseConvexPoints()
 		var pointsArray = this.pointsArray;
 
 		// Set the data
-		this.leftView.array({
+		view.array({
 			expr: function (emit, i, t) {
 				for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
 		    },
@@ -644,22 +520,13 @@ var Mode2D = (function (scope) {
 		    id:'hull_data'
 		})
 		// Draw the geometry 
-		this.leftView.face({
+		view.face({
 			color:this.gui.colors.data,
 			id:'hull_geometry',
 			points:'#hull_data',
 			opacity:1,
 		})
 
-		// Render to texture 
-		this.readback =  this.convertToPixels(function(v){
-			return v.face({
-				points:'#hull_data',
-				id:'hull_pixel_geometry',
-				color: '#000000',
-	        	blending: 'no',
-			})
-		},"indexbuffer")
 
 		this.geometry_id = "hull_geometry"
 	}
@@ -695,13 +562,18 @@ var Mode2D = (function (scope) {
 			for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
 		}) */
 		this.cleanupConvexHull();
-		this.initConvexHull();
+		this.initConvexHull(this.leftView);
+		this.initConvexHull(this.rightView);
 	}
 	Mode2D.prototype.cleanupConvexHull = function(){
 		this.leftView.remove("#hull_data")
 		this.leftView.remove("#hull_geometry")
 		this.leftView.remove("#hull_pixel_geometry")
-		this.leftView.remove("#indexbuffer");
+
+		this.rightView.remove("#hull_data")
+		this.rightView.remove("#hull_geometry")
+		this.rightView.remove("#hull_pixel_geometry")
+
 		this.geometry_id = ""
 	}
 
