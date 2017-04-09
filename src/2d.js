@@ -98,7 +98,7 @@ var Mode2D = (function (scope) {
 		})
 		this.rightView = rightView
 
-	    this.CreateViewAxis(1,[11,1],"x")
+	    this.axis_object  = this.CreateViewAxis(this.rightView,1,[11,1],"x")
 
 	    // Set up right view intersection shader
 	    this.SetupIntersection();
@@ -129,13 +129,17 @@ var Mode2D = (function (scope) {
 			"uniform float axis_value;",
 			"uniform float axis;",
 			"void getPosition(inout vec4 xyzw, inout vec4 stpq) {",
-			"xyzw.y -= axis_value - 1.0;",
+			"if(axis == 1.0) xyzw.y -= axis_value - 1.0;",
+			"if(axis == 0.0) xyzw.x -= axis_value - 1.0;",
 			"stpq = xyzw;",
 			"}"
 			].join("\n")
 		}, {
 			axis_value: function(){ return params.axis_value },
-			axis: function(){ return params.axis }
+			axis: function(){ 
+				if( params.axis == "X") return 0; 
+				if( params.axis == "Y") return 1; 
+			}
 		}).vertex({pass: 'data'})
 		
 		var rgb_color = hexToRgb(this.gui.colors.data)
@@ -151,37 +155,44 @@ var Mode2D = (function (scope) {
 				"uniform float axis_value;",
 				"uniform float axis;",
 				"vec4 getColor(vec4 xyzw, inout vec4 stpq) {",
-				"if(abs(stpq.y - 1.0) > 0.1) discard;",
+				"if(axis == 1.0 && abs(stpq.y - 1.0) > 0.1) discard;", // Y axis
+				"if(axis == 0.0 && abs(stpq.x - 1.0) > 0.1) discard;", // X axis
 				"return vec4("+rgb_color.r+","+rgb_color.g+","+rgb_color.b+",1.0);",
 				"}"
 				].join("\n")
 			}, {
 					axis_value: function(){ return params.axis_value },
-					axis: function(){ return params.axis }
+					axis: function(){ 
+						if( params.axis == "X") return 0; 
+						if( params.axis == "Y") return 1; 
+					}
 				})
 			.fragment()
 		
 	}
 
-	Mode2D.prototype.CreateViewAxis = function(axisNum,pos,labelName){
-		this.rightView.axis({
+	Mode2D.prototype.CreateViewAxis = function(view,axisNum,pos,labelName){
+		view.axis({
 		    axis: axisNum,
 		    width: 4,
 		    color:'black',
 		    id:'viewing_1d_axis',
 		  })
 
-		this.rightView.array({
+		view.array({
 	      data: [pos],
 	      channels: 2, // necessary
 	      live: false,
+	      id:"viewing_1d_axis_pos"
 	    }).text({
 	      data: [labelName],
+	      id:"viewing_1d_axis_text"
 	    }).label({
 	      color: 0x000000,
 	      id:'viewing_1d_axis_label',
 	    });
 
+	    return view;
 	}
 
 	Mode2D.prototype.CreateViewLine = function(){
@@ -214,10 +225,21 @@ var Mode2D = (function (scope) {
 
 	Mode2D.prototype.callbacks = {
 		'axis': function(self,val){
-			self.rightView.remove("#viewing_1d_axis")
-	    	self.rightView.remove("#viewing_1d_axis_label")
-			if(val == "Y") self.CreateViewAxis(1,[11,1],"x")
-			if(val == "X") self.CreateViewAxis(1,[11,1],"y")
+			if(val == "X"){
+				self.axis_object.select("#viewing_1d_axis").set("axis",2);
+				self.axis_object.select("#viewing_1d_axis_pos").set("data",[1,12]);
+				self.axis_object.select("#viewing_1d_axis_text").set("data",["y"]);
+			}
+			if(val == "Y"){
+				self.axis_object.select("#viewing_1d_axis").set("axis",1);
+				self.axis_object.select("#viewing_1d_axis_pos").set("data",[11,1]);
+				self.axis_object.select("#viewing_1d_axis_text").set("data",["x"]);
+			}
+			
+			// self.axis_object.remove("#viewing_1d_axis")
+	  //   	self.axis_object.remove("#viewing_1d_axis_label")
+			// if(val == "Y") self.axis_object = self.CreateViewAxis(self.rightView,1,[11,1],"x")
+			// if(val == "X") self.axis_object = self.CreateViewAxis(self.rightView,2,[1,12],"y")
 		},
 		'thickness': function(self,val){
 			// need to change the line's property when thickness changes
