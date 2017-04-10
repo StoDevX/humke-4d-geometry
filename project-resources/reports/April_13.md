@@ -10,3 +10,12 @@ To do:
   * Make it work for parametric and convex 
 * ~Input 4D cartesian equation~
 * ~See intersections in 4D volumes~
+
+Next Steps:
+
+* Input 4D convex hull
+  * Figure out a way to calculate 3d intersections of this?
+* Input 4D parametric 
+  * I don't even know where to start here 
+* Project 4D on the left side 
+* What else are we missing?
