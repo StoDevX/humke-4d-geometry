@@ -126,7 +126,6 @@ var Mode3D = (function (scope) {
 				}
 
 			}
-			console.log(intersection_points);
 
 			if (this.rightView.select("#intersection_point_data")){
 				this.rightView.remove("#intersection_point_data")
@@ -136,6 +135,7 @@ var Mode3D = (function (scope) {
 			this.rightView.array({
 				width: intersection_points.length,
 				channels: 2,
+				items:2,
 				data: intersection_points,
 				id: "intersection_point_data"
 			});
@@ -169,7 +169,7 @@ var Mode3D = (function (scope) {
 			// });
 
 		}
-}
+	}
 
 	Mode3D.prototype.createView = function(el,width){
 		var mathbox = mathBox({
