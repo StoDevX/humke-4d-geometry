@@ -4,5 +4,7 @@ To do:
 
 * ~Make 2d intersections smooth with shaders~
 * Finish 3D intersections 
-* Input 4D equation 
-* See intersections in 4D volumes
+  * Make it work for X and Z planes too
+  * Make it work for parametric and convex 
+* ~Input 4D cartesian equation~
+* ~See intersections in 4D volumes~
