@@ -51,7 +51,8 @@ var GUI = (function (scope) {
 			'param_eq_x':'sin(a) * b * 5', // butterfly wings
 			'param_eq_y':'sin(a * 2) * b * 5',
 			'param_a':'0 < a < 2 * PI',
-			'param_b':'0 < b < 1'
+			'param_b':'0 < b < 1',
+			'axis':'Y'
 		}
 		// 3D defaults 
 		this.defaults['3D'] = {
@@ -63,19 +64,24 @@ var GUI = (function (scope) {
 			'param_eq_z':'a/3',
 			'param_a':'-4 * PI < a < 4 * PI',
 			'param_b':'0 < b < 1',
-			'param_c':'0 < c < 1'
+			'param_c':'0 < c < 1',
+			'axis':'Y'
 		}
 
 		// 3D defaults 
 		this.defaults['4D'] = {
-			'equation':'x^2+y^2+z^2 = 100', 
-			'points':'(5,0,5),(5,0,-5),(-5,0,-5),(-5,0,5),(5,5,5),(5,5,-5),(-5,5,-5),(-5,5,5)', 
-			'param_eq_x':'b * cos(a) - c * sin(a)',
-			'param_eq_y':'b * sin(a) + c * cos(a)',
-			'param_eq_z':'a/3',
-			'param_a':'-4 * PI < a < 4 * PI',
+			'equation':'x^2+y^2+z^2+w^2 = 10', 
+			'points':'', 
+			'resolution':20,
+			'param_eq_x':'',
+			'param_eq_y':'',
+			'param_eq_z':'',
+			'param_eq_w':'',
+			'param_a':'0 < a < 1',
 			'param_b':'0 < b < 1',
-			'param_c':'0 < c < 1'
+			'param_c':'0 < c < 1',
+			'param_d':'0 < d < 1',
+			'axis':'W'
 		}
 
 		this.mode_obj = null;
@@ -131,7 +137,7 @@ var GUI = (function (scope) {
 	    this.initCartesianSource();
 
 	    // Now the viewing controls 
-	    var axis_value_control = this.viewingControls.add(params, 'axis_value').min(-10).max(10).step(0.01).name('Y = ').listen();
+	    var axis_value_control = this.viewingControls.add(params, 'axis_value').min(-10).max(10).step(0.01).listen();
 	    axis_value_control.onChange(function(val){
 	    	if(callbacks['axis_value']) callbacks['axis_value'](mode_obj,val);
 	    })
@@ -143,6 +149,8 @@ var GUI = (function (scope) {
 	    	params.axis_value = 0;
 	    	if(callbacks['axis']) callbacks['axis'](mode_obj,val);
 	    });
+	    // Set axis name 
+	    axis_value_control.name(params.axis + " = ")
 
 	    /*
 	    this.viewingControls.add(params, 'samples', 200, 10000).name('Samples');
