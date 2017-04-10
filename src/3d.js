@@ -126,20 +126,21 @@ var Mode3D = (function (scope) {
 				}
 
 			}
+			console.log(intersection_points);
 
-			if (this.leftView.select("#intersection_point_data")){
-				this.leftView.remove("#intersection_point_data")
-				this.leftView.remove("#intersection_geometry")
+			if (this.rightView.select("#intersection_point_data")){
+				this.rightView.remove("#intersection_point_data")
+				this.rightView.remove("#intersection_geometry")
 			}
 
-			this.leftView.array({
+			this.rightView.array({
 				width: intersection_points.length,
-				channels: 3,
+				channels: 2,
 				data: intersection_points,
 				id: "intersection_point_data"
 			});
 
-			this.leftView.point({
+			this.rightView.point({
 				color: 'green',
 				size: 10,
 				id: "intersection_geometry"

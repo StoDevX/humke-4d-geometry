@@ -3,7 +3,7 @@ CalculateIntersectionPoints = function(p1,p2,p3,axis,axis_value) {
 
   if (axis == 'Y') { // currently only handles Y axis. Needs to be generalized to X and Y
 
-    var intersection_point = [6];
+    var intersection_point = [4];
 
     var above = [];
     var below = [];
@@ -26,8 +26,8 @@ CalculateIntersectionPoints = function(p1,p2,p3,axis,axis_value) {
       var t = (below[0][1] - axis_value)/(direction[1]*-1);
 
       intersection_point[0] = below[0][0] + t * direction[0];
-      intersection_point[1] = axis_value;
-      intersection_point[2] = below[0][2] + t * direction[2];
+      //intersection_point[1] = axis_value;
+      intersection_point[1] = below[0][2] + t * direction[2];
 
       direction[0] = below[1][axis_conv['X']] - above[0][axis_conv['X']];
       direction[1] = below[1][axis_conv['Y']] - above[0][axis_conv['Y']];
@@ -35,9 +35,9 @@ CalculateIntersectionPoints = function(p1,p2,p3,axis,axis_value) {
 
       t = (below[1][1] - axis_value)/(direction[1]*-1);
 
-      intersection_point[3] = below[1][0] + t * direction[0];
-      intersection_point[4] = axis_value;
-      intersection_point[5] = below[1][2] + t * direction[2];
+      intersection_point[2] = below[1][0] + t * direction[0];
+      //intersection_point[4] = axis_value;
+      intersection_point[3] = below[1][2] + t * direction[2];
 
       return intersection_point;
     }
@@ -50,8 +50,8 @@ CalculateIntersectionPoints = function(p1,p2,p3,axis,axis_value) {
       var t = (above[0][1] - axis_value)/(direction[1]*-1);
 
       intersection_point[0] = above[0][0] + t * direction[0];
-      intersection_point[1] = axis_value;
-      intersection_point[2] = above[0][2] + t * direction[2];
+      //intersection_point[1] = axis_value;
+      intersection_point[1] = above[0][2] + t * direction[2];
 
       direction[0] = above[1][axis_conv['X']] - below[0][axis_conv['X']];
       direction[1] = above[1][axis_conv['Y']] - below[0][axis_conv['Y']];
@@ -59,9 +59,9 @@ CalculateIntersectionPoints = function(p1,p2,p3,axis,axis_value) {
 
       var t = (above[1][1] - axis_value)/(direction[1]*-1);
 
-      intersection_point[3] = above[1][0] + t * direction[0];
-      intersection_point[4] = axis_value;
-      intersection_point[5] = above[1][2] + t * direction[2];
+      intersection_point[2] = above[1][0] + t * direction[0];
+      //intersection_point[4] = axis_value;
+      intersection_point[3] = above[1][2] + t * direction[2];
 
       return intersection_point;
     }
