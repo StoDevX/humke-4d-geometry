@@ -30,6 +30,7 @@
     vec3 d3 = abs(fract(stpq.xyz * 16.0) - .5);
     float level = 1.0 - 2.0 * min(d3.x, min(d3.y, d3.z));
     float grid = clamp(level * 32.0 - 24.0, 0.0, 1.0) * .5 + .5;
+    if(stpq.y > 0.5) discard;
     
     return vec4(rgb * grid, 1.0);
   }
