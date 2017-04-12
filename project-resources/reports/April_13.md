@@ -8,7 +8,7 @@ To do:
   * ~Draw the filled in area of intersection in real time~
   * ~Make it work for X and Z planes too~
   * ~Make it work convex~
-  * Make it work for parametric
+  * ~Make it work for parametric~
   * Figure out clean way to fill the inside 
 * ~Input 4D cartesian equation~
 * ~See intersections in 4D volumes~
