@@ -443,14 +443,14 @@ var Mode3D = (function (scope) {
 		instance.build()
 		var vertices = instance.collectFaces()
 		this.triangleArray = []
-		for(var i=0;vertices.length;i++){
-			console.log(vertices[i])
-			// var v1 = pointsArray[vertices[i][0]];
-			// var v2 = pointsArray[vertices[i][1]];
-			// var v3 = pointsArray[vertices[i][2]];
-			// this.triangleArray.push(v1);
-			// this.triangleArray.push(v2);
-			// this.triangleArray.push(v3);
+
+		for(var i=0;i<vertices.length;i++){
+			var v1 = pointsArray[vertices[i][0]];
+			var v2 = pointsArray[vertices[i][1]];
+			var v3 = pointsArray[vertices[i][2]];
+			this.triangleArray.push(v1);
+			this.triangleArray.push(v2);
+			this.triangleArray.push(v3);
 		}
 
 		this.leftView.array({
