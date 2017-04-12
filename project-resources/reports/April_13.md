@@ -6,7 +6,7 @@ To do:
 * Finish 3D intersections 
   * ~Correctly calculate the intersection points~
   * ~Draw the filled in area of intersection in real time~
-  * Make it work for X and Z planes too
+  * ~Make it work for X and Z planes too~
   * Make it work for parametric and convex 
 * ~Input 4D cartesian equation~
 * ~See intersections in 4D volumes~
