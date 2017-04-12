@@ -103,10 +103,6 @@ var Mode3D = (function (scope) {
 		var intersection_points = [];
 		var triangleArray = this.triangleArray;
 
-		if(source == "parametric"){
-			return; // Haven't figured this out yet 
-		}
-		
 		for (var i = 0; i < triangleArray.length; i+=3) {
 
 			var max = Math.max(triangleArray[i][axis_conv[axis]],triangleArray[i+1][axis_conv[axis]],triangleArray[i+2][axis_conv[axis]]);
@@ -210,7 +206,7 @@ var Mode3D = (function (scope) {
 	// define a function to be called when each param is updated
 	function updateParametricCallback(self,val){
 		self.cleanupParametric();
-		self.initParametric()
+		self.initTesselatedParametric()
 	}
 
 	Mode3D.prototype.callbacks = {
@@ -281,7 +277,7 @@ var Mode3D = (function (scope) {
 		this.current_mode = params.source;
 		//Init new
 		if(this.current_mode == "cartesian") this.initCartesian();
-		if(this.current_mode == "parametric") this.initParametric();
+		if(this.current_mode == "parametric") this.initTesselatedParametric();
 		if(this.current_mode == "convex-hull") this.initConvexHull();
 	}
 
@@ -392,6 +388,148 @@ var Mode3D = (function (scope) {
 	Mode3D.prototype.cleanupCartesian = function(){
 		this.leftView.remove("#cartesian_triangle_data");
 		this.leftView.remove("#cartesian_geometry");
+	}
+
+	Mode3D.prototype.initTesselatedParametric = function(){
+		function klein(  u,v ) {
+			u *= Math.PI;
+			v *= 2 * Math.PI;
+
+			u = u * 2;
+			var x, y, z;
+			if ( u < Math.PI ) { 	
+
+				x = 3 * Math.cos( u ) * ( 1 + Math.sin( u ) ) + ( 2 * ( 1 - Math.cos( u ) / 2 ) ) * Math.cos( u ) * Math.cos( v );
+				z = - 8 * Math.sin( u ) - 2 * ( 1 - Math.cos( u ) / 2 ) * Math.sin( u ) * Math.cos( v );
+
+			} else {
+
+				x = 3 * Math.cos( u ) * ( 1 + Math.sin( u ) ) + ( 2 * ( 1 - Math.cos( u ) / 2 ) ) * Math.cos( v + Math.PI );
+				z = - 8 * Math.sin( u );
+
+			}
+
+			y = - 2 * ( 1 - Math.cos( u ) / 2 ) * Math.sin( v );
+
+			return [x,y,z]
+		}
+
+		function spiral_tube(u,v){
+			v *= 8 * Math.PI -  4 * Math.PI;
+			v*= 2;
+			u *= 2;
+
+			var x = 1 * Math.cos(v) - u * Math.sin(v);
+			var y = 1 * Math.cos(v) + u * Math.cos(v);
+			var z = v/2;
+
+			return [x,y,z];
+		}
+
+		function torus(u,v){
+			u *= 2 * Math.PI;
+			v *=  Math.PI;
+
+
+			var x = (4 + 0.5 * (3 + 5 * Math.cos(v))) * Math.sin(u);
+			var y = (4 + 0.5 * (3 + 5 * Math.cos(v))) * Math.cos(u);
+			var z = 4 + 5 * Math.sin(v);
+
+			return [x,y,z];
+		}
+
+
+
+		// this.leftView.volume({
+		// 	rangeX: [0,1],
+		// 	rangeY: [0,2 * Math.PI],
+		// 	rangeZ: [0, Math.PI],
+		// 	width: 25,
+		// 	height: 25,
+		// 	depth: 25,
+		// 	expr: function(emit, x,y,z,i,j,k){
+		// 		var p = torus(x,y,z)
+
+		// 		emit(p[0],p[1],p[2]);
+		// 	},
+		// 	channels:3,
+		// 	id:'param_data',
+		// 	live:false
+		// })
+
+		// this.leftView.point({
+		// 	color:this.gui.colors.data,
+		// 	id:'param_geometry',
+		// 	//shaded:true,
+		// 	opacity:1
+		// })		
+
+		// Uniformly sample the points 	
+		/// from: https://github.com/mrdoob/three.js/blob/master/src/geometries/ParametricGeometry.js
+		var slices = 25;
+		var stacks = 25;
+		var sliceCount = slices+1;
+		var vertices = [];
+		var indices  = [];
+
+		for(var i=0;i<=stacks;i++){
+			var v = i / stacks;
+			for(var j=0;j<=slices;j++){
+				var u = j / slices; 
+				var p = spiral_tube(u,v);
+				vertices.push(p);
+			}
+		}
+
+		for ( i = 0; i < stacks; i ++ ) {
+			for ( j = 0; j < slices; j ++ ) {
+				var a = i * sliceCount + j;
+				var b = i * sliceCount + j + 1;
+				var c = ( i + 1 ) * sliceCount + j + 1;
+				var d = ( i + 1 ) * sliceCount + j;
+
+				// faces one and two
+
+				indices.push( [a, b, d] );
+				indices.push( [b, c, d] );
+
+			}
+		}
+
+		this.triangleArray = []
+
+		for(var i=0;i<indices.length;i++){
+			var v1 = vertices[indices[i][0]];
+			var v2 = vertices[indices[i][1]];
+			var v3 = vertices[indices[i][2]];
+			this.triangleArray.push(v1);
+			this.triangleArray.push(v2);
+			this.triangleArray.push(v3);
+		}
+
+		this.leftView.array({
+		    expr: function (emit, i, t) {
+		      var v1 = vertices[indices[i][0]];
+		      var v2 = vertices[indices[i][1]];
+		      var v3 = vertices[indices[i][2]];
+		      emit(v1[0],v1[1],v1[2])
+		      emit(v2[0],v2[1],v2[2])
+		      emit(v3[0],v3[1],v3[2])
+		      },
+	        width: indices.length,
+	        items: 3,
+	        channels: 3,
+	        live:false,
+	        id:'param_data'
+		  })
+	  this.leftView.face({
+	    color:this.gui.colors.data,
+	    shaded:true,
+	    id:'param_geometry',
+	    points:'#param_data',
+	  })
+
+
 	}
 
 	Mode3D.prototype.initParametric = function(){

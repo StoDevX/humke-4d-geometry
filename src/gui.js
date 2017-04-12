@@ -196,6 +196,15 @@ var GUI = (function (scope) {
 		var callbacks = this.callbacks;
 		var mode_obj = this.mode_obj;
 
+		// Create fill option only in 3D 
+		if(this.mode == "3D"){
+			var fill = this.shapeProperties.add(this.params, 'fill').name('Fill').onChange(function(val){
+				if(callbacks['fill']) callbacks['fill'](mode_obj,val);
+			});
+			arr.push(fill)
+		}
+		
+
 		arr.push(this.shapeProperties.add(this.params, 'param_eq_x').name('x = '));
 		arr.push(this.shapeProperties.add(this.params, 'param_eq_y').name('y = '));
 		if(this.mode == "3D" || this.mode  == "4D"){
