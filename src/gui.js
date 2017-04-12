@@ -29,7 +29,7 @@ var GUI = (function (scope) {
 			'fill':false,
 
 			// Viewing Controls
-			'axis_value':0,
+			'axis_value':0.1,
 			'axis':'Y',
 			'samples':200,
 			'thickness':'medium'

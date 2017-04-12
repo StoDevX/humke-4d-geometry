@@ -136,6 +136,7 @@ var Mode3D = (function (scope) {
 			this.rightView.remove("#intersection_hull_geometry")
 		}
 
+		console.log(intersection_points.length,"<<")
 
 		var pointsArray = []
 		for(var i=0;i<intersection_points.length;i++){
@@ -225,6 +226,9 @@ var Mode3D = (function (scope) {
 			if(val == "Y") self.CreateViewAxis("X","Z")
 			if(val == "X") self.CreateViewAxis("Z", "Y")
 			if(val == "Z") self.CreateViewAxis("X","Y")
+
+			self.rightView.remove("#intersection_line")
+			self.rightView.remove("#intersection_line_data")
 			self.CalculateIntersection();
 		},
 		'axis_value': function(self,val){
@@ -240,6 +244,10 @@ var Mode3D = (function (scope) {
 		'source': function(self,val){
 			self.setMode();
 			self.gui.params.render_shape = true; //Reset this back to true
+
+			self.rightView.remove("#intersection_line")
+			self.rightView.remove("#intersection_line_data")
+			self.CalculateIntersection();
 		},
 		'resolution': function(self,val){
 			self.cleanupCartesian();
