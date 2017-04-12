@@ -7,3 +7,4 @@ Here's a collection of some useful/inspiring links:
 * [Tutorial on Parametric Equations](http://www.econym.demon.co.uk/isotut/parametric.htm) - is a good source for equations to try.
 * [Rendering 3D parametric equations](http://www.jaanga.com/2014/07/algesurf-parametric-equations-math-in.html) - nice article with code samples and tools for rendering parametric equations. 
 * [MathMod](https://sourceforge.net/projects/mathmod/?source=typ_redirect) - A program for visualizing and slicing 3D/4D objects?
+* [CGAL](http://www.cgal.org/index.html) - Computational Geometry Algorithms Library for doing most of what we need to do. 
