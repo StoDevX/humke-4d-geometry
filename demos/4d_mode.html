@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>4D Geometry Viewer</title>
+	<script src="../mathbox-src/build/mathbox-bundle.js"></script>
+  	<link rel="stylesheet" href="../../build/mathbox.css">
+  	<script src="../datgui/dat.gui.js"></script>
+  	<meta name="viewport" content="initial-scale=1, maximum-scale=1">
+  	<!-- http://silentmatt.com/javascript-expression-evaluator/ -->
+	<script src="../parser.js"></script>
+	<script src="../polygonize.js"></script>
+	<script src="../quickhull.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+
+var mathbox = mathBox({
+	plugins: ['core', 'controls', 'cursor', 'mathbox'],
+	controls: {
+	// Orbit controls, i.e. Euler angles, with gimbal lock
+	klass: THREE.OrbitControls,
+
+	// Trackball controls, i.e. Free quaternion rotation
+	//klass: THREE.TrackballControls,
+	},
+});
+if (mathbox.fallback) throw "WebGL not supported"
+
+var three = mathbox.three;
+three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
+
+var camera = mathbox.camera({
+  proxy: true, // this alows interactive camera controls to override the position
+  position: [0, 0, -3]
+})
+
+view = mathbox.cartesian4({
+  range: [[-10, 10], [-10, 10], [-10, 10], [-10, 10]],
+  scale: [1, 1, 1, 1],
+});
+
+view = view.transform({
+  position: [0, 0, 0,0],
+  rotation: [-0.4,0.3,0,0,0]
+})
+
+// Rotate so we can see the 4th axis 
+view = view.transform4({
+  matrix: [
+    1, 0, 0, .577,
+    0, 1, 0, .577,
+    0, 0, 1, .577,
+    0, 0, 0, 1,
+  ],
+})
+
+// Add axes and a grid
+
+view.axis({
+  axis: 1,
+  width: 2,
+});
+view.axis({
+  axis: 2,
+  width: 2,
+});
+
+view.axis({
+  axis: 3,
+  width: 2,
+});
+
+view.axis({
+  axis: 4,
+  width: 2,
+});
+
+// Add axis labels 
+view.array({
+  data: [[11,0,0,0], [0,11,0,0], [0,0,11,0], [0,0,0,11]],
+  channels: 4, // necessary
+  live: false,
+}).text({
+  data: ["x", "y","z","w"],
+}).label({
+  color: 0x000000,
+});
+
+var pointsArray = []
+
+function DrawCube(){
+  var arr = []
+  for(var x=-1;x<=1;x++){
+    for(var y=-1;y<=1;y++){
+      for(var z=-1;z<=1;z++){
+        //for(var w=-1;w<=1;w++){
+          arr.push([x*5,y*5,z*5]) 
+        //}
+        
+      }
+    }
+  }
+  return arr; 
+}
+
+function Eq(x,y,z){
+  return Math.pow(x,2) + Math.pow(y,2) + Math.pow(z,2) - 50; 
+}
+
+function DrawSphere(){
+  var arr = [];
+  var step = 0.5;
+
+  for(var x=-10;x<=10;x+=step){
+    for(var y=-10;y<=10;y+=step){
+      for(var z=-10;z<=10;z+=step){
+        if(Eq(x,y,z) < 0) arr.push([x,y,z])
+      }
+    }
+  }
+
+  return arr;
+}
+
+//pointsArray = DrawCube();
+pointsArray = DrawSphere();
+
+// Generate convex hull
+var instance = new QuickHull(pointsArray);
+instance.build()
+var vertices = instance.collectFaces()
+
+var hull = true;
+
+if(hull){
+  //Draw the viewing object 
+  view.array({
+    expr: function (emit, i, t) {
+      var v1 = pointsArray[vertices[i][0]];
+      var v2 = pointsArray[vertices[i][1]];
+      var v3 = pointsArray[vertices[i][2]];
+
+      emit(v1[0],v1[1],v1[2],0)
+      emit(v2[0],v2[1],v2[2],0)
+      emit(v3[0],v3[1],v3[2],0)
+      },
+      width: vertices.length,
+      items: 3,
+      channels: 4,
+      id:'hull_data'
+  })
+
+  view.face({
+    color:'red',
+    id:'hull_view',
+    points:'#hull_data',
+    //size:15,
+  })  
+} else {
+  view.array({
+    expr: function (emit, i, t) {
+      for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0],pointsArray[j][1],pointsArray[j][2],0)
+      },
+      width: 1,
+      items: pointsArray.length,
+      channels: 4,
+      id:'hull_data'
+  })
+
+  view.point({
+    color:'red',
+    id:'hull_view',
+    points:'#hull_data',
+    //size:15,
+  })
+}
+
+
+
+
+
+</script>
+</body>
+</html>

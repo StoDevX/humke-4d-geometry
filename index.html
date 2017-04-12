@@ -2,7 +2,7 @@
 <html>
 <head>
 	<title>4D Geometry Viewer</title>
-	 <meta charset="UTF-8"> 
+	 <meta charset="UTF-8">
 	<link rel="stylesheet" type="text/css" href="src/css/index.css">
 	<!-- For parsing mathematical expressions. Used by the gui -->
 	<script src="src/lib/parser.js"></script>
@@ -50,8 +50,8 @@
 	    	<svg width="100" height="100">
 			  <rect x="37" y="1" width="25" height="25"
 			  style="stroke:#ffa0a3;stroke-width:2px;fill:none;" />
-			</svg> 
-		
+			</svg>
+
 	    </div>
 	    <div>2D</div>
 	</div>
@@ -64,7 +64,7 @@
 	    <div>3D</div>
 	</div>
 
-	<!-- 4D --> 
+	<!-- 4D -->
 	<div class="button_base b_3d_roll" id="btn_4d">
 	    <div>
 	    	<img src="src/img/tesseract.svg" alt="Tesseract" style="width:32%; height:auto; margin-top:-8px;">
@@ -74,7 +74,7 @@
 </center>
 </div>
 
-<!-- This is where the actual program will live. It's hidden until you select a mode --> 
+<!-- This is where the actual program will live. It's hidden until you select a mode -->
 <div id="mode_container" style="display: none;">
 	<div id="header">
 		<center>
@@ -83,7 +83,7 @@
 		</center>
 	</div>
 	<div id="display">
-		
+
 	</div>
 	<!-- <canvas id="debug_canvas" style="border:1px solid black; width:100px; height:100px;"></canvas> -->
 
@@ -94,8 +94,8 @@
 <script type="text/javascript">
 	// Listen for clicks on any of the mode buttons to:
 	//	- Hide the menu
-	//	- Init the mode 
-	//	- Init the gui 
+	//	- Init the mode
+	//	- Init the gui
 	//	- Create the top bar with the back button
 	var buttons = ['btn_2d','btn_3d','btn_4d']
 	var text_map = {'btn_2d':'2D','btn_3d':'3D','btn_4d':'4D'}
@@ -113,7 +113,7 @@
 			current_mode = text_map[clicked_name];
 			// Hide main menu
 			document.querySelector("#main-menu").style.display = "none";
-			// Show the display container div 
+			// Show the display container div
 			document.querySelector("#mode_container").style.display = "block";
 			document.querySelector("#world_title").innerHTML = text_map[clicked_name] + " World"
 			// Init the mode (the mode inits the gui with its own options)
@@ -121,15 +121,15 @@
 		}
 	}
 
-	// Back to menu button 
+	// Back to menu button
 	document.querySelector("#back_to_menu_btn").onclick = function(e){
-		// Switch back to main menu 
+		// Switch back to main menu
 		document.querySelector("#main-menu").style.display = "block";
 		document.querySelector("#mode_container").style.display = "none";
-		// Destory the mode 
+		// Destory the mode
 		mode_objects[current_mode].cleanup();
 	}
-	
+
 </script>
 
 </body>
