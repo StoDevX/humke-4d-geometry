@@ -135,7 +135,6 @@ var Mode3D = (function (scope) {
 			}
 
 
-			// Generate convex hull
 			var pointsArray = []
 			for(var i=0;i<intersection_points.length;i++){
 				var p = intersection_points[i];
@@ -154,12 +153,22 @@ var Mode3D = (function (scope) {
 			    id:'intersection_hull_data'
 			})
 			// Draw the geometry 
-			this.rightView.point({
-				color:this.gui.colors.data,
-				id:'intersection_hull_geometry',
-				points:'#intersection_hull_data',
-				opacity:1,
-			})
+			if(params.fill){
+				this.rightView.face({
+					color:this.gui.colors.data,
+					id:'intersection_hull_geometry',
+					points:'#intersection_hull_data',
+					opacity:1,
+				})
+			} else {
+				this.rightView.point({
+					color:this.gui.colors.data,
+					id:'intersection_hull_geometry',
+					points:'#intersection_hull_data',
+					opacity:1,
+				})
+			}
+			
 
 		}
 	}
@@ -204,6 +213,11 @@ var Mode3D = (function (scope) {
 			self.CalculateIntersection();
 		},
 		'axis_value': function(self,val){
+			self.rightView.remove("#intersection_line")
+			self.rightView.remove("#intersection_line_data")
+			self.CalculateIntersection();
+		},
+		'fill': function(self,val){
 			self.rightView.remove("#intersection_line")
 			self.rightView.remove("#intersection_line_data")
 			self.CalculateIntersection();
