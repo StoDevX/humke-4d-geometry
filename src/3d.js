@@ -130,43 +130,36 @@ var Mode3D = (function (scope) {
 			if (this.rightView.select("#intersection_point_data")){
 				this.rightView.remove("#intersection_point_data")
 				this.rightView.remove("#intersection_geometry")
+				this.rightView.remove("#intersection_hull_data")
+				this.rightView.remove("#intersection_hull_geometry")
 			}
 
+
+			// Generate convex hull
+			var pointsArray = []
+			for(var i=0;i<intersection_points.length;i++){
+				var p = intersection_points[i];
+				pointsArray.push([p[0],p[1]]);
+				pointsArray.push([p[2],p[3]]);
+			}
+
+			// Set the data
 			this.rightView.array({
-				width: intersection_points.length,
-				channels: 2,
-				items:2,
-				data: intersection_points,
-				id: "intersection_point_data"
-			});
-
+				expr: function (emit, i, t) {
+					for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
+			    },
+			    width: 1,
+			    items:pointsArray.length,
+			    channels: 2,
+			    id:'intersection_hull_data'
+			})
+			// Draw the geometry 
 			this.rightView.point({
-				color: 'green',
-				size: 10,
-				id: "intersection_geometry"
-			});
-
-			// if (this.leftView.select("#intersection_triangle_data")){
-			// 	this.leftView.remove("#intersection_triangle_data")
-			// 	this.leftView.remove("#intersection_geometry")
-			// }
-			//
-			// this.leftView.array({
-			// 	width: intersection_triangles.length/3,
-			// 	items: 3,
-			// 	channels: 3,
-			// 	data: intersection_triangles,
-			// 	id: "intersection_triangle_data"
-			// });
-			//
-			// this.leftView.face({
-			// 	//points: "#intersection_triangle_data",
-			// 	color: 'red',
-			// 	width: 5,
-			// 	opacity: 1,
-			// 	shaded: true,
-			// 	id: "intersection_geometry"
-			// });
+				color:this.gui.colors.data,
+				id:'intersection_hull_geometry',
+				points:'#intersection_hull_data',
+				opacity:1,
+			})
 
 		}
 	}
@@ -441,6 +434,7 @@ var Mode3D = (function (scope) {
 	    id:'hull_geometry',
 	    points:'#hull_data',
 	  })
+
 
 	}
 	Mode3D.prototype.parseConvexPoints = function(){
