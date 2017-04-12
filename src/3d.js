@@ -101,48 +101,52 @@ var Mode3D = (function (scope) {
 
 		var intersection_triangles = [];
 		var intersection_points = [];
+		var triangleArray = this.triangleArray;
 
-		if(source == "cartesian"){
-			triangleArray = this.triangleArray;
+		if(source == "parametric"){
+			return; // Haven't figured this out yet 
+		}
+		
+		for (var i = 0; i < triangleArray.length; i+=3) {
 
-			for (var i = 0; i < triangleArray.length; i+=3) {
+			var max = Math.max(triangleArray[i][axis_conv[axis]],triangleArray[i+1][axis_conv[axis]],triangleArray[i+2][axis_conv[axis]]);
 
-				var max = Math.max(triangleArray[i][axis_conv[axis]],triangleArray[i+1][axis_conv[axis]],triangleArray[i+2][axis_conv[axis]]);
+			var min = Math.min(triangleArray[i][axis_conv[axis]],triangleArray[i+1][axis_conv[axis]],triangleArray[i+2][axis_conv[axis]]);
 
-				var min = Math.min(triangleArray[i][axis_conv[axis]],triangleArray[i+1][axis_conv[axis]],triangleArray[i+2][axis_conv[axis]]);
-
-				if(axis_value < max && axis_value > min) {
-					intersection_triangles.push(triangleArray[i]);
-					intersection_triangles.push(triangleArray[i+1]);
-					intersection_triangles.push(triangleArray[i+2]);
-					intersection_points.push(
-						CalculateIntersectionPoints(
-							triangleArray[i],
-							triangleArray[i+1],
-							triangleArray[i+2],
-							axis,
-							axis_value)
-					);
-				}
-
+			if(axis_value < max && axis_value > min) {
+				intersection_triangles.push(triangleArray[i]);
+				intersection_triangles.push(triangleArray[i+1]);
+				intersection_triangles.push(triangleArray[i+2]);
+				intersection_points.push(
+					CalculateIntersectionPoints(
+						triangleArray[i],
+						triangleArray[i+1],
+						triangleArray[i+2],
+						axis,
+						axis_value)
+				);
 			}
 
-			if (this.rightView.select("#intersection_point_data")){
-				this.rightView.remove("#intersection_point_data")
-				this.rightView.remove("#intersection_geometry")
-				this.rightView.remove("#intersection_hull_data")
-				this.rightView.remove("#intersection_hull_geometry")
-			}
+		}
+
+		if (this.rightView.select("#intersection_point_data")){
+			this.rightView.remove("#intersection_point_data")
+			this.rightView.remove("#intersection_geometry")
+			this.rightView.remove("#intersection_hull_data")
+			this.rightView.remove("#intersection_hull_geometry")
+		}
 
 
-			var pointsArray = []
-			for(var i=0;i<intersection_points.length;i++){
-				var p = intersection_points[i];
-				pointsArray.push([p[0],p[1]]);
-				pointsArray.push([p[2],p[3]]);
-			}
-
-			// Set the data
+		var pointsArray = []
+		for(var i=0;i<intersection_points.length;i++){
+			var p = intersection_points[i];
+			pointsArray.push([p[0],p[1]]);
+			pointsArray.push([p[2],p[3]]);
+		}
+		
+		// Draw the geometry 
+		if(params.fill){
+			// Draw it filled in as faces
 			this.rightView.array({
 				expr: function (emit, i, t) {
 					for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
@@ -152,25 +156,36 @@ var Mode3D = (function (scope) {
 			    channels: 2,
 			    id:'intersection_hull_data'
 			})
-			// Draw the geometry 
-			if(params.fill){
-				this.rightView.face({
-					color:this.gui.colors.data,
-					id:'intersection_hull_geometry',
-					points:'#intersection_hull_data',
-					opacity:1,
-				})
-			} else {
-				this.rightView.point({
-					color:this.gui.colors.data,
-					id:'intersection_hull_geometry',
-					points:'#intersection_hull_data',
-					opacity:1,
-				})
-			}
+
+			this.rightView.face({
+				color:this.gui.colors.data,
+				id:'intersection_hull_geometry',
+				points:'#intersection_hull_data',
+				opacity:1,
+			})
+		} else {
+			// Draw it as lines 
+
+			this.rightView.array({
+				width: pointsArray.length/2,
+				items: 2,
+				channels: 2,
+				data: pointsArray,
+				live:false,
+			    id:'intersection_hull_data'
+			})
+			this.rightView.vector({
+				color: this.gui.colors.data,
+				width: 10,
+				start: false,
+				id:'intersection_hull_geometry',
+				points:'#intersection_hull_data',
+				opacity:1,
+			})
+		}
 			
 
-		}
+		
 	}
 
 	Mode3D.prototype.createView = function(el,width){
@@ -427,6 +442,16 @@ var Mode3D = (function (scope) {
 		var instance = new QuickHull(pointsArray);
 		instance.build()
 		var vertices = instance.collectFaces()
+		this.triangleArray = []
+		for(var i=0;vertices.length;i++){
+			console.log(vertices[i])
+			// var v1 = pointsArray[vertices[i][0]];
+			// var v2 = pointsArray[vertices[i][1]];
+			// var v3 = pointsArray[vertices[i][2]];
+			// this.triangleArray.push(v1);
+			// this.triangleArray.push(v2);
+			// this.triangleArray.push(v3);
+		}
 
 		this.leftView.array({
 		    expr: function (emit, i, t) {
