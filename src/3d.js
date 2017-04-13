@@ -132,7 +132,6 @@ var Mode3D = (function (scope) {
 			this.rightView.remove("#intersection_hull_geometry")
 		}
 
-		console.log(intersection_points.length,"<<")
 
 		var pointsArray = []
 		for(var i=0;i<intersection_points.length;i++){
@@ -206,7 +205,7 @@ var Mode3D = (function (scope) {
 	// define a function to be called when each param is updated
 	function updateParametricCallback(self,val){
 		self.cleanupParametric();
-		self.initTesselatedParametric()
+		self.initParametric()
 	}
 
 	Mode3D.prototype.callbacks = {
@@ -277,7 +276,7 @@ var Mode3D = (function (scope) {
 		this.current_mode = params.source;
 		//Init new
 		if(this.current_mode == "cartesian") this.initCartesian();
-		if(this.current_mode == "parametric") this.initTesselatedParametric();
+		if(this.current_mode == "parametric") this.initParametric();
 		if(this.current_mode == "convex-hull") this.initConvexHull();
 	}
 
@@ -430,6 +429,12 @@ var Mode3D = (function (scope) {
 			u *= 2 * Math.PI;
 			v *=  Math.PI;
 
+			//(4 + 0.5 * (3 + 5 * cos(b)) ) * sin(a)
+			//(4 + 0.5 * (3 + 5 * cos(b)) ) * cos(a)
+			//4 + 5 * sin(b)
+			//0 < a < 2 * PI
+			//0 < b < PI
+			//0 < c < 5
 
 			var x = (4 + 0.5 * (3 + 5 * Math.cos(v))) * Math.sin(u);
 			var y = (4 + 0.5 * (3 + 5 * Math.cos(v))) * Math.cos(u);
@@ -476,7 +481,7 @@ var Mode3D = (function (scope) {
 			var v = i / stacks;
 			for(var j=0;j<=slices;j++){
 				var u = j / slices;
-				var p = spiral_tube(u,v);
+				var p = torus(u,v);
 				vertices.push(p);
 			}
 		}
@@ -522,14 +527,71 @@ var Mode3D = (function (scope) {
 	        live:false,
 	        id:'param_data'
 		  })
-	  this.leftView.face({
-	    color:this.gui.colors.data,
-	    shaded:true,
-	    id:'param_geometry',
-	    points:'#param_data',
-	  })
+	  // this.leftView.face({
+	  //   color:this.gui.colors.data,
+	  //   shaded:true,
+	  //   id:'param_geometry',
+	  //   points:'#param_data',
+	  // })
+	  this.leftView.point({
+			color:this.gui.colors.data,
+			id:'param_geometry',
+			opacity:1
+		})
 
+	}
 
+	Mode3D.prototype.tesselateParametric = function(a_range,b_range,c_value){
+		var params = this.gui.params
+		// Returns a triangle array 
+		var slices = 25; 
+		var stacks = 25;
+		var vertices = [];
+
+		for(var i=0;i<=stacks;i++){
+			var v = i / stacks;
+			for(var j=0;j<=slices;j++){
+				var u = j / slices;
+				var a = u * (a_range[1] - a_range[0]) + a_range[0];
+				var b = v * (b_range[1] - b_range[0]) + b_range[0];
+				var x = Parser.evaluate(params.param_eq_x,{a:a,b:b,c:c_value});
+				var y = Parser.evaluate(params.param_eq_y,{a:a,b:b,c:c_value});
+				var z = Parser.evaluate(params.param_eq_z,{a:a,b:b,c:c_value});
+				vertices.push([x,y,z]);
+			}
+		}
+
+		// Create the triangles
+		var sliceCount = slices+1;
+		
+		var indices  = [];
+		for ( i = 0; i < stacks; i ++ ) {
+			for ( j = 0; j < slices; j ++ ) {
+				var a = i * sliceCount + j;
+				var b = i * sliceCount + j + 1;
+				var c = ( i + 1 ) * sliceCount + j + 1;
+				var d = ( i + 1 ) * sliceCount + j;
+
+				// faces one and two
+
+				indices.push( [a, b, d] );
+				indices.push( [b, c, d] );
+
+			}
+		}
+
+		
+
+		for(var i=0;i<indices.length;i++){
+			var v1 = vertices[indices[i][0]];
+			var v2 = vertices[indices[i][1]];
+			var v3 = vertices[indices[i][2]];
+			this.triangleArray.push(v1);
+			this.triangleArray.push(v2);
+			this.triangleArray.push(v3);
+		}
+
+		return [vertices,indices];
 	}
 
 	Mode3D.prototype.initParametric = function(){
@@ -548,35 +610,72 @@ var Mode3D = (function (scope) {
 		c_range[0] = Parser.evaluate(splitArrayC[0]);
 		c_range[1] = Parser.evaluate(splitArrayC[2]);
 
-		this.leftView.volume({
-			rangeX: a_range,
-			rangeY: b_range,
-			rangeZ: c_range,
-			width: 20,
-			height: 20,
-			depth: 20,
-			expr: function(emit, a,b,c,i,j,k){
-				var x = Parser.evaluate(params.param_eq_x,{a:a,b:b,c:c});
-				var y = Parser.evaluate(params.param_eq_y,{a:a,b:b,c:c});
-				var z = Parser.evaluate(params.param_eq_z,{a:a,b:b,c:c});
+		this.triangleArray = [] 
 
-				emit(x,y,z);
-			},
-			channels:3,
-			id:'param_data',
-			live:false
-		})
+		var upperData = this.tesselateParametric(a_range,b_range,c_range[1]);
+		var upperBoundVerticies = upperData[0];
+		var upperIndices = upperData[1];
 
-		this.leftView.surface({
+		var lowerData = this.tesselateParametric(a_range,b_range,c_range[0]);
+		var lowerBoundVerticies = lowerData[0];
+		var lowerIndices = lowerData[1];
+
+		// Draw upper bound 
+		this.leftView.array({
+		    expr: function (emit, i, t) {
+		      var v1 = upperBoundVerticies[upperIndices[i][0]];
+		      var v2 = upperBoundVerticies[upperIndices[i][1]];
+		      var v3 = upperBoundVerticies[upperIndices[i][2]];
+		      emit(v1[0],v1[1],v1[2])
+		      emit(v2[0],v2[1],v2[2])
+		      emit(v3[0],v3[1],v3[2])
+		      },
+	        width: upperIndices.length,
+	        items: 3,
+	        channels: 3,
+	        live:false,
+	        id:'param_data_upper'
+		  })
+
+		this.leftView.face({
 			color:this.gui.colors.data,
-			id:'param_geometry',
+			id:'param_geometry_upper',
 			shaded:true,
 			opacity:1
 		})
+
+		// Draw lower bound 
+		this.leftView.array({
+		    expr: function (emit, i, t) {
+		      var v1 = lowerBoundVerticies[lowerIndices[i][0]];
+		      var v2 = lowerBoundVerticies[lowerIndices[i][1]];
+		      var v3 = lowerBoundVerticies[lowerIndices[i][2]];
+		      emit(v1[0],v1[1],v1[2])
+		      emit(v2[0],v2[1],v2[2])
+		      emit(v3[0],v3[1],v3[2])
+		      },
+	        width: lowerIndices.length,
+	        items: 3,
+	        channels: 3,
+	        live:false,
+	        id:'param_data_lower'
+		  })
+
+		this.leftView.face({
+			color:this.gui.colors.data,
+			id:'param_geometry_lower',
+			shaded:true,
+			opacity:1
+		})
+		
+
 	}
 	Mode3D.prototype.cleanupParametric = function(){
-		this.leftView.remove("#param_data");
-		this.leftView.remove("#param_geometry");
+		this.leftView.remove("#param_data_upper");
+		this.leftView.remove("#param_geometry_upper");
+
+		this.leftView.remove("#param_data_lower");
+		this.leftView.remove("#param_geometry_lower");
 	}
 
 
