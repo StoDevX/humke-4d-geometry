@@ -109,7 +109,7 @@ var Mode3D = (function (scope) {
 
 			var min = Math.min(triangleArray[i][axis_conv[axis]],triangleArray[i+1][axis_conv[axis]],triangleArray[i+2][axis_conv[axis]]);
 
-			if(axis_value < max && axis_value > min) {
+			if(axis_value <= max && axis_value >= min) {
 				intersection_triangles.push(triangleArray[i]);
 				intersection_triangles.push(triangleArray[i+1]);
 				intersection_triangles.push(triangleArray[i+2]);
@@ -140,8 +140,8 @@ var Mode3D = (function (scope) {
 			pointsArray.push([p[0],p[1]]);
 			pointsArray.push([p[2],p[3]]);
 		}
-		
-		// Draw the geometry 
+
+		// Draw the geometry
 		if(params.fill){
 			// Draw it filled in as faces
 			this.rightView.array({
@@ -161,7 +161,7 @@ var Mode3D = (function (scope) {
 				opacity:1,
 			})
 		} else {
-			// Draw it as lines 
+			// Draw it as lines
 
 			this.rightView.array({
 				width: pointsArray.length/2,
@@ -180,9 +180,9 @@ var Mode3D = (function (scope) {
 				opacity:1,
 			})
 		}
-			
 
-		
+
+
 	}
 
 	Mode3D.prototype.createView = function(el,width){
@@ -397,7 +397,7 @@ var Mode3D = (function (scope) {
 
 			u = u * 2;
 			var x, y, z;
-			if ( u < Math.PI ) { 	
+			if ( u < Math.PI ) {
 
 				x = 3 * Math.cos( u ) * ( 1 + Math.sin( u ) ) + ( 2 * ( 1 - Math.cos( u ) / 2 ) ) * Math.cos( u ) * Math.cos( v );
 				z = - 8 * Math.sin( u ) - 2 * ( 1 - Math.cos( u ) / 2 ) * Math.sin( u ) * Math.cos( v );
@@ -462,9 +462,9 @@ var Mode3D = (function (scope) {
 		// 	id:'param_geometry',
 		// 	//shaded:true,
 		// 	opacity:1
-		// })		
+		// })
 
-		// Uniformly sample the points 	
+		// Uniformly sample the points
 		/// from: https://github.com/mrdoob/three.js/blob/master/src/geometries/ParametricGeometry.js
 		var slices = 25;
 		var stacks = 25;
@@ -475,7 +475,7 @@ var Mode3D = (function (scope) {
 		for(var i=0;i<=stacks;i++){
 			var v = i / stacks;
 			for(var j=0;j<=slices;j++){
-				var u = j / slices; 
+				var u = j / slices;
 				var p = spiral_tube(u,v);
 				vertices.push(p);
 			}
