@@ -54,52 +54,36 @@
         return intensity;
       }
     });
-    
-    var transition = mathbox.reveal({
-      stagger: [10, 0, 0, 0],
-    }, {
-      enter: function (t) { return 1.0 - Math.pow(1.0 - Math.min(1,  (1 + pingpong(t))*2), 2); },
-      exit:  function (t) { return 1.0 - Math.pow(1.0 - Math.min(1,  (1 - pingpong(t))*2), 2); },
-    });
 
-    var view = transition.vertex({
-      pass: 'view'
+    // var view = mathbox.cartesian({
+    //   range: [[-10, 10], [-10, 10]],
+    //   scale: [1, 1],
+    // });
+    // view
+    //   .axis({
+    //     axis: 1,
+    //     width: 4,
+    //     color:'black',
+    //   })
+    //   .axis({
+    //     axis: 2,
+    //     width: 4,
+    //     color:'black',
+    //   })
+    //   .grid({
+    //     width: 1,
+    //     divideX: 10,
+    //     divideY: 10
+    //   });
+    
+    var view = mathbox.vertex({
+      //pass: 'view'
     })
     .polar({
       bend: .25,
       range: [[-π, π], [0, 1], [-1, 1]],
       scale: [2, 1, 1],
     });
-
-    view.transform({
-      position: [0, .5, 0],
-    }).axis({
-      detail: 512,
-    })
-    .scale({
-      divide: 10,
-      unit: π,
-      base: 2,
-    })
-    .ticks({
-      width: 3,
-      classes: ['foo', 'bar'],
-    })
-    .scale({
-      divide: 5,
-      unit: π,
-      base: 2,
-    })
-    .format({
-      expr: function (x) {
-        return x ? (x / π).toPrecision(2) + 'π' : 0
-      }
-    })
-    .label({
-      depth: .5,
-      zIndex: 1
-    });
-
 
 
     view.axis({
@@ -122,30 +106,7 @@
       crossed: true,
     });
     
-    view.interval({
-      id: 'sampler',
-      width: 512,
-      expr: function (emit, x, i, t) {
-        emit(x, .5 + .25 * Math.sin(x + t) + .25 * Math.sin(x * 1.91 + t * 1.81));
-      },
-      channels: 2,
-    })
-    .grid({
-      divideX: 40,
-      detailX: 512,
-      divideY: 20,
-      detailY: 128,
-      width: 1,
-      opacity: 0.5,
-      unitX: π,
-      baseX: 2,
-      zBias: -5,
-    })
-    .line({
-      points: '#sampler',
-      color: 0x3090FF,
-      width: 5,
-    });
+
 
   </script>
 </body>
