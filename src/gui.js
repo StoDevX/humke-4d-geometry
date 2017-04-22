@@ -1,26 +1,26 @@
-// Class for creating & handling the dat.gui controls 
+// Class for creating & handling the dat.gui controls
 // as well as creating a common interface for all modes to use
 
 var GUI = (function (scope) {
-	//Constructor 
+	//Constructor
 	function GUI(){
-		
+
 	}
 
 	GUI.prototype.init = function(mode,callbacks,mode_obj){
-		// Colors to use throughout 
+		// Colors to use throughout
 		this.colors = {
 			'viewing':'#e59a1c', // For the line/place of intersection
 			'data':'#3090FF' // For the actual shape/data
 		}
 
-		// These are all the possible parameters to keep track of 
+		// These are all the possible parameters to keep track of
 		this.params = {
 			// Shape Properties
 			'source':'cartesian',
 			'equation':'',
-			'points':'', // For convex hull 
-			'param_a':'', // These are the ranges the parameters take 
+			'points':'', // For convex hull
+			'param_a':'', // These are the ranges the parameters take
 			'param_b':'',
 			'param_c':'',
 			'param_d':'',
@@ -29,8 +29,7 @@ var GUI = (function (scope) {
 			'param_eq_z':'',
 			'param_eq_w':'',
 			'render_shape':true,
-			'resolution':60, // For the marching squares/cubes 
-			'fill':false,
+			'resolution':60, // For the marching squares/cubes
 
 			// Viewing Controls
 			'axis_value':0,
@@ -42,7 +41,7 @@ var GUI = (function (scope) {
 		this.mode = "";
 		this.last_source = this.params.source;
 
-		// 2D defaults 
+		// 2D defaults
 		this.defaults = {}
 		// Alternative parametric: (a: [0,2pi],b:[0.5,1])
 		//b * (1-cos(a))*sin(a) * 5
@@ -58,7 +57,7 @@ var GUI = (function (scope) {
 			'param_b':'0 < b < 1',
 			'axis':'Y'
 		}
-		// 3D defaults 
+		// 3D defaults
 		this.defaults['3D'] = {
 			'equation':'x^2+y^2+z^2 = 10', // Sphere
 			'resolution':20,
@@ -72,10 +71,10 @@ var GUI = (function (scope) {
 			'axis':'Y'
 		}
 
-		// 3D defaults 
+		// 3D defaults
 		this.defaults['4D'] = {
-			'equation':'x^2+y^2+z^2+w^2 = 10', 
-			'points':'', 
+			'equation':'x^2+y^2+z^2+w^2 = 10',
+			'points':'',
 			'resolution':20,
 			'param_eq_x':'',
 			'param_eq_y':'',
@@ -103,7 +102,7 @@ var GUI = (function (scope) {
 	    var current_scope = this;
 	    var params = this.params;
 
-	    // Load defaults 
+	    // Load defaults
 	    for(var key in params){
 	    	if(this.defaults[mode][key]){
 	    		params[key] = this.defaults[mode][key]
@@ -135,10 +134,10 @@ var GUI = (function (scope) {
 	    	if(callbacks['render_shape']) callbacks['render_shape'](mode_obj,val);
 	    });
 
-	    // Init cartesian by default 
+	    // Init cartesian by default
 	    this.initCartesianSource();
 
-	    // Now the viewing controls 
+	    // Now the viewing controls
 	    var axis_value_control = this.viewingControls.add(params, 'axis_value').min(-10).max(10).step(0.01).listen();
 	    axis_value_control.onChange(function(val){
 	    	if(callbacks['axis_value']) callbacks['axis_value'](mode_obj,val);
@@ -151,7 +150,7 @@ var GUI = (function (scope) {
 	    	params.axis_value = 0;
 	    	if(callbacks['axis']) callbacks['axis'](mode_obj,val);
 	    });
-	    // Set axis name 
+	    // Set axis name
 	    axis_value_control.name(params.axis + " = ")
 
 	    /*
@@ -176,11 +175,6 @@ var GUI = (function (scope) {
 		var arr = [];
 		var callbacks = this.callbacks;
 		var mode_obj = this.mode_obj;
-
-		var fill = this.shapeProperties.add(this.params, 'fill').name('Fill').onChange(function(val){
-			if(callbacks['fill']) callbacks['fill'](mode_obj,val);
-		});
-		arr.push(fill)
 
 		var eq = this.shapeProperties.add(this.params, 'equation').name('Equation').onChange(function(val){
 			if(callbacks['equation']) callbacks['equation'](mode_obj,val);
@@ -244,7 +238,7 @@ var GUI = (function (scope) {
 		var arr = [];
 		var callbacks = this.callbacks;
 		var mode_obj = this.mode_obj;
-		
+
 		var points = this.shapeProperties.add(this.params, 'points').onChange(function(val){
 			if(callbacks['points']) callbacks['points'](mode_obj,val);
 		});
@@ -264,7 +258,7 @@ var GUI = (function (scope) {
 	GUI.prototype.cleanup = function(){
 		//Destroys everything created
 		this.gui.destroy();
-		// Reset all stuff 
+		// Reset all stuff
 		this.convexSourceItems = null;
 		this.paramSourceItems = null;
 		this.cartesianSourceItems = null;
