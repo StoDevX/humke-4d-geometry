@@ -1,30 +1,30 @@
 // All logic & rendering of the 2D mode is contained here
 // depends on Mathbox existing in the scope as well as the gui class
 
-/* 
+/*
 
 */
 
 var Mode2D = (function (scope) {
-	//Constructor 
+	//Constructor
 	function Mode2D(document){
-		this.document = document; 
+		this.document = document;
 		this.thicknessValuesTable = {'thin':0.2,'medium':0.5,'thick':1}
 
 		this.geometry_id = "" //ID of active geometry in the left view
 
 		// Cartesian properties
 		this.objectArray = null;
-		this.numCartesianObjects = 0; //Allow drawing multiple equations at the same time 
+		this.numCartesianObjects = 0; //Allow drawing multiple equations at the same time
 		this.current_mode = null;
 		// Convex Hull points
 		this.pointsArray = [];
-		
+
 	}
 
 	// Creates the scene and everything
 	Mode2D.prototype.init = function(div,gui){
-		// Create two child divs 
+		// Create two child divs
 		var leftChild = document.createElement("div");
 		var rightChild = document.createElement("div");
 		div.appendChild(leftChild); leftChild.id = "left-view";
@@ -33,14 +33,14 @@ var Mode2D = (function (scope) {
 		leftChild.style = style;
 		rightChild.style = style;
 		this.leftChild = leftChild; this.rightChild = rightChild;
-		
+
 		var viewWidth = (window.innerWidth-20)/2;
 		var leftView = this.createView(leftChild,viewWidth);
 		var rightView = this.createView(rightChild,viewWidth);
 		this.leftView = leftView;
 		this.rightView = rightView;
 
-		// Init gui 
+		// Init gui
 	    gui.init("2D",this.callbacks,this);
 	    this.gui = gui;
 
@@ -85,8 +85,8 @@ var Mode2D = (function (scope) {
 		this.leftView = leftView;
 		this.CreateViewLine();
 
-		
-		
+
+
 		// Set up right view
 		rightView = rightView.cartesian({
 		  range: [[-10, 10],[-10,10]],
@@ -121,8 +121,8 @@ var Mode2D = (function (scope) {
 
 	Mode2D.prototype.SetupIntersection = function(){
 		var params = this.gui.params
-		// Apply the intersection shader 
-		// Run vertex shader to get fragment positions, then fragment shader to discard pixels 
+		// Apply the intersection shader
+		// Run vertex shader to get fragment positions, then fragment shader to discard pixels
 		this.rightView = this.rightView.shader({
 			code : [
 			"#define POSITION_STPQ",
@@ -136,14 +136,14 @@ var Mode2D = (function (scope) {
 			].join("\n")
 		}, {
 			axis_value: function(){ return params.axis_value },
-			axis: function(){ 
-				if( params.axis == "X") return 0; 
-				if( params.axis == "Y") return 1; 
+			axis: function(){
+				if( params.axis == "X") return 0;
+				if( params.axis == "Y") return 1;
 			}
 		}).vertex({pass: 'data'})
-		
+
 		var rgb_color = hexToRgb(this.gui.colors.data)
-		// Make it a little darker 
+		// Make it a little darker
 		var factor = 0.8;
 		rgb_color.r *= factor;
 		rgb_color.g *= factor;
@@ -162,13 +162,13 @@ var Mode2D = (function (scope) {
 				].join("\n")
 			}, {
 					axis_value: function(){ return params.axis_value },
-					axis: function(){ 
-						if( params.axis == "X") return 0; 
-						if( params.axis == "Y") return 1; 
+					axis: function(){
+						if( params.axis == "X") return 0;
+						if( params.axis == "Y") return 1;
 					}
 				})
 			.fragment()
-		
+
 	}
 
 	Mode2D.prototype.CreateViewAxis = function(view,axisNum,pos,labelName){
@@ -196,7 +196,7 @@ var Mode2D = (function (scope) {
 	}
 
 	Mode2D.prototype.CreateViewLine = function(){
-		//The line on the left to show you what it's intersecting 
+		//The line on the left to show you what it's intersecting
 		var params = this.gui.params
 		var thickness = this.thicknessValuesTable[params.thickness]
 		this.leftView.interval({
@@ -235,7 +235,7 @@ var Mode2D = (function (scope) {
 				self.axis_object.select("#viewing_1d_axis_pos").set("data",[11,1]);
 				self.axis_object.select("#viewing_1d_axis_text").set("data",["x"]);
 			}
-			
+
 			// self.axis_object.remove("#viewing_1d_axis")
 	  //   	self.axis_object.remove("#viewing_1d_axis_label")
 			// if(val == "Y") self.axis_object = self.CreateViewAxis(self.rightView,1,[11,1],"x")
@@ -248,7 +248,8 @@ var Mode2D = (function (scope) {
 		'source': function(self,val){
 			self.setMode();
 			self.gui.params.render_shape = true; //Reset this back to true
-		}, 
+			self.gui.params.render_slices = true; //Reset this back to true
+		},
 		'resolution': function(self,val){
 			self.cleanupCartesian();
 			self.initCartesian(self.leftView);
@@ -258,7 +259,7 @@ var Mode2D = (function (scope) {
 			self.cleanupCartesian();
 
 			// console.log(" == LEFT == ");
-			// self.leftView.print();
+			// self.leftView.print();f
 			// console.log(" == RIGHT == ");
 			// self.rightView.print();
 
@@ -274,42 +275,58 @@ var Mode2D = (function (scope) {
 			self.updateConvexHull()
 		},
 		'axis_value': function(self,val){
-			
+
 
 		},
-		'param_eq_x': updateParametricCallback, 
-		'param_eq_y': updateParametricCallback, 
-		'param_a': updateParametricCallback, 
-		'param_b': updateParametricCallback, 
+		'param_eq_x': updateParametricCallback,
+		'param_eq_y': updateParametricCallback,
+		'param_a': updateParametricCallback,
+		'param_b': updateParametricCallback,
 		'render_shape': function(self,val){
-			// Toggle opacity 
+			// Toggle opacity
 			if(self.geometry_id == "") return;
-			// If it's cartesian, there might be more objects 
+			// If it's cartesian, there might be more objects
 			if(self.numCartesianObjects != 0){
 				for(var i=0;i<self.numCartesianObjects;i++){
 					var flipped_opacity = self.leftView.select('#'+self.geometry_id + String(i)).get("opacity") == 1 ? 0 : 1 ;
 					self.leftView.select('#'+self.geometry_id+ String(i)).set("opacity",flipped_opacity)
 				}
-				
+
 			} else {
 				var flipped_opacity = self.leftView.select('#'+self.geometry_id).get("opacity") == 1 ? 0 : 1 ;
 				self.leftView.select('#'+self.geometry_id).set("opacity",flipped_opacity)
 			}
-			
+
+		},
+		'render_slices': function(self,val){
+			// Toggle opacity
+			if(self.geometry_id == "") return;
+			// If it's cartesian, there might be more objects
+			if(self.numCartesianObjects != 0){
+				for(var i=0;i<self.numCartesianObjects;i++){
+					var flipped_opacity = self.rightView.select('#'+self.geometry_id + String(i)).get("opacity") == 1 ? 0 : 1 ;
+					self.rightView.select('#'+self.geometry_id+ String(i)).set("opacity",flipped_opacity)
+				}
+
+			} else {
+				var flipped_opacity = self.rightView.select('#'+self.geometry_id).get("opacity") == 1 ? 0 : 1 ;
+				self.rightView.select('#'+self.geometry_id).set("opacity",flipped_opacity)
+			}
+
 		}
 	};
 
 	Mode2D.prototype.setMode = function(){
 		var params = this.gui.params
-		//Switch the mode based on the gui value 
+		//Switch the mode based on the gui value
 		if(this.current_mode != null){
-			//Clean up previous 
+			//Clean up previous
 			if(this.current_mode == "cartesian") this.cleanupCartesian();
 			if(this.current_mode == "parametric") this.cleanupParametric();
 			if(this.current_mode == "convex-hull") this.cleanupConvexHull();
 		}
 		this.current_mode = params.source;
-		//Init new 
+		//Init new
 		if(this.current_mode == "cartesian") {
 			this.initCartesian(this.leftView);
 			this.initCartesian(this.rightView);
@@ -325,14 +342,14 @@ var Mode2D = (function (scope) {
 
 	}
 
-	// >>>>>>>>>> Cartesian mode functions 
+	// >>>>>>>>>> Cartesian mode functions
 	Mode2D.prototype.initCartesian = function(view){
 		this.polygonizeCartesian();
-		if(this.objectArray == null) return; //Failed to parse 
+		if(this.objectArray == null) return; //Failed to parse
 		var params = this.gui.params
 
 		if(params.fill==false){
-			// Create the edge data 
+			// Create the edge data
 			for(var i=0;i<this.objectArray.length;i++){
 				var edgeArray = this.objectArray[i];
 				view.array({
@@ -354,7 +371,7 @@ var Mode2D = (function (scope) {
 				});
 			}
 			this.numCartesianObjects = this.objectArray.length;
-			// Save to pixels 
+			// Save to pixels
 			// var objectArray = this.objectArray;
 			// this.readback =  this.convertToPixels(function(v){
 			// 	for(var i=0;i<objectArray.length;i++){
@@ -367,9 +384,9 @@ var Mode2D = (function (scope) {
 			// 			id: "cartesian_pixel_geometry" + String(i)
 			// 		});
 			// 	}
-			// 	return v; 
+			// 	return v;
 			// },"indexbuffer")
-			
+
 		} else {
 			// To draw filled in, put all the edges into one big edge array!
 			var edgeArray = [];
@@ -409,7 +426,7 @@ var Mode2D = (function (scope) {
 
 		this.geometry_id = "cartesian_geometry"
 	}
-	
+
 	Mode2D.prototype.polygonizeCartesian = function(){
 		var params = this.gui.params
 
@@ -424,17 +441,17 @@ var Mode2D = (function (scope) {
 			let RHSfunc = Parser.parse(RHS).toJSFunction(['x','y']);
 			equationFuncArray.push(function(x,y) { return LHSfunc(x,y) - RHSfunc(x,y); });
 		}
-		
 
-		//Parses the equation, and polygonizes it 
+
+		//Parses the equation, and polygonizes it
 		try {
 			this.objectArray = [];
 			for(var i=0;i<equationFuncArray.length;i++){
 				var edgeArray = Polygonize.generate(equationFuncArray[i], [[-10, 10], [-10, 10]], params.resolution);
 				this.objectArray.push(edgeArray);
 			}
-		
-			
+
+
 
 		} catch(err){
 			console.log("Error rendering equation",err);
@@ -456,7 +473,7 @@ var Mode2D = (function (scope) {
 			this.rightView.remove("#cartesian_geometry" );
 			this.rightView.remove("#cartesian_pixel_geometry" );
 		}
-		
+
 		this.leftView.remove("#indexbuffer");
 		this.rightView.remove("#indexbuffer");
 		this.geometry_id = ""
@@ -464,15 +481,15 @@ var Mode2D = (function (scope) {
 
 
 	}
-	
+
 
 	// >>>>>>>>>>> Parametric mode functions
 	Mode2D.prototype.initParametric = function(view){
 		var a_range = [0,1];
 		var b_range = [0,1];
 		var params = this.gui.params
-		// get range from string 
-		var splitArrayA = params.param_a.split("<"); // should return 3 pieces. We want the first and last 
+		// get range from string
+		var splitArrayA = params.param_a.split("<"); // should return 3 pieces. We want the first and last
 		a_range[0] = Parser.evaluate(splitArrayA[0]);
 		a_range[1] = Parser.evaluate(splitArrayA[2]);
 		var splitArrayB = params.param_b.split("<");
@@ -501,7 +518,7 @@ var Mode2D = (function (scope) {
 			opacity:1
 		})
 
-		
+
 
 		this.geometry_id = "param_geometry"
 
@@ -541,7 +558,7 @@ var Mode2D = (function (scope) {
 		    channels: 2,
 		    id:'hull_data'
 		})
-		// Draw the geometry 
+		// Draw the geometry
 		view.face({
 			color:this.gui.colors.data,
 			id:'hull_geometry',
@@ -554,8 +571,8 @@ var Mode2D = (function (scope) {
 	}
 	Mode2D.prototype.parseConvexPoints = function(){
 		var params = this.gui.params
-		// Get string of points and parse it 
-		// Remove whitespace 
+		// Get string of points and parse it
+		// Remove whitespace
 		var points_str = params.points.replace(/\s+/g, '');
 		// Split based on the pattern (digits,digits)
 		var points_split = points_str.match(/\(-*[.\d]+,-*[.\d]+\)/g);
@@ -563,22 +580,22 @@ var Mode2D = (function (scope) {
 
 		for(var i=0;i<points_split.length;i++){
 			var p = points_split[i];
-			// Remove parenthesis 
+			// Remove parenthesis
 			p = p.replace(/[\(\)]/g,'');
 			// Split by comma
-			var comma_split = p.split(",") 
+			var comma_split = p.split(",")
 			var point = []
 			for(var j=0;j<comma_split.length;j++) point.push(Number(comma_split[j]))
 			this.pointsArray.push(point)
 		}
-		
+
 	}
 	Mode2D.prototype.updateConvexHull = function(){
 		/*
 		// Re-parse
 		this.parseConvexPoints();
 		var pointsArray = this.pointsArray;
-		// Update the data 
+		// Update the data
 		this.leftView.select("#hull_data").set("items",pointsArray.length)
 		this.leftView.select("#hull_data").set("expr",function(emit,i,t){
 			for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
@@ -600,7 +617,7 @@ var Mode2D = (function (scope) {
 	}
 
 	Mode2D.prototype.convertToPixels = function(geom_func,id){
-		//This converts some geometry to pixel data by rendering it to a texture and grabbing that data 
+		//This converts some geometry to pixel data by rendering it to a texture and grabbing that data
 		var scale = 1 / 4;
 		var view = this.leftView
 		.rtt({
@@ -609,7 +626,7 @@ var Mode2D = (function (scope) {
 			height: scale,
 		})
 		.camera({
-		  position: [2, 0, 18],// I just found this experimentally, seems to make it fit the best? 
+		  position: [2, 0, 18],// I just found this experimentally, seems to make it fit the best?
 		})
 		view = geom_func(view);
 		view
@@ -638,7 +655,7 @@ var Mode2D = (function (scope) {
 	      },
 	    });
 	    if (mathbox.fallback) throw "WebGL not supported"
-	    // Set the renderer color 
+	    // Set the renderer color
 		mathbox.three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
 		return mathbox;
 	}
@@ -648,14 +665,14 @@ var Mode2D = (function (scope) {
 		// Destroy mathbox overlays
 		var overlays = this.document.querySelector(".mathbox-overlays");
 		overlays.parentNode.removeChild(overlays);
-		// Destroy the canvas element 
+		// Destroy the canvas element
 		var canvas = this.document.querySelector("canvas");
 		canvas.parentNode.removeChild(canvas);
-		// Remove the two child divs 
+		// Remove the two child divs
 		this.leftChild.parentNode.removeChild(this.leftChild);
 		this.rightChild.parentNode.removeChild(this.rightChild);
 
-		// Destroy gui 
+		// Destroy gui
 		this.gui.cleanup();
 	}
 
