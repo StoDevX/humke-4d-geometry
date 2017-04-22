@@ -9,3 +9,4 @@ Here's a collection of some useful/inspiring links:
 * [MathMod](https://sourceforge.net/projects/mathmod/?source=typ_redirect) - A program for visualizing and slicing 3D/4D objects?
 * [CGAL](http://www.cgal.org/index.html) - Computational Geometry Algorithms Library for doing most of what we need to do. 
 * [Rendering parametric surfaces](http://prideout.net/blog/?p=44) - Straightforward article on doing this in Python 
+* [Lectures on computational geometry](http://www.cs.umd.edu/~mount/754/Lects/754lects.pdf) - Includes stuff about convex hull algorithms.

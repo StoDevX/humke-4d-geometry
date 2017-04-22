@@ -1,13 +1,13 @@
 var Mode3D = (function (scope) {
-	//Constructor 
+	//Constructor
 	function Mode3D(document){
-		this.document = document; 
-		
+		this.document = document;
+
 	}
 
 	// Creates the scene and everything
 	Mode3D.prototype.init = function(div,gui){
-		// Create two child divs 
+		// Create two child divs
 		var leftChild = document.createElement("div");
 		var rightChild = document.createElement("div");
 		div.appendChild(leftChild); leftChild.id = "left-view";
@@ -23,7 +23,7 @@ var Mode3D = (function (scope) {
 		this.leftView = leftView;
 		this.rightView = rightView;
 
-		// Init gui 
+		// Init gui
 	    gui.init("3D",this.callbacks,this);
 	    this.gui = gui;
 
@@ -54,9 +54,9 @@ var Mode3D = (function (scope) {
 		  })
 		  .grid({
 		    axes: [1,3],
-		    width: 1, 
+		    width: 1,
 		    divideX: 10,
-		    divideY: 10        
+		    divideY: 10
 		  });
 
 		 // Add text
@@ -81,37 +81,107 @@ var Mode3D = (function (scope) {
 		  proxy: true, // this alows interactive camera controls to override the position
 		  position: [0, 0, 3],
 		})
-		 .axis({
-		    axis: 1,
-		    width: 4,
-		    color:'black',
-		  })
-		  .axis({
-		    axis: 2,
-		    width: 4,
-		    color:'black',
-		  })
-		  .grid({
-		    width: 1,
-		    divideX: 10,
-		    divideY: 10
-		  })
-		  .array({
-		  data: [[11,1], [0,12]],
-		  channels: 2, // necessary
-		  live: false,
-		}).text({
-		  data: ["x", "z"],
-		}).label({
-		  color: 0x000000,
-		});
-
 		this.rightView = rightView
 
 		// Draw our main shape
-		this.setMode()
+		this.setMode();
 
-		this.CreateViewAxis();
+		this.CreateViewAxis("X","Z");
+		this.CalculateIntersection();
+	}
+
+	Mode3D.prototype.CalculateIntersection = function(){
+		var params = this.gui.params;
+
+		var source = params.source;
+		var axis = params.axis;
+		var axis_value = params.axis_value;
+
+		var axis_conv = {'X':0, 'Y':1, 'Z':2}
+
+		var intersection_triangles = [];
+		var intersection_points = [];
+		var triangleArray = this.triangleArray;
+
+		for (var i = 0; i < triangleArray.length; i+=3) {
+
+			var max = Math.max(triangleArray[i][axis_conv[axis]],triangleArray[i+1][axis_conv[axis]],triangleArray[i+2][axis_conv[axis]]);
+
+			var min = Math.min(triangleArray[i][axis_conv[axis]],triangleArray[i+1][axis_conv[axis]],triangleArray[i+2][axis_conv[axis]]);
+
+			if(axis_value <= max && axis_value >= min) {
+				intersection_triangles.push(triangleArray[i]);
+				intersection_triangles.push(triangleArray[i+1]);
+				intersection_triangles.push(triangleArray[i+2]);
+				intersection_points.push(
+					CalculateIntersectionPoints(
+						triangleArray[i],
+						triangleArray[i+1],
+						triangleArray[i+2],
+						axis,
+						axis_value)
+				);
+			}
+
+		}
+
+		if (this.rightView.select("#intersection_point_data")){
+			this.rightView.remove("#intersection_point_data")
+			this.rightView.remove("#intersection_geometry")
+			this.rightView.remove("#intersection_hull_data")
+			this.rightView.remove("#intersection_hull_geometry")
+		}
+
+
+		var pointsArray = []
+		for(var i=0;i<intersection_points.length;i++){
+			var p = intersection_points[i];
+			pointsArray.push([p[0],p[1]]);
+			pointsArray.push([p[2],p[3]]);
+		}
+
+		// Draw the geometry
+		if(params.fill){
+			// Draw it filled in as faces
+			this.rightView.array({
+				expr: function (emit, i, t) {
+					for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
+			    },
+			    width: 1,
+			    items:pointsArray.length,
+			    channels: 2,
+			    id:'intersection_hull_data'
+			})
+
+			this.rightView.face({
+				color:this.gui.colors.data,
+				id:'intersection_hull_geometry',
+				points:'#intersection_hull_data',
+				opacity:1,
+			})
+		} else {
+			// Draw it as lines
+
+			this.rightView.array({
+				width: pointsArray.length/2,
+				items: 2,
+				channels: 2,
+				data: pointsArray,
+				live:false,
+			    id:'intersection_hull_data'
+			})
+			this.rightView.vector({
+				color: this.gui.colors.data,
+				width: 10,
+				start: false,
+				id:'intersection_hull_geometry',
+				points:'#intersection_hull_data',
+				opacity:1,
+			})
+		}
+
+
+
 	}
 
 	Mode3D.prototype.createView = function(el,width){
@@ -127,7 +197,7 @@ var Mode3D = (function (scope) {
 	      },
 	    });
 	    if (mathbox.fallback) throw "WebGL not supported"
-	    // Set the renderer color 
+	    // Set the renderer color
 		mathbox.three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
 		return mathbox;
 	}
@@ -139,10 +209,41 @@ var Mode3D = (function (scope) {
 	}
 
 	Mode3D.prototype.callbacks = {
+		'axis': function(self,val) {
+			self.rightView.remove("#viewing_2d_axis_1")
+			self.rightView.remove("#viewing_2d_axis_2")
+			self.rightView.remove("#intersection_line")
+			self.rightView.remove("#intersection_line_data")
+	    self.rightView.remove("#viewing_2d_axis_label")
+			self.leftView.remove("#viewing_plane_data");
+			self.leftView.remove("#viewing_plane_geometry");
+
+			if(val == "Y") self.CreateViewAxis("X","Z")
+			if(val == "X") self.CreateViewAxis("Z", "Y")
+			if(val == "Z") self.CreateViewAxis("X","Y")
+
+			self.rightView.remove("#intersection_line")
+			self.rightView.remove("#intersection_line_data")
+			self.CalculateIntersection();
+		},
+		'axis_value': function(self,val){
+			self.rightView.remove("#intersection_line")
+			self.rightView.remove("#intersection_line_data")
+			self.CalculateIntersection();
+		},
+		'fill': function(self,val){
+			self.rightView.remove("#intersection_line")
+			self.rightView.remove("#intersection_line_data")
+			self.CalculateIntersection();
+		},
 		'source': function(self,val){
 			self.setMode();
 			self.gui.params.render_shape = true; //Reset this back to true
-		}, 
+
+			self.rightView.remove("#intersection_line")
+			self.rightView.remove("#intersection_line_data")
+			self.CalculateIntersection();
+		},
 		'resolution': function(self,val){
 			self.cleanupCartesian();
 			self.initCartesian();
@@ -155,32 +256,61 @@ var Mode3D = (function (scope) {
 			self.cleanupConvexHull()
 			self.initConvexHull()
 		},
-		'param_eq_x': updateParametricCallback, 
-		'param_eq_y': updateParametricCallback, 
-		'param_eq_z': updateParametricCallback, 
-		'param_a': updateParametricCallback, 
-		'param_b': updateParametricCallback, 
-		'param_c': updateParametricCallback, 
+		'param_eq_x': updateParametricCallback,
+		'param_eq_y': updateParametricCallback,
+		'param_eq_z': updateParametricCallback,
+		'param_a': updateParametricCallback,
+		'param_b': updateParametricCallback,
+		'param_c': updateParametricCallback,
 	};
 
 	Mode3D.prototype.setMode = function(){
 		var params = this.gui.params
-		//Switch the mode based on the gui value 
+		//Switch the mode based on the gui value
 		if(this.current_mode != null){
-			//Clean up previous 
+			//Clean up previous
 			if(this.current_mode == "cartesian") this.cleanupCartesian();
 			if(this.current_mode == "parametric") this.cleanupParametric();
 			if(this.current_mode == "convex-hull") this.cleanupConvexHull();
 		}
 		this.current_mode = params.source;
-		//Init new 
+		//Init new
 		if(this.current_mode == "cartesian") this.initCartesian();
 		if(this.current_mode == "parametric") this.initParametric();
 		if(this.current_mode == "convex-hull") this.initConvexHull();
 	}
 
-	Mode3D.prototype.CreateViewAxis = function(){
-		var params = this.gui.params; 
+	Mode3D.prototype.CreateViewAxis = function(labelName1,labelName2){
+		this.rightView.axis({
+			 axis: 1,
+			 width: 4,
+			 color:'black',
+			 id:'viewing_2d_axis_1'
+		 })
+		 .axis({
+			 axis: 2,
+			 width: 4,
+			 color:'black',
+			 id:'viewing_2d_axis_2'
+		 })
+		 .grid({
+			 width: 1,
+			 divideX: 10,
+			 divideY: 10
+		 })
+		 .array({
+		 data: [[11,1], [0,12]],
+		 channels: 2, // necessary
+		 live: false,
+	 }).text({
+		 data: [labelName1,labelName2],
+	 }).label({
+		 color: 0x000000,
+		 id:'viewing_2d_axis_label'
+	 });
+
+
+		var params = this.gui.params;
 		this.leftView.array({
 				id: "viewing_plane_data",
 				channels: 3,
@@ -212,7 +342,7 @@ var Mode3D = (function (scope) {
 
 	Mode3D.prototype.initCartesian = function(){
 		this.polygonizeCartesian();
-		if(this.triangleArray == null) return; //Failed to parse 
+		if(this.triangleArray == null) return; //Failed to parse
 		var triangleArray = this.triangleArray;
 		this.leftView.array({
 			width: triangleArray.length/3,
@@ -242,12 +372,12 @@ var Mode3D = (function (scope) {
 		let RHSfunc = Parser.parse(RHS).toJSFunction(['x','y','z']);
 		var eq = function(x,y,z) { return LHSfunc(x,y,z) - RHSfunc(x,y,z); };
 
-		//Parses the equation, and polygonizes it 
+		//Parses the equation, and polygonizes it
 		try {
 			var triangleArray = [];
 			triangleArray = Polygonize.generate(eq, [[-10, 10], [-10, 10], [-10, 10]], params.resolution);
 			this.triangleArray = triangleArray;
-			
+
 
 		} catch(err){
 			console.log("Error rendering equation",err);
@@ -259,13 +389,218 @@ var Mode3D = (function (scope) {
 		this.leftView.remove("#cartesian_geometry");
 	}
 
+	Mode3D.prototype.initTesselatedParametric = function(){
+		function klein(  u,v ) {
+			u *= Math.PI;
+			v *= 2 * Math.PI;
+
+			u = u * 2;
+			var x, y, z;
+			if ( u < Math.PI ) {
+
+				x = 3 * Math.cos( u ) * ( 1 + Math.sin( u ) ) + ( 2 * ( 1 - Math.cos( u ) / 2 ) ) * Math.cos( u ) * Math.cos( v );
+				z = - 8 * Math.sin( u ) - 2 * ( 1 - Math.cos( u ) / 2 ) * Math.sin( u ) * Math.cos( v );
+
+			} else {
+
+				x = 3 * Math.cos( u ) * ( 1 + Math.sin( u ) ) + ( 2 * ( 1 - Math.cos( u ) / 2 ) ) * Math.cos( v + Math.PI );
+				z = - 8 * Math.sin( u );
+
+			}
+
+			y = - 2 * ( 1 - Math.cos( u ) / 2 ) * Math.sin( v );
+
+			return [x,y,z]
+		}
+
+		function spiral_tube(u,v){
+			v *= 8 * Math.PI -  4 * Math.PI;
+			v*= 2;
+			u *= 2;
+
+			var x = 1 * Math.cos(v) - u * Math.sin(v);
+			var y = 1 * Math.cos(v) + u * Math.cos(v);
+			var z = v/2;
+
+			return [x,y,z];
+		}
+
+		function torus(u,v){
+			u *= 2 * Math.PI;
+			v *=  Math.PI;
+
+			//(4 + 0.5 * (3 + 5 * cos(b)) ) * sin(a)
+			//(4 + 0.5 * (3 + 5 * cos(b)) ) * cos(a)
+			//4 + 5 * sin(b)
+			//0 < a < 2 * PI
+			//0 < b < PI
+			//0 < c < 5
+
+			var x = (4 + 0.5 * (3 + 5 * Math.cos(v))) * Math.sin(u);
+			var y = (4 + 0.5 * (3 + 5 * Math.cos(v))) * Math.cos(u);
+			var z = 4 + 5 * Math.sin(v);
+
+			return [x,y,z];
+		}
+
+
+
+		// this.leftView.volume({
+		// 	rangeX: [0,1],
+		// 	rangeY: [0,2 * Math.PI],
+		// 	rangeZ: [0, Math.PI],
+		// 	width: 25,
+		// 	height: 25,
+		// 	depth: 25,
+		// 	expr: function(emit, x,y,z,i,j,k){
+		// 		var p = torus(x,y,z)
+
+		// 		emit(p[0],p[1],p[2]);
+		// 	},
+		// 	channels:3,
+		// 	id:'param_data',
+		// 	live:false
+		// })
+
+		// this.leftView.point({
+		// 	color:this.gui.colors.data,
+		// 	id:'param_geometry',
+		// 	//shaded:true,
+		// 	opacity:1
+		// })
+
+		// Uniformly sample the points
+		/// from: https://github.com/mrdoob/three.js/blob/master/src/geometries/ParametricGeometry.js
+		var slices = 25;
+		var stacks = 25;
+		var sliceCount = slices+1;
+		var vertices = [];
+		var indices  = [];
+
+		for(var i=0;i<=stacks;i++){
+			var v = i / stacks;
+			for(var j=0;j<=slices;j++){
+				var u = j / slices;
+				var p = torus(u,v);
+				vertices.push(p);
+			}
+		}
+
+		for ( i = 0; i < stacks; i ++ ) {
+			for ( j = 0; j < slices; j ++ ) {
+				var a = i * sliceCount + j;
+				var b = i * sliceCount + j + 1;
+				var c = ( i + 1 ) * sliceCount + j + 1;
+				var d = ( i + 1 ) * sliceCount + j;
+
+				// faces one and two
+
+				indices.push( [a, b, d] );
+				indices.push( [b, c, d] );
+
+			}
+		}
+
+		this.triangleArray = []
+
+		for(var i=0;i<indices.length;i++){
+			var v1 = vertices[indices[i][0]];
+			var v2 = vertices[indices[i][1]];
+			var v3 = vertices[indices[i][2]];
+			this.triangleArray.push(v1);
+			this.triangleArray.push(v2);
+			this.triangleArray.push(v3);
+		}
+
+		this.leftView.array({
+		    expr: function (emit, i, t) {
+		      var v1 = vertices[indices[i][0]];
+		      var v2 = vertices[indices[i][1]];
+		      var v3 = vertices[indices[i][2]];
+		      emit(v1[0],v1[1],v1[2])
+		      emit(v2[0],v2[1],v2[2])
+		      emit(v3[0],v3[1],v3[2])
+		      },
+	        width: indices.length,
+	        items: 3,
+	        channels: 3,
+	        live:false,
+	        id:'param_data'
+		  })
+	  // this.leftView.face({
+	  //   color:this.gui.colors.data,
+	  //   shaded:true,
+	  //   id:'param_geometry',
+	  //   points:'#param_data',
+	  // })
+	  this.leftView.point({
+			color:this.gui.colors.data,
+			id:'param_geometry',
+			opacity:1
+		})
+
+	}
+
+	Mode3D.prototype.tesselateParametric = function(a_range,b_range,c_value){
+		var params = this.gui.params
+		// Returns a triangle array 
+		var slices = 25; 
+		var stacks = 25;
+		var vertices = [];
+
+		for(var i=0;i<=stacks;i++){
+			var v = i / stacks;
+			for(var j=0;j<=slices;j++){
+				var u = j / slices;
+				var a = u * (a_range[1] - a_range[0]) + a_range[0];
+				var b = v * (b_range[1] - b_range[0]) + b_range[0];
+				var x = Parser.evaluate(params.param_eq_x,{a:a,b:b,c:c_value});
+				var y = Parser.evaluate(params.param_eq_y,{a:a,b:b,c:c_value});
+				var z = Parser.evaluate(params.param_eq_z,{a:a,b:b,c:c_value});
+				vertices.push([x,y,z]);
+			}
+		}
+
+		// Create the triangles
+		var sliceCount = slices+1;
+		
+		var indices  = [];
+		for ( i = 0; i < stacks; i ++ ) {
+			for ( j = 0; j < slices; j ++ ) {
+				var a = i * sliceCount + j;
+				var b = i * sliceCount + j + 1;
+				var c = ( i + 1 ) * sliceCount + j + 1;
+				var d = ( i + 1 ) * sliceCount + j;
+
+				// faces one and two
+
+				indices.push( [a, b, d] );
+				indices.push( [b, c, d] );
+
+			}
+		}
+
+		
+
+		for(var i=0;i<indices.length;i++){
+			var v1 = vertices[indices[i][0]];
+			var v2 = vertices[indices[i][1]];
+			var v3 = vertices[indices[i][2]];
+			this.triangleArray.push(v1);
+			this.triangleArray.push(v2);
+			this.triangleArray.push(v3);
+		}
+
+		return [vertices,indices];
+	}
+
 	Mode3D.prototype.initParametric = function(){
 		var params = this.gui.params
 		var a_range = [0,1];
 		var b_range = [0,1];
 		var c_range = [0,1];
-		// get range from string 
-		var splitArrayA = params.param_a.split("<"); // should return 3 pieces. We want the first and last 
+		// get range from string
+		var splitArrayA = params.param_a.split("<"); // should return 3 pieces. We want the first and last
 		a_range[0] = Parser.evaluate(splitArrayA[0]);
 		a_range[1] = Parser.evaluate(splitArrayA[2]);
 		var splitArrayB = params.param_b.split("<");
@@ -275,35 +610,72 @@ var Mode3D = (function (scope) {
 		c_range[0] = Parser.evaluate(splitArrayC[0]);
 		c_range[1] = Parser.evaluate(splitArrayC[2]);
 
-		this.leftView.volume({
-			rangeX: a_range,
-			rangeY: b_range,
-			rangeZ: c_range,
-			width: 20,
-			height: 20,
-			depth: 20,
-			expr: function(emit, a,b,c,i,j,k){
-				var x = Parser.evaluate(params.param_eq_x,{a:a,b:b,c:c});
-				var y = Parser.evaluate(params.param_eq_y,{a:a,b:b,c:c});
-				var z = Parser.evaluate(params.param_eq_z,{a:a,b:b,c:c});
+		this.triangleArray = [] 
 
-				emit(x,y,z);
-			},
-			channels:3,
-			id:'param_data',
-			live:false
-		})
+		var upperData = this.tesselateParametric(a_range,b_range,c_range[1]);
+		var upperBoundVerticies = upperData[0];
+		var upperIndices = upperData[1];
 
-		this.leftView.surface({
+		var lowerData = this.tesselateParametric(a_range,b_range,c_range[0]);
+		var lowerBoundVerticies = lowerData[0];
+		var lowerIndices = lowerData[1];
+
+		// Draw upper bound 
+		this.leftView.array({
+		    expr: function (emit, i, t) {
+		      var v1 = upperBoundVerticies[upperIndices[i][0]];
+		      var v2 = upperBoundVerticies[upperIndices[i][1]];
+		      var v3 = upperBoundVerticies[upperIndices[i][2]];
+		      emit(v1[0],v1[1],v1[2])
+		      emit(v2[0],v2[1],v2[2])
+		      emit(v3[0],v3[1],v3[2])
+		      },
+	        width: upperIndices.length,
+	        items: 3,
+	        channels: 3,
+	        live:false,
+	        id:'param_data_upper'
+		  })
+
+		this.leftView.face({
 			color:this.gui.colors.data,
-			id:'param_geometry',
+			id:'param_geometry_upper',
 			shaded:true,
 			opacity:1
 		})
+
+		// Draw lower bound 
+		this.leftView.array({
+		    expr: function (emit, i, t) {
+		      var v1 = lowerBoundVerticies[lowerIndices[i][0]];
+		      var v2 = lowerBoundVerticies[lowerIndices[i][1]];
+		      var v3 = lowerBoundVerticies[lowerIndices[i][2]];
+		      emit(v1[0],v1[1],v1[2])
+		      emit(v2[0],v2[1],v2[2])
+		      emit(v3[0],v3[1],v3[2])
+		      },
+	        width: lowerIndices.length,
+	        items: 3,
+	        channels: 3,
+	        live:false,
+	        id:'param_data_lower'
+		  })
+
+		this.leftView.face({
+			color:this.gui.colors.data,
+			id:'param_geometry_lower',
+			shaded:true,
+			opacity:1
+		})
+		
+
 	}
 	Mode3D.prototype.cleanupParametric = function(){
-		this.leftView.remove("#param_data");
-		this.leftView.remove("#param_geometry");
+		this.leftView.remove("#param_data_upper");
+		this.leftView.remove("#param_geometry_upper");
+
+		this.leftView.remove("#param_data_lower");
+		this.leftView.remove("#param_geometry_lower");
 	}
 
 
@@ -315,6 +687,16 @@ var Mode3D = (function (scope) {
 		var instance = new QuickHull(pointsArray);
 		instance.build()
 		var vertices = instance.collectFaces()
+		this.triangleArray = []
+
+		for(var i=0;i<vertices.length;i++){
+			var v1 = pointsArray[vertices[i][0]];
+			var v2 = pointsArray[vertices[i][1]];
+			var v3 = pointsArray[vertices[i][2]];
+			this.triangleArray.push(v1);
+			this.triangleArray.push(v2);
+			this.triangleArray.push(v3);
+		}
 
 		this.leftView.array({
 		    expr: function (emit, i, t) {
@@ -335,13 +717,14 @@ var Mode3D = (function (scope) {
 	    shaded: true,
 	    id:'hull_geometry',
 	    points:'#hull_data',
-	  })  
+	  })
+
 
 	}
 	Mode3D.prototype.parseConvexPoints = function(){
 		var params = this.gui.params
-		// Get string of points and parse it 
-		// Remove whitespace 
+		// Get string of points and parse it
+		// Remove whitespace
 		var points_str = params.points.replace(/\s+/g, '');
 		// Split based on the pattern (digits,digits)
 		var points_split = points_str.match(/\(-*[.\d]+,-*[.\d]+,-*[.\d]+\)/g);
@@ -349,15 +732,15 @@ var Mode3D = (function (scope) {
 
 		for(var i=0;i<points_split.length;i++){
 			var p = points_split[i];
-			// Remove parenthesis 
+			// Remove parenthesis
 			p = p.replace(/[\(\)]/g,'');
 			// Split by comma
-			var comma_split = p.split(",") 
+			var comma_split = p.split(",")
 			var point = []
 			for(var j=0;j<comma_split.length;j++) point.push(Number(comma_split[j]))
 			this.pointsArray.push(point)
 		}
-		
+
 	}
 	Mode3D.prototype.cleanupConvexHull = function(){
 		this.leftView.remove("#hull_data")
@@ -369,14 +752,14 @@ var Mode3D = (function (scope) {
 		// Destroy mathbox overlays
 		var overlays = this.document.querySelector(".mathbox-overlays");
 		overlays.parentNode.removeChild(overlays);
-		// Destroy the canvas element 
+		// Destroy the canvas element
 		var canvas = this.document.querySelector("canvas");
 		canvas.parentNode.removeChild(canvas);
-		// Remove the two child divs 
+		// Remove the two child divs
 		this.leftChild.parentNode.removeChild(this.leftChild);
 		this.rightChild.parentNode.removeChild(this.rightChild);
 
-		// Destroy gui 
+		// Destroy gui
 		this.gui.cleanup();
 	}
 

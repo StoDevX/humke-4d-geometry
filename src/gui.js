@@ -32,7 +32,7 @@ var GUI = (function (scope) {
 			'resolution':60, // For the marching squares/cubes
 
 			// Viewing Controls
-			'axis_value':0,
+			'axis_value':0.1,
 			'axis':'Y',
 			'samples':200,
 			'thickness':'medium'
@@ -62,13 +62,18 @@ var GUI = (function (scope) {
 			'equation':'x^2+y^2+z^2 = 10', // Sphere
 			'resolution':20,
 			'points':'(5,0,5),(5,0,-5),(-5,0,-5),(-5,0,5),(5,5,5),(5,5,-5),(-5,5,-5),(-5,5,5)', // Cube
-			'param_eq_x':'b * cos(a) - c * sin(a)', // Spiral tube
-			'param_eq_y':'b * sin(a) + c * cos(a)',
-			'param_eq_z':'a/3',
-			'param_a':'-4 * PI < a < 4 * PI',
-			'param_b':'0 < b < 1',
-			'param_c':'0 < c < 1',
-			'axis':'Y'
+			'param_eq_x':'(4 + 0.5 * (3 + 5 * cos(b)) ) * sin(a)',
+			'param_eq_y':'(4 + 0.5 * (3 + 5 * cos(b)) ) * cos(a)',
+			'param_eq_z':'4 + c * sin(b)',
+			'param_a':'0 < a < 2 * PI',
+			'param_b':'0 < b < PI',
+			'param_c':'0 < c < 5'
+			//'param_eq_x':'b * cos(a) - c * sin(a)', // Spiral tube
+			//'param_eq_y':'b * sin(a) + c * cos(a)',
+			//'param_eq_z':'a/3',
+			//'param_a':'-4 * PI < a < 4 * PI',
+			//'param_b':'0 < b < 1',
+			//'param_c':'0 < c < 1'
 		}
 
 		// 3D defaults
@@ -200,30 +205,56 @@ var GUI = (function (scope) {
 		var callbacks = this.callbacks;
 		var mode_obj = this.mode_obj;
 
-		arr.push(this.shapeProperties.add(this.params, 'param_eq_x').name('x = '));
-		arr.push(this.shapeProperties.add(this.params, 'param_eq_y').name('y = '));
-		if(this.mode == "3D" || this.mode  == "4D"){
-			arr.push(this.shapeProperties.add(this.params, 'param_eq_z').name('z = '));
-		}
-		if(this.mode == "4D"){
-			arr.push(this.shapeProperties.add(this.params, 'param_eq_w').name('w = '));
-		}
-		arr.push(this.shapeProperties.add(this.params, 'param_a').name('a = '));
-		arr.push(this.shapeProperties.add(this.params, 'param_b').name('b = '));
-		if(this.mode == "3D" || this.mode  == "4D"){
-			arr.push(this.shapeProperties.add(this.params, 'param_c').name('c = '));
-		}
-		if(this.mode == "4D"){
-			arr.push(this.shapeProperties.add(this.params, 'param_d').name('d = '));
+		// Create fill option only in 3D
+		if(this.mode == "3D"){
+			var fill = this.shapeProperties.add(this.params, 'fill').name('Fill').onChange(function(val){
+				if(callbacks['fill']) callbacks['fill'](mode_obj,val);
+			});
+			arr.push(fill)
 		}
 
-		for(var i=0;i<arr.length;i++){
-			// Use a closure to capture the value of the current names[i]
-			var changeFunc = (function(name){ return function(val){ if(callbacks[name]) callbacks[name](mode_obj,val); } })(names[i]);
-			arr[i].onChange(function(val){
-				changeFunc(val)
-			})
+
+
+		arr.push(this.shapeProperties.add(this.params, 'param_eq_x').name('x = ').onChange(function(val){
+			if(callbacks['param_eq_x']) callbacks['param_eq_x'](mode_obj,val);
+		}));
+		arr.push(this.shapeProperties.add(this.params, 'param_eq_y').name('y = ').onChange(function(val){
+			if(callbacks['param_eq_y']) callbacks['param_eq_y'](mode_obj,val);
+		}));
+		if(this.mode == "3D" || this.mode  == "4D"){
+			arr.push(this.shapeProperties.add(this.params, 'param_eq_z').name('z = ').onChange(function(val){
+				if(callbacks['param_eq_z']) callbacks['param_eq_z'](mode_obj,val);
+			}));
 		}
+		if(this.mode == "4D"){
+			arr.push(this.shapeProperties.add(this.params, 'param_eq_w').name('w = ').onChange(function(val){
+				if(callbacks['param_eq_w']) callbacks['param_eq_w'](mode_obj,val);
+			}));
+		}
+		arr.push(this.shapeProperties.add(this.params, 'param_a').name('a = ').onChange(function(val){
+			if(callbacks['param_a']) callbacks['param_a'](mode_obj,val);
+		}));
+		arr.push(this.shapeProperties.add(this.params, 'param_b').name('b = ').onChange(function(val){
+			if(callbacks['param_b']) callbacks['param_b'](mode_obj,val);
+		}));
+		if(this.mode == "3D" || this.mode  == "4D"){
+			arr.push(this.shapeProperties.add(this.params, 'param_c').name('c = ').onChange(function(val){
+				if(callbacks['param_c']) callbacks['param_c'](mode_obj,val);
+			}));
+		}
+		if(this.mode == "4D"){
+			arr.push(this.shapeProperties.add(this.params, 'param_d').name('d = ').onChange(function(val){
+				if(callbacks['param_d']) callbacks['param_d'](mode_obj,val);
+			}));
+		}
+
+		// for(var i=0;i<arr.length;i++){
+		// 	// Use a closure to capture the value of the current names[i]
+		// 	var changeFunc = (function(name){ return function(val){ if(callbacks[name]) callbacks[name](mode_obj,val); } })(names[i]);
+		// 	arr[i].onChange(function(val){
+		// 		changeFunc(val)
+		// 	})
+		// }
 
 		this.paramSourceItems = arr;
 	}
