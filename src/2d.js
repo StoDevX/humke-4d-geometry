@@ -41,45 +41,45 @@ var Mode2D = (function (scope) {
 		this.rightView = rightView;
 
 		// Init gui
-	    gui.init("2D",this.callbacks,this);
-	    this.gui = gui;
+		gui.init("2D",this.callbacks,this);
+		this.gui = gui;
 
 
 		// Set up left view
 		var camera = leftView.camera({
-		  proxy: true, // this alows interactive camera controls to override the position
-		  position: [0, 0, 3],
+			proxy: true, // this alows interactive camera controls to override the position
+			position: [0, 0, 3],
 		})
 		leftView = leftView.cartesian({
-		  range: [[-10, 10], [-10, 10]],
-		  scale: [1, 1],
+			range: [[-10, 10], [-10, 10]],
+			scale: [1, 1],
 		});
 		leftView
-		  .axis({
-		    axis: 1,
-		    width: 4,
-		    color:'black',
-		  })
-		  .axis({
-		    axis: 2,
-		    width: 4,
-		    color:'black',
-		  })
-		  .grid({
-		    width: 1,
-		    divideX: 10,
-		    divideY: 10
-		  });
+		.axis({
+			axis: 1,
+			width: 4,
+			color:'black',
+		})
+		.axis({
+			axis: 2,
+			width: 4,
+			color:'black',
+		})
+		.grid({
+			width: 1,
+			divideX: 10,
+			divideY: 10
+		});
 
-		 // Add text
+		// Add text
 		leftView.array({
-		  data: [[11,1], [0,12]],
-		  channels: 2, // necessary
-		  live: false,
+			data: [[11,1], [0,12]],
+			channels: 2, // necessary
+			live: false,
 		}).text({
-		  data: ["x", "y"],
+			data: ["x", "y"],
 		}).label({
-		  color: 0x000000,
+			color: 0x000000,
 		});
 
 		this.leftView = leftView;
@@ -89,33 +89,43 @@ var Mode2D = (function (scope) {
 
 		// Set up right view
 		rightView = rightView.cartesian({
-		  range: [[-10, 10],[-10,10]],
-		  scale: [1, 1],
+			range: [[-10, 10],[-10,10]],
+			scale: [1, 1],
 		});
 		rightView.camera({
-		  proxy: true, // this alows interactive camera controls to override the position
-		  position: [0, 0, 3],
+			proxy: true, // this alows interactive camera controls to override the position
+			position: [0, 0, 3],
 		})
 		this.rightView = rightView
 
-	    this.axis_object  = this.CreateViewAxis(this.rightView,1,[11,1],"x")
+		this.axis_object  = this.CreateViewAxis(this.rightView,1,[11,1],"x")
 
-	    // Set up right view intersection shader
-	    this.SetupIntersection();
+		// Set up right view intersection shader
+		this.SetupIntersection();
 
-	    // Draw our main shape
+		// Draw our main shape
 		this.setMode()
+		console.log(this.geometry_id);
+
+		// Hide the slices at start
+		if(this.numCartesianObjects != 0){
+			for(var i=0;i<this.numCartesianObjects;i++){
+				this.rightView.select('#'+this.geometry_id+ String(i)).set("opacity",0)
+			}
+		} else {
+			this.rightView.select('#'+this.geometry_id).set("opacity",0)
+		}
 
 	}
 
 	function hexToRgb(hex) {
-	// from: http://stackoverflow.com/a/5624139/1278023
-	    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-	    return result ? {
-	        r: parseInt(result[1], 16)/255,
-	        g: parseInt(result[2], 16)/255,
-	        b: parseInt(result[3], 16)/255
-	    } : null;
+		// from: http://stackoverflow.com/a/5624139/1278023
+		var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+		return result ? {
+			r: parseInt(result[1], 16)/255,
+			g: parseInt(result[2], 16)/255,
+			b: parseInt(result[3], 16)/255
+		} : null;
 	}
 
 
@@ -125,14 +135,14 @@ var Mode2D = (function (scope) {
 		// Run vertex shader to get fragment positions, then fragment shader to discard pixels
 		this.rightView = this.rightView.shader({
 			code : [
-			"#define POSITION_STPQ",
-			"uniform float axis_value;",
-			"uniform float axis;",
-			"void getPosition(inout vec4 xyzw, inout vec4 stpq) {",
-			"if(axis == 1.0) xyzw.y -= axis_value - 1.0;",
-			"if(axis == 0.0) xyzw.x -= axis_value - 1.0;",
-			"stpq = xyzw;",
-			"}"
+				"#define POSITION_STPQ",
+				"uniform float axis_value;",
+				"uniform float axis;",
+				"void getPosition(inout vec4 xyzw, inout vec4 stpq) {",
+				"if(axis == 1.0) xyzw.y -= axis_value - 1.0;",
+				"if(axis == 0.0) xyzw.x -= axis_value - 1.0;",
+				"stpq = xyzw;",
+				"}"
 			].join("\n")
 		}, {
 			axis_value: function(){ return params.axis_value },
@@ -150,7 +160,7 @@ var Mode2D = (function (scope) {
 		rgb_color.b *= factor;
 
 		this.rightView = this.rightView.shader({
-				code: [
+			code: [
 				"#define POSITION_STPQ",
 				"uniform float axis_value;",
 				"uniform float axis;",
@@ -159,40 +169,40 @@ var Mode2D = (function (scope) {
 				"if(axis == 0.0 && abs(stpq.x - 1.0) > 0.1) discard;", // X axis
 				"return vec4("+rgb_color.r+","+rgb_color.g+","+rgb_color.b+",1.0);",
 				"}"
-				].join("\n")
-			}, {
-					axis_value: function(){ return params.axis_value },
-					axis: function(){
-						if( params.axis == "X") return 0;
-						if( params.axis == "Y") return 1;
-					}
-				})
-			.fragment()
+			].join("\n")
+		}, {
+			axis_value: function(){ return params.axis_value },
+			axis: function(){
+				if( params.axis == "X") return 0;
+				if( params.axis == "Y") return 1;
+			}
+		})
+		.fragment()
 
 	}
 
 	Mode2D.prototype.CreateViewAxis = function(view,axisNum,pos,labelName){
 		view.axis({
-		    axis: axisNum,
-		    width: 4,
-		    color:'black',
-		    id:'viewing_1d_axis',
-		  })
+			axis: axisNum,
+			width: 4,
+			color:'black',
+			id:'viewing_1d_axis',
+		})
 
 		view.array({
-	      data: [pos],
-	      channels: 2, // necessary
-	      live: false,
-	      id:"viewing_1d_axis_pos"
-	    }).text({
-	      data: [labelName],
-	      id:"viewing_1d_axis_text"
-	    }).label({
-	      color: 0x000000,
-	      id:'viewing_1d_axis_label',
-	    });
+			data: [pos],
+			channels: 2, // necessary
+			live: false,
+			id:"viewing_1d_axis_pos"
+		}).text({
+			data: [labelName],
+			id:"viewing_1d_axis_text"
+		}).label({
+			color: 0x000000,
+			id:'viewing_1d_axis_label',
+		});
 
-	    return view;
+		return view;
 	}
 
 	Mode2D.prototype.CreateViewLine = function(){
@@ -202,9 +212,9 @@ var Mode2D = (function (scope) {
 		this.leftView.interval({
 			expr: function(emit,x,i,t){
 				if(params.axis == "Y")
-					emit(x,params.axis_value);
+				emit(x,params.axis_value);
 				else
-					emit(params.axis_value,x);
+				emit(params.axis_value,x);
 			},
 			width:2,
 			channels:2,
@@ -237,7 +247,7 @@ var Mode2D = (function (scope) {
 			}
 
 			// self.axis_object.remove("#viewing_1d_axis")
-	  //   	self.axis_object.remove("#viewing_1d_axis_label")
+			//   	self.axis_object.remove("#viewing_1d_axis_label")
 			// if(val == "Y") self.axis_object = self.CreateViewAxis(self.rightView,1,[11,1],"x")
 			// if(val == "X") self.axis_object = self.CreateViewAxis(self.rightView,2,[1,12],"y")
 		},
@@ -248,7 +258,15 @@ var Mode2D = (function (scope) {
 		'source': function(self,val){
 			self.setMode();
 			self.gui.params.render_shape = true; //Reset this back to true
-			self.gui.params.render_slices = true; //Reset this back to true
+			self.gui.params.render_slices = false; //Reset this back to true
+
+			if(self.numCartesianObjects != 0){
+				for(var i=0;i<self.numCartesianObjects;i++){
+					self.rightView.select('#'+self.geometry_id+ String(i)).set("opacity",0)
+				}
+			} else {
+				self.rightView.select('#'+self.geometry_id).set("opacity",0)
+			}
 		},
 		'resolution': function(self,val){
 			self.cleanupCartesian();
@@ -552,11 +570,11 @@ var Mode2D = (function (scope) {
 		view.array({
 			expr: function (emit, i, t) {
 				for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
-		    },
-		    width: 1,
-		    items:pointsArray.length,
-		    channels: 2,
-		    id:'hull_data'
+			},
+			width: 1,
+			items:pointsArray.length,
+			channels: 2,
+			id:'hull_data'
 		})
 		// Draw the geometry
 		view.face({
@@ -598,85 +616,85 @@ var Mode2D = (function (scope) {
 		// Update the data
 		this.leftView.select("#hull_data").set("items",pointsArray.length)
 		this.leftView.select("#hull_data").set("expr",function(emit,i,t){
-			for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
-		}) */
-		this.cleanupConvexHull();
-		this.initConvexHull(this.leftView);
-		this.initConvexHull(this.rightView);
-	}
-	Mode2D.prototype.cleanupConvexHull = function(){
-		this.leftView.remove("#hull_data")
-		this.leftView.remove("#hull_geometry")
-		this.leftView.remove("#hull_pixel_geometry")
+		for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
+	}) */
+	this.cleanupConvexHull();
+	this.initConvexHull(this.leftView);
+	this.initConvexHull(this.rightView);
+}
+Mode2D.prototype.cleanupConvexHull = function(){
+	this.leftView.remove("#hull_data")
+	this.leftView.remove("#hull_geometry")
+	this.leftView.remove("#hull_pixel_geometry")
 
-		this.rightView.remove("#hull_data")
-		this.rightView.remove("#hull_geometry")
-		this.rightView.remove("#hull_pixel_geometry")
+	this.rightView.remove("#hull_data")
+	this.rightView.remove("#hull_geometry")
+	this.rightView.remove("#hull_pixel_geometry")
 
-		this.geometry_id = ""
-	}
+	this.geometry_id = ""
+}
 
-	Mode2D.prototype.convertToPixels = function(geom_func,id){
-		//This converts some geometry to pixel data by rendering it to a texture and grabbing that data
-		var scale = 1 / 4;
-		var view = this.leftView
-		.rtt({
-			size:   'relative',
-			width:  scale,
-			height: scale,
-		})
-		.camera({
-		  position: [2, 0, 18],// I just found this experimentally, seems to make it fit the best?
-		})
-		view = geom_func(view);
-		view
-		.end();
-		// Readback RTT pixels
-	    var readback =
-	      this.leftView
-	      .readback({
-	        id: id,
-	        type: 'unsignedByte',
-	      });
-	   return readback;
-	}
+Mode2D.prototype.convertToPixels = function(geom_func,id){
+	//This converts some geometry to pixel data by rendering it to a texture and grabbing that data
+	var scale = 1 / 4;
+	var view = this.leftView
+	.rtt({
+		size:   'relative',
+		width:  scale,
+		height: scale,
+	})
+	.camera({
+		position: [2, 0, 18],// I just found this experimentally, seems to make it fit the best?
+	})
+	view = geom_func(view);
+	view
+	.end();
+	// Readback RTT pixels
+	var readback =
+	this.leftView
+	.readback({
+		id: id,
+		type: 'unsignedByte',
+	});
+	return readback;
+}
 
-	// Creates a new mathbox view
-	Mode2D.prototype.createView = function(el,width){
-		var mathbox = mathBox({
-		  element: el,
-		  size: {width:width,height:window.innerHeight-50},
-	      plugins: ['core', 'controls', 'cursor', 'mathbox'],
-	      controls: {
-	        // Orbit controls, i.e. Euler angles, with gimbal lock
-	        klass: THREE.OrbitControls,
-	        // Trackball controls, i.e. Free quaternion rotation
-	        //klass: THREE.TrackballControls,
-	      },
-	    });
-	    if (mathbox.fallback) throw "WebGL not supported"
-	    // Set the renderer color
-		mathbox.three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
-		return mathbox;
-	}
+// Creates a new mathbox view
+Mode2D.prototype.createView = function(el,width){
+	var mathbox = mathBox({
+		element: el,
+		size: {width:width,height:window.innerHeight-50},
+		plugins: ['core', 'controls', 'cursor', 'mathbox'],
+		controls: {
+			// Orbit controls, i.e. Euler angles, with gimbal lock
+			klass: THREE.OrbitControls,
+			// Trackball controls, i.e. Free quaternion rotation
+			//klass: THREE.TrackballControls,
+		},
+	});
+	if (mathbox.fallback) throw "WebGL not supported"
+	// Set the renderer color
+	mathbox.three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
+	return mathbox;
+}
 
-	//Destroys everything created
-	Mode2D.prototype.cleanup = function(){
-		// Destroy mathbox overlays
-		var overlays = this.document.querySelector(".mathbox-overlays");
-		overlays.parentNode.removeChild(overlays);
-		// Destroy the canvas element
-		var canvas = this.document.querySelector("canvas");
-		canvas.parentNode.removeChild(canvas);
-		// Remove the two child divs
-		this.leftChild.parentNode.removeChild(this.leftChild);
-		this.rightChild.parentNode.removeChild(this.rightChild);
+//Destroys everything created
+Mode2D.prototype.cleanup = function(){
+	// Destroy mathbox overlays
+	var overlays = this.document.querySelector(".mathbox-overlays");
+	overlays.parentNode.removeChild(overlays);
+	// Destroy the canvas element
+	var canvas = this.document.querySelector("canvas");
+	canvas.parentNode.removeChild(canvas);
+	// Remove the two child divs
+	this.leftChild.parentNode.removeChild(this.leftChild);
+	this.rightChild.parentNode.removeChild(this.rightChild);
 
-		// Destroy gui
-		this.gui.cleanup();
-	}
+	// Destroy gui
+	this.gui.cleanup();
+}
 
 
-	scope.Mode2D = Mode2D;
-	return Mode2D;
+scope.Mode2D = Mode2D;
+return Mode2D;
 })(typeof exports === 'undefined' ? {} : exports);

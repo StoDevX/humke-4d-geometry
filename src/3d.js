@@ -87,6 +87,9 @@ var Mode3D = (function (scope) {
 
 		this.CreateViewAxis("X","Z");
 		this.CalculateIntersection();
+
+		// Hide the slices at start
+		this.rightView.select('#intersection_hull_geometry').set("opacity", 0)
 	}
 
 	Mode3D.prototype.CalculateIntersection = function(){
@@ -268,12 +271,15 @@ var Mode3D = (function (scope) {
 		},
 		'source': function(self,val){
 			self.setMode();
+			if (self.gui.params.render_shape == true) console.log("Previously drawn")
 			self.gui.params.render_shape = true; //Reset this back to true
-			self.gui.params.render_slices = true; //Reset this back to true
+			self.gui.params.render_slices = false; //Reset this back to false
 
 			self.rightView.remove("#intersection_line")
 			self.rightView.remove("#intersection_line_data")
 			self.CalculateIntersection();
+
+			self.rightView.select('#intersection_hull_geometry').set("opacity", 0)
 		},
 		'resolution': function(self,val){
 			self.cleanupCartesian();

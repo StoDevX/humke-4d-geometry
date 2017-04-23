@@ -29,7 +29,7 @@ var GUI = (function (scope) {
 			'param_eq_z':'',
 			'param_eq_w':'',
 			'render_shape':true,
-			'render_slices':true,
+			'render_slices':false,
 			'resolution':60, // For the marching squares/cubes
 			'fill':false,
 
