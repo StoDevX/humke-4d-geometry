@@ -208,6 +208,37 @@ var Mode3D = (function (scope) {
 		self.initParametric()
 	}
 
+	function updateRenderShape(self,val,opacity_val){
+		var params = self.gui.params;
+		var source = params.source;
+
+		if (source == "cartesian") {
+			var flipped_opacity = self.leftView.select('#cartesian_geometry').get("opacity") == 1 ? 0 : 1 ;
+			if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
+			self.leftView.select('#cartesian_geometry').set("opacity",flipped_opacity)
+		}
+		if (source == "parametric") {
+			var flipped_opacity = self.leftView.select('#param_geometry_upper').get("opacity") == 1 ? 0 : 1 ;
+			if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
+			self.leftView.select('#param_geometry_upper').set("opacity",flipped_opacity)
+			self.leftView.select('#param_geometry_lower').set("opacity",flipped_opacity)
+		}
+		if (source == "convex-hull") {
+			var flipped_opacity = self.leftView.select('#hull_geometry').get("opacity") == 1 ? 0 : 1 ;
+			if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
+			self.leftView.select('#hull_geometry').set("opacity",flipped_opacity)
+		}
+	}
+
+	function updateRenderSlices(self,val,opacity_val){
+		var params = self.gui.params;
+		var source = params.source;
+
+		var flipped_opacity = self.rightView.select('#intersection_hull_geometry').get("opacity") == 1 ? 0 : 1 ;
+		if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
+		self.rightView.select('#intersection_hull_geometry').set("opacity",flipped_opacity)
+	}
+
 	Mode3D.prototype.callbacks = {
 		'axis': function(self,val) {
 			self.rightView.remove("#viewing_2d_axis_1")
@@ -235,33 +266,14 @@ var Mode3D = (function (scope) {
 			// Toggle opacity
 			if(self.current_mode == null) return;
 
-			var params = self.gui.params;
-			var source = params.source;
-
-			if (source == "cartesian") {
-				var flipped_opacity = self.leftView.select('#cartesian_geometry').get("opacity") == 1 ? 0 : 1 ;
-				self.leftView.select('#cartesian_geometry').set("opacity",flipped_opacity)
-			}
-			if (source == "parametric") {
-				var flipped_opacity = self.leftView.select('#param_geometry_upper').get("opacity") == 1 ? 0 : 1 ;
-				self.leftView.select('#param_geometry_upper').set("opacity",flipped_opacity)
-				self.leftView.select('#param_geometry_lower').set("opacity",flipped_opacity)
-			}
-			if (source == "convex-hull") {
-				var flipped_opacity = self.leftView.select('#hull_geometry').get("opacity") == 1 ? 0 : 1 ;
-				self.leftView.select('#hull_geometry').set("opacity",flipped_opacity)
-			}
+			updateRenderShape(self,val);
 
 		},
 		'render_slices': function(self,val){
 			// Toggle opacity
 			if(self.current_mode == null) return;
 
-			var params = self.gui.params;
-			var source = params.source;
-
-			var flipped_opacity = self.rightView.select('#intersection_hull_geometry').get("opacity") == 1 ? 0 : 1 ;
-			self.rightView.select('#intersection_hull_geometry').set("opacity",flipped_opacity)
+			updateRenderSlices(self,val);
 
 		},
 		'fill': function(self,val){
@@ -274,6 +286,8 @@ var Mode3D = (function (scope) {
 			if (self.gui.params.render_shape == true) console.log("Previously drawn")
 			self.gui.params.render_shape = true; //Reset this back to true
 			self.gui.params.render_slices = false; //Reset this back to false
+			updateRenderShape(self,val,1);
+			updateRenderSlices(self,val,0);
 
 			self.rightView.remove("#intersection_line")
 			self.rightView.remove("#intersection_line_data")
