@@ -233,6 +233,42 @@ var Mode2D = (function (scope) {
 		self.initParametric(self.rightView);
 	}
 
+	function updateRenderShape(self,val,opacity_val){
+		// Toggle opacity
+		if(self.geometry_id == "") return;
+		// If it's cartesian, there might be more objects
+		if(self.numCartesianObjects != 0){
+			for(var i=0;i<self.numCartesianObjects;i++){
+				var flipped_opacity = self.leftView.select('#'+self.geometry_id + String(i)).get("opacity") == 1 ? 0 : 1 ;
+				if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
+				self.leftView.select('#'+self.geometry_id+ String(i)).set("opacity",flipped_opacity)
+			}
+
+		} else {
+			var flipped_opacity = self.leftView.select('#'+self.geometry_id).get("opacity") == 1 ? 0 : 1 ;
+			if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
+			self.leftView.select('#'+self.geometry_id).set("opacity",flipped_opacity)
+		}
+	}
+
+	function updateRenderSlices(self,val,opacity_val){
+		// Toggle opacity
+		if(self.geometry_id == "") return;
+		// If it's cartesian, there might be more objects
+		if(self.numCartesianObjects != 0){
+			for(var i=0;i<self.numCartesianObjects;i++){
+				var flipped_opacity = self.rightView.select('#'+self.geometry_id + String(i)).get("opacity") == 1 ? 0 : 1 ;
+				if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
+				self.rightView.select('#'+self.geometry_id+ String(i)).set("opacity",flipped_opacity)
+			}
+
+		} else {
+			var flipped_opacity = self.rightView.select('#'+self.geometry_id).get("opacity") == 1 ? 0 : 1 ;
+			if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
+			self.rightView.select('#'+self.geometry_id).set("opacity",flipped_opacity)
+		}
+	}
+
 	Mode2D.prototype.callbacks = {
 		'axis': function(self,val){
 			if(val == "X"){
@@ -259,14 +295,18 @@ var Mode2D = (function (scope) {
 			self.setMode();
 			self.gui.params.render_shape = true; //Reset this back to true
 			self.gui.params.render_slices = false; //Reset this back to true
+			updateRenderShape(self,val,1);
+			updateRenderSlices(self,val,0);
 
-			if(self.numCartesianObjects != 0){
-				for(var i=0;i<self.numCartesianObjects;i++){
-					self.rightView.select('#'+self.geometry_id+ String(i)).set("opacity",0)
-				}
-			} else {
-				self.rightView.select('#'+self.geometry_id).set("opacity",0)
-			}
+			// if(self.numCartesianObjects != 0){
+			// 	for(var i=0;i<self.numCartesianObjects;i++){
+			// 		self.rightView.select('#'+self.geometry_id+ String(i)).set("opacity",0)
+			// 	}
+			// } else {
+			// 	self.rightView.select('#'+self.geometry_id).set("opacity",0)
+			// }
+
+			
 		},
 		'resolution': function(self,val){
 			self.cleanupCartesian();
@@ -301,35 +341,11 @@ var Mode2D = (function (scope) {
 		'param_a': updateParametricCallback,
 		'param_b': updateParametricCallback,
 		'render_shape': function(self,val){
-			// Toggle opacity
-			if(self.geometry_id == "") return;
-			// If it's cartesian, there might be more objects
-			if(self.numCartesianObjects != 0){
-				for(var i=0;i<self.numCartesianObjects;i++){
-					var flipped_opacity = self.leftView.select('#'+self.geometry_id + String(i)).get("opacity") == 1 ? 0 : 1 ;
-					self.leftView.select('#'+self.geometry_id+ String(i)).set("opacity",flipped_opacity)
-				}
-
-			} else {
-				var flipped_opacity = self.leftView.select('#'+self.geometry_id).get("opacity") == 1 ? 0 : 1 ;
-				self.leftView.select('#'+self.geometry_id).set("opacity",flipped_opacity)
-			}
+			updateRenderShape(self,val);
 
 		},
 		'render_slices': function(self,val){
-			// Toggle opacity
-			if(self.geometry_id == "") return;
-			// If it's cartesian, there might be more objects
-			if(self.numCartesianObjects != 0){
-				for(var i=0;i<self.numCartesianObjects;i++){
-					var flipped_opacity = self.rightView.select('#'+self.geometry_id + String(i)).get("opacity") == 1 ? 0 : 1 ;
-					self.rightView.select('#'+self.geometry_id+ String(i)).set("opacity",flipped_opacity)
-				}
-
-			} else {
-				var flipped_opacity = self.rightView.select('#'+self.geometry_id).get("opacity") == 1 ? 0 : 1 ;
-				self.rightView.select('#'+self.geometry_id).set("opacity",flipped_opacity)
-			}
+			updateRenderSlices(self,val);
 
 		}
 	};
