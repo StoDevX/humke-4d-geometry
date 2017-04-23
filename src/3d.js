@@ -2,7 +2,6 @@ var Mode3D = (function (scope) {
 	//Constructor
 	function Mode3D(document){
 		this.document = document;
-
 	}
 
 	// Creates the scene and everything
@@ -180,8 +179,6 @@ var Mode3D = (function (scope) {
 			})
 		}
 
-
-
 	}
 
 	Mode3D.prototype.createView = function(el,width){
@@ -231,6 +228,39 @@ var Mode3D = (function (scope) {
 			self.rightView.remove("#intersection_line_data")
 			self.CalculateIntersection();
 		},
+		'render_shape': function(self,val){
+			// Toggle opacity
+			if(self.current_mode == null) return;
+
+			var params = self.gui.params;
+			var source = params.source;
+
+			if (source == "cartesian") {
+				var flipped_opacity = self.leftView.select('#cartesian_geometry').get("opacity") == 1 ? 0 : 1 ;
+				self.leftView.select('#cartesian_geometry').set("opacity",flipped_opacity)
+			}
+			if (source == "parametric") {
+				var flipped_opacity = self.leftView.select('#param_geometry_upper').get("opacity") == 1 ? 0 : 1 ;
+				self.leftView.select('#param_geometry_upper').set("opacity",flipped_opacity)
+				self.leftView.select('#param_geometry_lower').set("opacity",flipped_opacity)
+			}
+			if (source == "convex-hull") {
+				var flipped_opacity = self.leftView.select('#hull_geometry').get("opacity") == 1 ? 0 : 1 ;
+				self.leftView.select('#hull_geometry').set("opacity",flipped_opacity)
+			}
+
+		},
+		'render_slices': function(self,val){
+			// Toggle opacity
+			if(self.current_mode == null) return;
+
+			var params = self.gui.params;
+			var source = params.source;
+
+			var flipped_opacity = self.rightView.select('#intersection_hull_geometry').get("opacity") == 1 ? 0 : 1 ;
+			self.rightView.select('#intersection_hull_geometry').set("opacity",flipped_opacity)
+
+		},
 		'fill': function(self,val){
 			self.rightView.remove("#intersection_line")
 			self.rightView.remove("#intersection_line_data")
@@ -239,6 +269,7 @@ var Mode3D = (function (scope) {
 		'source': function(self,val){
 			self.setMode();
 			self.gui.params.render_shape = true; //Reset this back to true
+			self.gui.params.render_slices = true; //Reset this back to true
 
 			self.rightView.remove("#intersection_line")
 			self.rightView.remove("#intersection_line_data")
@@ -360,6 +391,8 @@ var Mode3D = (function (scope) {
 			shaded: true,
 			id: "cartesian_geometry"
 		});
+
+		this.geometry_id = "cartesian_geometry"
 	}
 	Mode3D.prototype.polygonizeCartesian = function(){
 		var params = this.gui.params
@@ -543,8 +576,8 @@ var Mode3D = (function (scope) {
 
 	Mode3D.prototype.tesselateParametric = function(a_range,b_range,c_value){
 		var params = this.gui.params
-		// Returns a triangle array 
-		var slices = 25; 
+		// Returns a triangle array
+		var slices = 25;
 		var stacks = 25;
 		var vertices = [];
 
@@ -563,7 +596,7 @@ var Mode3D = (function (scope) {
 
 		// Create the triangles
 		var sliceCount = slices+1;
-		
+
 		var indices  = [];
 		for ( i = 0; i < stacks; i ++ ) {
 			for ( j = 0; j < slices; j ++ ) {
@@ -580,7 +613,7 @@ var Mode3D = (function (scope) {
 			}
 		}
 
-		
+
 
 		for(var i=0;i<indices.length;i++){
 			var v1 = vertices[indices[i][0]];
@@ -610,7 +643,7 @@ var Mode3D = (function (scope) {
 		c_range[0] = Parser.evaluate(splitArrayC[0]);
 		c_range[1] = Parser.evaluate(splitArrayC[2]);
 
-		this.triangleArray = [] 
+		this.triangleArray = []
 
 		var upperData = this.tesselateParametric(a_range,b_range,c_range[1]);
 		var upperBoundVerticies = upperData[0];
@@ -620,7 +653,7 @@ var Mode3D = (function (scope) {
 		var lowerBoundVerticies = lowerData[0];
 		var lowerIndices = lowerData[1];
 
-		// Draw upper bound 
+		// Draw upper bound
 		this.leftView.array({
 		    expr: function (emit, i, t) {
 		      var v1 = upperBoundVerticies[upperIndices[i][0]];
@@ -644,7 +677,7 @@ var Mode3D = (function (scope) {
 			opacity:1
 		})
 
-		// Draw lower bound 
+		// Draw lower bound
 		this.leftView.array({
 		    expr: function (emit, i, t) {
 		      var v1 = lowerBoundVerticies[lowerIndices[i][0]];
@@ -667,7 +700,6 @@ var Mode3D = (function (scope) {
 			shaded:true,
 			opacity:1
 		})
-		
 
 	}
 	Mode3D.prototype.cleanupParametric = function(){
