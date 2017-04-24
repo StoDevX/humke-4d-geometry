@@ -105,6 +105,16 @@ var Mode2D = (function (scope) {
 
 		// Draw our main shape
 		this.setMode()
+		console.log(this.geometry_id);
+
+		// Hide the slices at start
+		if(this.numCartesianObjects != 0){
+			for(var i=0;i<this.numCartesianObjects;i++){
+				this.rightView.select('#'+this.geometry_id+ String(i)).set("opacity",0)
+			}
+		} else {
+			this.rightView.select('#'+this.geometry_id).set("opacity",0)
+		}
 
 	}
 
@@ -223,6 +233,48 @@ var Mode2D = (function (scope) {
 		self.initParametric(self.rightView);
 	}
 
+	function updateRenderShape(self,val,opacity_val){
+		if(opacity_val === undefined){
+			opacity_val = val ? 1 : 0;
+		}
+		// Toggle opacity
+		if(self.geometry_id == "") return;
+		// If it's cartesian, there might be more objects
+		if(self.numCartesianObjects != 0){
+			for(var i=0;i<self.numCartesianObjects;i++){
+				var flipped_opacity = self.leftView.select('#'+self.geometry_id + String(i)).get("opacity") == 1 ? 0 : 1 ;
+				if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
+				self.leftView.select('#'+self.geometry_id+ String(i)).set("opacity",flipped_opacity)
+			}
+
+		} else {
+			var flipped_opacity = self.leftView.select('#'+self.geometry_id).get("opacity") == 1 ? 0 : 1 ;
+			if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
+			self.leftView.select('#'+self.geometry_id).set("opacity",flipped_opacity)
+		}
+	}
+
+	function updateRenderSlices(self,val,opacity_val){
+		if(opacity_val === undefined){
+			opacity_val = val ? 1 : 0;
+		}
+		// Toggle opacity
+		if(self.geometry_id == "") return;
+		// If it's cartesian, there might be more objects
+		if(self.numCartesianObjects != 0){
+			for(var i=0;i<self.numCartesianObjects;i++){
+				var flipped_opacity = self.rightView.select('#'+self.geometry_id + String(i)).get("opacity") == 1 ? 0 : 1 ;
+				if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
+				self.rightView.select('#'+self.geometry_id+ String(i)).set("opacity",flipped_opacity)
+			}
+
+		} else {
+			var flipped_opacity = self.rightView.select('#'+self.geometry_id).get("opacity") == 1 ? 0 : 1 ;
+			if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
+			self.rightView.select('#'+self.geometry_id).set("opacity",flipped_opacity)
+		}
+	}
+
 	Mode2D.prototype.callbacks = {
 		'axis': function(self,val){
 			if(val == "X"){
@@ -248,23 +300,36 @@ var Mode2D = (function (scope) {
 		'source': function(self,val){
 			self.setMode();
 			self.gui.params.render_shape = true; //Reset this back to true
+			self.gui.params.render_slices = false; //Reset this back to true
+			updateRenderShape(self,val,1);
+			updateRenderSlices(self,val,0);
+
+			// if(self.numCartesianObjects != 0){
+			// 	for(var i=0;i<self.numCartesianObjects;i++){
+			// 		self.rightView.select('#'+self.geometry_id+ String(i)).set("opacity",0)
+			// 	}
+			// } else {
+			// 	self.rightView.select('#'+self.geometry_id).set("opacity",0)
+			// }
+
+
 		},
 		'resolution': function(self,val){
 			self.cleanupCartesian();
 			self.initCartesian(self.leftView);
 			self.initCartesian(self.rightView);
 		},
-		// 'fill': function(self,val){
-		// 	self.cleanupCartesian();
-		//
-		// 	// console.log(" == LEFT == ");
-		// 	// self.leftView.print();
-		// 	// console.log(" == RIGHT == ");
-		// 	// self.rightView.print();
-		//
-		// 	self.initCartesian(self.leftView);
-		// 	self.initCartesian(self.rightView);
-		// },
+		'fill': function(self,val){
+			self.cleanupCartesian();
+
+			// console.log(" == LEFT == ");
+			// self.leftView.print();f
+			// console.log(" == RIGHT == ");
+			// self.rightView.print();
+
+			self.initCartesian(self.leftView);
+			self.initCartesian(self.rightView);
+		},
 		'equation': function(self,val){
 			self.cleanupCartesian();
 			self.initCartesian(self.leftView);
@@ -282,19 +347,11 @@ var Mode2D = (function (scope) {
 		'param_a': updateParametricCallback,
 		'param_b': updateParametricCallback,
 		'render_shape': function(self,val){
-			// Toggle opacity
-			if(self.geometry_id == "") return;
-			// If it's cartesian, there might be more objects
-			if(self.numCartesianObjects != 0){
-				for(var i=0;i<self.numCartesianObjects;i++){
-					var flipped_opacity = self.leftView.select('#'+self.geometry_id + String(i)).get("opacity") == 1 ? 0 : 1 ;
-					self.leftView.select('#'+self.geometry_id+ String(i)).set("opacity",flipped_opacity)
-				}
+			updateRenderShape(self,val);
 
-			} else {
-				var flipped_opacity = self.leftView.select('#'+self.geometry_id).get("opacity") == 1 ? 0 : 1 ;
-				self.leftView.select('#'+self.geometry_id).set("opacity",flipped_opacity)
-			}
+		},
+		'render_slices': function(self,val){
+			updateRenderSlices(self,val);
 
 		}
 	};
@@ -331,8 +388,52 @@ var Mode2D = (function (scope) {
 		if(this.objectArray == null) return; //Failed to parse
 		var params = this.gui.params
 
-		for(var i=0;i<this.objectArray.length;i++){
-			var edgeArray = this.objectArray[i];
+		if(params.fill==false){
+			// Create the edge data
+			for(var i=0;i<this.objectArray.length;i++){
+				var edgeArray = this.objectArray[i];
+				view.array({
+					width: edgeArray.length/2,
+					items: 2,
+					channels: 2,
+					data: edgeArray,
+					live:false,
+					id: "cartesian_edge_data" + String(i)
+				});
+				// Draw the geometry
+				view.vector({
+					points: "#cartesian_edge_data" + String(i),
+					color: this.gui.colors.data,
+					width: 10,
+					start: false,
+					opacity:1,
+					id: "cartesian_geometry" + String(i)
+				});
+			}
+			this.numCartesianObjects = this.objectArray.length;
+			// Save to pixels
+			// var objectArray = this.objectArray;
+			// this.readback =  this.convertToPixels(function(v){
+			// 	for(var i=0;i<objectArray.length;i++){
+			// 		var edgeArray = objectArray[i];
+			// 		v = v.vector({
+			// 			points: "#cartesian_edge_data" + String(i),
+			// 			color: '#000000',
+			// 			width: 5,
+			// 			start: false,
+			// 			id: "cartesian_pixel_geometry" + String(i)
+			// 		});
+			// 	}
+			// 	return v;
+			// },"indexbuffer")
+
+		} else {
+			// To draw filled in, put all the edges into one big edge array!
+			var edgeArray = [];
+			for(var i=0;i<this.objectArray.length;i++){
+				for(var j=0;j<this.objectArray[i].length;j++) edgeArray.push(this.objectArray[i][j])
+			}
+
 			view.array({
 				width: edgeArray.length/2,
 				items: 2,

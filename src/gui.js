@@ -29,7 +29,9 @@ var GUI = (function (scope) {
 			'param_eq_z':'',
 			'param_eq_w':'',
 			'render_shape':true,
+			'render_slices':false,
 			'resolution':60, // For the marching squares/cubes
+			'fill':false,
 
 			// Viewing Controls
 			'axis_value':0.1,
@@ -137,6 +139,10 @@ var GUI = (function (scope) {
 
 	    shapeProperties.add(params, 'render_shape').name("Render Shape").listen().onChange(function(val){
 	    	if(callbacks['render_shape']) callbacks['render_shape'](mode_obj,val);
+	    });
+
+			shapeProperties.add(params, 'render_slices').name("Render Slices").listen().onChange(function(val){
+	    	if(callbacks['render_slices']) callbacks['render_slices'](mode_obj,val);
 	    });
 
 	    // Init cartesian by default
@@ -269,6 +275,15 @@ var GUI = (function (scope) {
 		var arr = [];
 		var callbacks = this.callbacks;
 		var mode_obj = this.mode_obj;
+
+		// Create fill option only in 3D
+		if(this.mode == "3D"){
+			var fill = this.shapeProperties.add(this.params, 'fill').name('Fill').onChange(function(val){
+				if(callbacks['fill']) callbacks['fill'](mode_obj,val);
+			});
+			arr.push(fill)
+		}
+
 
 		var points = this.shapeProperties.add(this.params, 'points').onChange(function(val){
 			if(callbacks['points']) callbacks['points'](mode_obj,val);

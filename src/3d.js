@@ -2,7 +2,6 @@ var Mode3D = (function (scope) {
 	//Constructor
 	function Mode3D(document){
 		this.document = document;
-
 	}
 
 	// Creates the scene and everything
@@ -88,6 +87,9 @@ var Mode3D = (function (scope) {
 
 		this.CreateViewAxis("X","Z");
 		this.CalculateIntersection();
+
+		// Hide the slices at start
+		this.rightView.select('#intersection_hull_geometry').set("opacity", 0)
 	}
 
 	Mode3D.prototype.CalculateIntersection = function(){
@@ -141,24 +143,44 @@ var Mode3D = (function (scope) {
 			}
 
 			// Draw the geometry
-			// Draw it as lines
+			if(params.fill){
+				// Draw it filled in as faces
+				this.rightView.array({
+					expr: function (emit, i, t) {
+						for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
+					},
+					width: 1,
+					items:pointsArray.length,
+					channels: 2,
+					id:'intersection_hull_data'
+				})
 
-			this.rightView.array({
-				width: pointsArray.length/2,
-				items: 2,
-				channels: 2,
-				data: pointsArray,
-				live:false,
-				id:'intersection_hull_data'
-			})
-			this.rightView.vector({
-				color: this.gui.colors.data,
-				width: 10,
-				start: false,
-				id:'intersection_hull_geometry',
-				points:'#intersection_hull_data',
-				opacity:1,
-			})
+				this.rightView.face({
+					color:this.gui.colors.data,
+					id:'intersection_hull_geometry',
+					points:'#intersection_hull_data',
+					opacity:1,
+				})
+			} else {
+				// Draw it as lines
+
+				this.rightView.array({
+					width: pointsArray.length/2,
+					items: 2,
+					channels: 2,
+					data: pointsArray,
+					live:false,
+					id:'intersection_hull_data'
+				})
+				this.rightView.vector({
+					color: this.gui.colors.data,
+					width: 10,
+					start: false,
+					id:'intersection_hull_geometry',
+					points:'#intersection_hull_data',
+					opacity:1,
+				})
+			}
 
 		}
 
@@ -186,6 +208,43 @@ var Mode3D = (function (scope) {
 			self.initParametric()
 		}
 
+		function updateRenderShape(self,val,opacity_val){
+			if(opacity_val === undefined){
+				opacity_val = val ? 1 : 0;
+			}
+			var params = self.gui.params;
+			var source = params.source;
+
+			if (source == "cartesian") {
+				var flipped_opacity = self.leftView.select('#cartesian_geometry').get("opacity") == 1 ? 0 : 1 ;
+				if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
+				self.leftView.select('#cartesian_geometry').set("opacity",flipped_opacity)
+			}
+			if (source == "parametric") {
+				var flipped_opacity = self.leftView.select('#param_geometry_upper').get("opacity") == 1 ? 0 : 1 ;
+				if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
+				self.leftView.select('#param_geometry_upper').set("opacity",flipped_opacity)
+				self.leftView.select('#param_geometry_lower').set("opacity",flipped_opacity)
+			}
+			if (source == "convex-hull") {
+				var flipped_opacity = self.leftView.select('#hull_geometry').get("opacity") == 1 ? 0 : 1 ;
+				if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
+				self.leftView.select('#hull_geometry').set("opacity",flipped_opacity)
+			}
+		}
+
+		function updateRenderSlices(self,val,opacity_val){
+			if(opacity_val === undefined){
+				opacity_val = val ? 1 : 0;
+			}
+			var params = self.gui.params;
+			var source = params.source;
+
+			var flipped_opacity = self.rightView.select('#intersection_hull_geometry').get("opacity") == 1 ? 0 : 1 ;
+			if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
+			self.rightView.select('#intersection_hull_geometry').set("opacity",flipped_opacity)
+		}
+
 		Mode3D.prototype.callbacks = {
 			'axis': function(self,val) {
 				self.rightView.remove("#viewing_2d_axis_1")
@@ -209,13 +268,38 @@ var Mode3D = (function (scope) {
 				self.rightView.remove("#intersection_line_data")
 				self.CalculateIntersection();
 			},
+			'render_shape': function(self,val){
+				// Toggle opacity
+				if(self.current_mode == null) return;
+
+				updateRenderShape(self,val);
+
+			},
+			'render_slices': function(self,val){
+				// Toggle opacity
+				if(self.current_mode == null) return;
+
+				updateRenderSlices(self,val);
+
+			},
+			'fill': function(self,val){
+				self.rightView.remove("#intersection_line")
+				self.rightView.remove("#intersection_line_data")
+				self.CalculateIntersection();
+			},
 			'source': function(self,val){
 				self.setMode();
+				if (self.gui.params.render_shape == true) console.log("Previously drawn")
 				self.gui.params.render_shape = true; //Reset this back to true
+				self.gui.params.render_slices = false; //Reset this back to false
+				updateRenderShape(self,val,1);
+				updateRenderSlices(self,val,0);
 
 				self.rightView.remove("#intersection_line")
 				self.rightView.remove("#intersection_line_data")
 				self.CalculateIntersection();
+
+				self.rightView.select('#intersection_hull_geometry').set("opacity", 0)
 			},
 			'resolution': function(self,val){
 				self.cleanupCartesian();
@@ -333,6 +417,8 @@ var Mode3D = (function (scope) {
 				shaded: true,
 				id: "cartesian_geometry"
 			});
+
+			this.geometry_id = "cartesian_geometry"
 		}
 		Mode3D.prototype.polygonizeCartesian = function(){
 			var params = this.gui.params
@@ -640,7 +726,6 @@ var Mode3D = (function (scope) {
 				shaded:true,
 				opacity:1
 			})
-
 
 		}
 		Mode3D.prototype.cleanupParametric = function(){
