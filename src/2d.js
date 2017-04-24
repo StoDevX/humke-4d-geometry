@@ -234,6 +234,9 @@ var Mode2D = (function (scope) {
 	}
 
 	function updateRenderShape(self,val,opacity_val){
+		if(opacity_val === undefined){
+			opacity_val = val ? 1 : 0;
+		}
 		// Toggle opacity
 		if(self.geometry_id == "") return;
 		// If it's cartesian, there might be more objects
@@ -252,6 +255,9 @@ var Mode2D = (function (scope) {
 	}
 
 	function updateRenderSlices(self,val,opacity_val){
+		if(opacity_val === undefined){
+			opacity_val = val ? 1 : 0;
+		}
 		// Toggle opacity
 		if(self.geometry_id == "") return;
 		// If it's cartesian, there might be more objects
@@ -306,7 +312,7 @@ var Mode2D = (function (scope) {
 			// 	self.rightView.select('#'+self.geometry_id).set("opacity",0)
 			// }
 
-			
+
 		},
 		'resolution': function(self,val){
 			self.cleanupCartesian();
