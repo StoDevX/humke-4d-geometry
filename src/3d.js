@@ -142,26 +142,6 @@ var Mode3D = (function (scope) {
 				pointsArray.push([p[2],p[3]]);
 			}
 
-			// Draw the geometry
-			if(params.fill){
-				// Draw it filled in as faces
-				this.rightView.array({
-					expr: function (emit, i, t) {
-						for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
-					},
-					width: 1,
-					items:pointsArray.length,
-					channels: 2,
-					id:'intersection_hull_data'
-				})
-
-				this.rightView.face({
-					color:this.gui.colors.data,
-					id:'intersection_hull_geometry',
-					points:'#intersection_hull_data',
-					opacity:1,
-				})
-			} else {
 				// Draw it as lines
 
 				this.rightView.array({
@@ -180,8 +160,6 @@ var Mode3D = (function (scope) {
 					points:'#intersection_hull_data',
 					opacity:1,
 				})
-			}
-
 		}
 
 		Mode3D.prototype.createView = function(el,width){

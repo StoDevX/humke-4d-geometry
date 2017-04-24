@@ -388,7 +388,6 @@ var Mode2D = (function (scope) {
 		if(this.objectArray == null) return; //Failed to parse
 		var params = this.gui.params
 
-		if(params.fill==false){
 			// Create the edge data
 			for(var i=0;i<this.objectArray.length;i++){
 				var edgeArray = this.objectArray[i];
@@ -427,31 +426,6 @@ var Mode2D = (function (scope) {
 			// 	return v;
 			// },"indexbuffer")
 
-		} else {
-			// To draw filled in, put all the edges into one big edge array!
-			var edgeArray = [];
-			for(var i=0;i<this.objectArray.length;i++){
-				for(var j=0;j<this.objectArray[i].length;j++) edgeArray.push(this.objectArray[i][j])
-			}
-
-			view.array({
-				width: edgeArray.length/2,
-				items: 2,
-				channels: 2,
-				data: edgeArray,
-				live:false,
-				id: "cartesian_edge_data" + String(i)
-			});
-			// Draw the geometry
-			view.vector({
-				points: "#cartesian_edge_data" + String(i),
-				color: this.gui.colors.data,
-				width: 10,
-				start: false,
-				opacity:1,
-				id: "cartesian_geometry" + String(i)
-			});
-		}
 		this.numCartesianObjects = this.objectArray.length;
 		// Save to pixels
 		// var objectArray = this.objectArray;

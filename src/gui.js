@@ -31,7 +31,6 @@ var GUI = (function (scope) {
 			'render_shape':true,
 			'render_slices':false,
 			'resolution':60, // For the marching squares/cubes
-			'fill':false,
 
 			// Viewing Controls
 			'axis_value':0.1,
@@ -211,16 +210,6 @@ var GUI = (function (scope) {
 		var callbacks = this.callbacks;
 		var mode_obj = this.mode_obj;
 
-		// Create fill option only in 3D
-		if(this.mode == "3D"){
-			var fill = this.shapeProperties.add(this.params, 'fill').name('Fill').onChange(function(val){
-				if(callbacks['fill']) callbacks['fill'](mode_obj,val);
-			});
-			arr.push(fill)
-		}
-
-
-
 		arr.push(this.shapeProperties.add(this.params, 'param_eq_x').name('x = ').onChange(function(val){
 			if(callbacks['param_eq_x']) callbacks['param_eq_x'](mode_obj,val);
 		}));
@@ -275,15 +264,6 @@ var GUI = (function (scope) {
 		var arr = [];
 		var callbacks = this.callbacks;
 		var mode_obj = this.mode_obj;
-
-		// Create fill option only in 3D
-		if(this.mode == "3D"){
-			var fill = this.shapeProperties.add(this.params, 'fill').name('Fill').onChange(function(val){
-				if(callbacks['fill']) callbacks['fill'](mode_obj,val);
-			});
-			arr.push(fill)
-		}
-
 
 		var points = this.shapeProperties.add(this.params, 'points').onChange(function(val){
 			if(callbacks['points']) callbacks['points'](mode_obj,val);
