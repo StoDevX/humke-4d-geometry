@@ -352,6 +352,7 @@ var Mode3D = (function (scope) {
 				items: 4,
 				width: 1,
 				expr: function(emit,i,t){
+					if(!this.gui.params.render_slices) return;
 					var points = [
 						[10,10,params.axis_value],
 						[-10,10,params.axis_value],

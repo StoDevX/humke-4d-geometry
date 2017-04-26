@@ -211,6 +211,7 @@ var Mode2D = (function (scope) {
 		var thickness = this.thicknessValuesTable[params.thickness]
 		this.leftView.interval({
 			expr: function(emit,x,i,t){
+				if(!this.gui.params.render_slices) return;
 				if(params.axis == "Y")
 				emit(x,params.axis_value);
 				else
