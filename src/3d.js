@@ -658,6 +658,31 @@ var Mode3D = (function (scope) {
 			var lowerBoundVerticies = lowerData[0];
 			var lowerIndices = lowerData[1];
 
+			// If we don't find BOTH a and b as variables, then draw it as a line 
+			var draw_filled = true;
+			var tokens = Parser.parse(params.param_eq_x).tokens;
+			var found_a = false;
+			var found_b = false;
+			var found_c = false;
+			for(var i=0;i<tokens.length;i++){
+				if(tokens[i].toString() == "a") found_a = true;
+				if(tokens[i].toString() == "b") found_b = true;
+				if(tokens[i].toString() == "c") found_c = true;
+			}
+			tokens = Parser.parse(params.param_eq_y).tokens;
+			for(var i=0;i<tokens.length;i++){
+				if(tokens[i].toString() == "a") found_a = true;
+				if(tokens[i].toString() == "b") found_b = true;
+				if(tokens[i].toString() == "c") found_c = true;
+			}
+			tokens = Parser.parse(params.param_eq_z).tokens;
+			for(var i=0;i<tokens.length;i++){
+				if(tokens[i].toString() == "a") found_a = true;
+				if(tokens[i].toString() == "b") found_b = true;
+				if(tokens[i].toString() == "c") found_c = true;
+			}
+			if(!found_a || !found_b || !found_c) draw_filled = false;
+
 			// Draw upper bound
 			this.leftView.array({
 				expr: function (emit, i, t) {
@@ -675,12 +700,22 @@ var Mode3D = (function (scope) {
 				id:'param_data_upper'
 			})
 
-			this.leftView.face({
-				color:this.gui.colors.data,
-				id:'param_geometry_upper',
-				shaded:true,
-				opacity:1
-			})
+			if(draw_filled){
+				this.leftView.face({
+					color:this.gui.colors.data,
+					id:'param_geometry_upper',
+					shaded:true,
+					opacity:1
+				})
+			} else {
+				this.leftView.point({
+					color:this.gui.colors.data,
+					id:'param_geometry_upper',
+					size:5,
+					opacity:1
+				})
+			}
+			
 
 			// Draw lower bound
 			this.leftView.array({
@@ -699,12 +734,21 @@ var Mode3D = (function (scope) {
 				id:'param_data_lower'
 			})
 
-			this.leftView.face({
-				color:this.gui.colors.data,
-				id:'param_geometry_lower',
-				shaded:true,
-				opacity:1
-			})
+			if(draw_filled){
+				this.leftView.face({
+					color:this.gui.colors.data,
+					id:'param_geometry_lower',
+					shaded:true,
+					opacity:1
+				})
+			} else {
+				this.leftView.point({
+					color:this.gui.colors.data,
+					id:'param_geometry_lower',
+					size:5,
+					opacity:1
+				})
+			}
 
 		}
 		Mode3D.prototype.cleanupParametric = function(){
