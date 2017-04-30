@@ -389,60 +389,31 @@ var Mode2D = (function (scope) {
 		if(this.objectArray == null) return; //Failed to parse
 		var params = this.gui.params
 
-			// Create the edge data
-			for(var i=0;i<this.objectArray.length;i++){
-				var edgeArray = this.objectArray[i];
-				view.array({
-					width: edgeArray.length/2,
-					items: 2,
-					channels: 2,
-					data: edgeArray,
-					live:false,
-					id: "cartesian_edge_data" + String(i)
-				});
-				// Draw the geometry
-				view.vector({
-					points: "#cartesian_edge_data" + String(i),
-					color: this.gui.colors.data,
-					width: 10,
-					start: false,
-					opacity:1,
-					id: "cartesian_geometry" + String(i)
-				});
-			}
-			this.numCartesianObjects = this.objectArray.length;
-			// Save to pixels
-			// var objectArray = this.objectArray;
-			// this.readback =  this.convertToPixels(function(v){
-			// 	for(var i=0;i<objectArray.length;i++){
-			// 		var edgeArray = objectArray[i];
-			// 		v = v.vector({
-			// 			points: "#cartesian_edge_data" + String(i),
-			// 			color: '#000000',
-			// 			width: 5,
-			// 			start: false,
-			// 			id: "cartesian_pixel_geometry" + String(i)
-			// 		});
-			// 	}
-			// 	return v;
-			// },"indexbuffer")
+		// To draw filled in, put all the edges into one big edge array!
+		var edgeArray = [];
+		for(var i=0;i<this.objectArray.length;i++){
+			for(var j=0;j<this.objectArray[i].length;j++) edgeArray.push(this.objectArray[i][j])
+		}
 
-		this.numCartesianObjects = this.objectArray.length;
-		// Save to pixels
-		// var objectArray = this.objectArray;
-		// this.readback =  this.convertToPixels(function(v){
-		// 	for(var i=0;i<objectArray.length;i++){
-		// 		var edgeArray = objectArray[i];
-		// 		v = v.vector({
-		// 			points: "#cartesian_edge_data" + String(i),
-		// 			color: '#000000',
-		// 			width: 5,
-		// 			start: false,
-		// 			id: "cartesian_pixel_geometry" + String(i)
-		// 		});
-		// 	}
-		// 	return v;
-		// },"indexbuffer")
+		view.array({
+			items:edgeArray.length,
+			width: 1,
+			channels:2,
+			expr: function(emit,i){
+				for(var j=0;j<edgeArray.length;j++) emit(edgeArray[j][0],edgeArray[j][1])
+			},
+			live:false,
+			id:'cartesian_edge_data'
+		})
+
+		view.face({
+			color:this.gui.colors.data,
+			points:'#cartesian_edge_data',
+			opacity:1,
+			id:'cartesian_geometry'
+		})
+
+		this.numCartesianObjects = 0;
 
 		this.geometry_id = "cartesian_geometry"
 	}
