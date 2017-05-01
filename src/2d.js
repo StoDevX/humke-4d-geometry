@@ -487,6 +487,24 @@ var Mode2D = (function (scope) {
 		b_range[0] = Parser.evaluate(splitArrayB[0]);
 		b_range[1] = Parser.evaluate(splitArrayB[2]);
 
+		var draw_filled = true;
+
+		// If we don't find BOTH a and b as variables, then draw it as a line 
+		var tokens = Parser.parse(params.param_eq_x).tokens;
+		var found_a = false;
+		var found_b = false;
+		for(var i=0;i<tokens.length;i++){
+			if(tokens[i].toString() == "a") found_a = true;
+			if(tokens[i].toString() == "b") found_b = true;
+		}
+		if(!found_a || !found_b) draw_filled = false;
+		tokens = Parser.parse(params.param_eq_y).tokens;
+		for(var i=0;i<tokens.length;i++){
+			if(tokens[i].toString() == "a") found_a = true;
+			if(tokens[i].toString() == "b") found_b = true;
+		}
+		if(!found_a || !found_b) draw_filled = false;
+
 		view.area({
 			rangeX: a_range,
 			rangeY: b_range,
@@ -503,13 +521,30 @@ var Mode2D = (function (scope) {
 			live:false
 		})
 
-		view.surface({
-			color:this.gui.colors.data,
-			id:'param_geometry',
-			opacity:1
-		})
 
-
+		if(draw_filled){
+			view.surface({
+				color:this.gui.colors.data,
+				id:'param_geometry',
+				opacity:1
+			})	
+		} else {
+			// This is ideal, except when you have only b instead of only a, you see nothing
+			// I think that's because of the order the points are in. If they're not orderered right the line won't be drawn right
+			// view.line({
+			// 	color:this.gui.colors.data,
+			// 	width:5,
+			// 	id:"param_geometry",
+			// 	opacity:1
+			// })
+			view.point({
+				color:this.gui.colors.data,
+				size:5,
+				id:"param_geometry",
+				opacity:1
+			})
+		}
+		
 
 		this.geometry_id = "param_geometry"
 
