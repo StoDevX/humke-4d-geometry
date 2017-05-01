@@ -168,6 +168,9 @@ var Mode4D = (function (scope) {
 	        klass: THREE.OrbitControls,
 	        // Trackball controls, i.e. Free quaternion rotation
 	        //klass: THREE.TrackballControls,
+	        parameters: {
+		      noKeys: true // Disable arrow keys to move the view
+		    }
 	      },
 	    });
 	    if (mathbox.fallback) throw "WebGL not supported"
