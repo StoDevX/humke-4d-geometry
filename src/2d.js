@@ -227,14 +227,10 @@ var Mode2D = (function (scope) {
 		})
 	}
 
-	// define a function to be called when each param is updated
-	function updateParametricCallback(self,val){
-		self.cleanupParametric();
-		self.initParametric(self.leftView);
-		self.initParametric(self.rightView);
-	}
+
 
 	function updateRenderShape(self,val,opacity_val){
+
 		if(opacity_val === undefined){
 			opacity_val = val ? 1 : 0;
 		}
@@ -274,6 +270,16 @@ var Mode2D = (function (scope) {
 			if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
 			self.rightView.select('#'+self.geometry_id).set("opacity",flipped_opacity)
 		}
+	}
+
+	// define a function to be called when each param is updated
+	function updateParametricCallback(self,val){
+		self.cleanupParametric();
+		self.initParametric(self.leftView);
+		self.initParametric(self.rightView);
+
+		updateRenderShape(self,val,Number(self.gui.params.render_shape) );
+		updateRenderSlices(self,val,Number(self.gui.params.render_slices));
 	}
 
 	Mode2D.prototype.callbacks = {
@@ -319,6 +325,8 @@ var Mode2D = (function (scope) {
 			self.cleanupCartesian();
 			self.initCartesian(self.leftView);
 			self.initCartesian(self.rightView);
+			updateRenderShape(self,val,Number(self.gui.params.render_shape) );
+			updateRenderSlices(self,val,Number(self.gui.params.render_slices));
 		},
 		'fill': function(self,val){
 			self.cleanupCartesian();
@@ -335,9 +343,13 @@ var Mode2D = (function (scope) {
 			self.cleanupCartesian();
 			self.initCartesian(self.leftView);
 			self.initCartesian(self.rightView);
+			updateRenderShape(self,val,Number(self.gui.params.render_shape) );
+			updateRenderSlices(self,val,Number(self.gui.params.render_slices));
 		},
 		'points': function(self,val){
 			self.updateConvexHull()
+			updateRenderShape(self,val,Number(self.gui.params.render_shape) );
+			updateRenderSlices(self,val,Number(self.gui.params.render_slices));
 		},
 		'axis_value': function(self,val){
 
@@ -489,7 +501,7 @@ var Mode2D = (function (scope) {
 
 		var draw_filled = true;
 
-		// If we don't find BOTH a and b as variables, then draw it as a line 
+		// If we don't find BOTH a and b as variables, then draw it as a line
 		var tokens = Parser.parse(params.param_eq_x).tokens;
 		var found_a = false;
 		var found_b = false;
@@ -527,7 +539,7 @@ var Mode2D = (function (scope) {
 				color:this.gui.colors.data,
 				id:'param_geometry',
 				opacity:1
-			})	
+			})
 		} else {
 			// This is ideal, except when you have only b instead of only a, you see nothing
 			// I think that's because of the order the points are in. If they're not orderered right the line won't be drawn right
@@ -544,7 +556,7 @@ var Mode2D = (function (scope) {
 				opacity:1
 			})
 		}
-		
+
 
 		this.geometry_id = "param_geometry"
 
