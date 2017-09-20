@@ -44,77 +44,83 @@ var Mode2D = (function (scope) {
 		gui.init("2D",this.callbacks,this);
 		this.gui = gui;
 
-
+		var leftscene = new THREE.Scene();
+		var leftcamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
+		var leftrenderer = new THREE.WebGLRenderer(); leftrenderer.setSize( viewWidth, window.innerHeight );
+		leftView.appendChild( leftrenderer.domElement );
 		// Set up left view
-		var camera = leftView.camera({
-			proxy: true, // this alows interactive camera controls to override the position
-			position: [0, 0, 3],
-		})
-		leftView = leftView.cartesian({
-			range: [[-10, 10], [-10, 10]],
-			scale: [1, 1],
-		});
-		leftView
-		.axis({
-			axis: 1,
-			width: 4,
-			color:'black',
-		})
-		.axis({
-			axis: 2,
-			width: 4,
-			color:'black',
-		})
-		.grid({
-			width: 1,
-			divideX: 10,
-			divideY: 10
-		});
+		// var camera = leftView.camera({
+		// 	proxy: true, // this alows interactive camera controls to override the position
+		// 	position: [0, 0, 3],
+		// })
+		// leftView = leftView.cartesian({
+		// 	range: [[-10, 10], [-10, 10]],
+		// 	scale: [1, 1],
+		// });
+		// leftView
+		// .axis({
+		// 	axis: 1,
+		// 	width: 4,
+		// 	color:'black',
+		// })
+		// .axis({
+		// 	axis: 2,
+		// 	width: 4,
+		// 	color:'black',
+		// })
+		// .grid({
+		// 	width: 1,
+		// 	divideX: 10,
+		// 	divideY: 10
+		// });
+		//
+		// // Add text
+		// leftView.array({
+		// 	data: [[11,1], [0,12]],
+		// 	channels: 2, // necessary
+		// 	live: false,
+		// }).text({
+		// 	data: ["x", "y"],
+		// }).label({
+		// 	color: 0x000000,
+		// });
+		//
+		// this.leftView = leftView;
+		// this.CreateViewLine();
 
-		// Add text
-		leftView.array({
-			data: [[11,1], [0,12]],
-			channels: 2, // necessary
-			live: false,
-		}).text({
-			data: ["x", "y"],
-		}).label({
-			color: 0x000000,
-		});
+		var rightscene = new THREE.Scene();
+		var rightcamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
+		var rightrenderer = new THREE.WebGLRenderer(); leftrenderer.setSize( viewWidth, window.innerHeight );
+		rightView.appendChild( rightrenderer.domElement );
 
-		this.leftView = leftView;
-		this.CreateViewLine();
-
-
-
-		// Set up right view
-		rightView = rightView.cartesian({
-			range: [[-10, 10],[-10,10]],
-			scale: [1, 1],
-		});
-		rightView.camera({
-			proxy: true, // this alows interactive camera controls to override the position
-			position: [0, 0, 3],
-		})
-		this.rightView = rightView
-
-		this.axis_object  = this.CreateViewAxis(this.rightView,1,[11,1],"x")
-
-		// Set up right view intersection shader
-		this.SetupIntersection();
-
-		// Draw our main shape
-		this.setMode()
-		console.log(this.geometry_id);
-
-		// Hide the slices at start
-		if(this.numCartesianObjects != 0){
-			for(var i=0;i<this.numCartesianObjects;i++){
-				this.rightView.select('#'+this.geometry_id+ String(i)).set("opacity",0)
-			}
-		} else {
-			this.rightView.select('#'+this.geometry_id).set("opacity",0)
-		}
+		// // Set up right view
+		// rightView = rightView.cartesian({
+		// 	range: [[-10, 10],[-10,10]],
+		// 	scale: [1, 1],
+		// });
+		// rightView.camera({
+		// 	proxy: true, // this alows interactive camera controls to override the position
+		// 	position: [0, 0, 3],
+		// })
+		// this.rightView = rightView
+		//
+		// this.axis_object  = this.CreateViewAxis(this.rightView,1,[11,1],"x")
+		//
+		// // Set up right view intersection shader
+		// this.SetupIntersection();
+		//
+		// // Draw our main shape
+		// this.setMode()
+		// console.log(this.geometry_id);
+		//
+		// // Hide the slices at start
+		// if(this.numCartesianObjects != 0){
+		// 	for(var i=0;i<this.numCartesianObjects;i++){
+		// 		this.rightView.select('#'+this.geometry_id+ String(i)).set("opacity",0)
+		// 	}
+		// } else {
+		// 	this.rightView.select('#'+this.geometry_id).set("opacity",0)
+		// }
 
 	}
 
@@ -489,7 +495,7 @@ var Mode2D = (function (scope) {
 
 		var draw_filled = true;
 
-		// If we don't find BOTH a and b as variables, then draw it as a line 
+		// If we don't find BOTH a and b as variables, then draw it as a line
 		var tokens = Parser.parse(params.param_eq_x).tokens;
 		var found_a = false;
 		var found_b = false;
@@ -527,7 +533,7 @@ var Mode2D = (function (scope) {
 				color:this.gui.colors.data,
 				id:'param_geometry',
 				opacity:1
-			})	
+			})
 		} else {
 			// This is ideal, except when you have only b instead of only a, you see nothing
 			// I think that's because of the order the points are in. If they're not orderered right the line won't be drawn right
@@ -544,7 +550,7 @@ var Mode2D = (function (scope) {
 				opacity:1
 			})
 		}
-		
+
 
 		this.geometry_id = "param_geometry"
 
@@ -668,42 +674,42 @@ Mode2D.prototype.convertToPixels = function(geom_func,id){
 }
 
 // Creates a new mathbox view
-Mode2D.prototype.createView = function(el,width){
-	var mathbox = mathBox({
-		element: el,
-		size: {width:width,height:window.innerHeight-50},
-		plugins: ['core', 'controls', 'cursor', 'mathbox'],
-		controls: {
-			// Orbit controls, i.e. Euler angles, with gimbal lock
-			klass: THREE.OrbitControls,
-			// Trackball controls, i.e. Free quaternion rotation
-			//klass: THREE.TrackballControls,
-			parameters: {
-		      noKeys: true // Disable arrow keys to move the view
-		    }
-		}
-	});
-	if (mathbox.fallback) throw "WebGL not supported"
-	// Set the renderer color
-	mathbox.three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
-	return mathbox;
-}
-
-//Destroys everything created
-Mode2D.prototype.cleanup = function(){
-	// Destroy mathbox overlays
-	var overlays = this.document.querySelector(".mathbox-overlays");
-	overlays.parentNode.removeChild(overlays);
-	// Destroy the canvas element
-	var canvas = this.document.querySelector("canvas");
-	canvas.parentNode.removeChild(canvas);
-	// Remove the two child divs
-	this.leftChild.parentNode.removeChild(this.leftChild);
-	this.rightChild.parentNode.removeChild(this.rightChild);
-
-	// Destroy gui
-	this.gui.cleanup();
-}
+// Mode2D.prototype.createView = function(el,width){
+// 	var mathbox = mathBox({
+// 		element: el,
+// 		size: {width:width,height:window.innerHeight-50},
+// 		plugins: ['core', 'controls', 'cursor', 'mathbox'],
+// 		controls: {
+// 			// Orbit controls, i.e. Euler angles, with gimbal lock
+// 			klass: THREE.OrbitControls,
+// 			// Trackball controls, i.e. Free quaternion rotation
+// 			//klass: THREE.TrackballControls,
+// 			parameters: {
+// 		      noKeys: true // Disable arrow keys to move the view
+// 		    }
+// 		}
+// 	});
+// 	if (mathbox.fallback) throw "WebGL not supported"
+// 	// Set the renderer color
+// 	mathbox.three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
+// 	return mathbox;
+// }
+//
+// //Destroys everything created
+// Mode2D.prototype.cleanup = function(){
+// 	// Destroy mathbox overlays
+// 	var overlays = this.document.querySelector(".mathbox-overlays");
+// 	overlays.parentNode.removeChild(overlays);
+// 	// Destroy the canvas element
+// 	var canvas = this.document.querySelector("canvas");
+// 	canvas.parentNode.removeChild(canvas);
+// 	// Remove the two child divs
+// 	this.leftChild.parentNode.removeChild(this.leftChild);
+// 	this.rightChild.parentNode.removeChild(this.rightChild);
+//
+// 	// Destroy gui
+// 	this.gui.cleanup();
+// }
 
 
 scope.Mode2D = Mode2D;
