@@ -20,6 +20,14 @@ var Mode2D = (function (scope) {
 		// Convex Hull points
 		this.pointsArray = [];
 
+		this.leftView = null;
+		this.leftCamera = null;
+		this.leftRenderer = null;
+
+		this.rightView = null;
+		this.rightCamera = null;
+		this.rightRenderer = null;
+
 	}
 
 	// Creates the scene and everything
@@ -35,19 +43,42 @@ var Mode2D = (function (scope) {
 		this.leftChild = leftChild; this.rightChild = rightChild;
 
 		var viewWidth = (window.innerWidth-20)/2;
-		var leftView = this.createView(leftChild,viewWidth);
-		var rightView = this.createView(rightChild,viewWidth);
-		this.leftView = leftView;
-		this.rightView = rightView;
+		//var leftView = this.createView(leftChild,viewWidth);
+		//var rightView = this.createView(rightChild,viewWidth);
 
 		// Init gui
 		gui.init("2D",this.callbacks,this);
 		this.gui = gui;
 
-		var leftscene = new THREE.Scene();
-		var leftcamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
-		var leftrenderer = new THREE.WebGLRenderer(); leftrenderer.setSize( viewWidth, window.innerHeight );
-		leftView.appendChild( leftrenderer.domElement );
+		this.leftView = new THREE.Scene();
+		this.leftCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
+		this.leftRenderer = new THREE.WebGLRenderer();
+		this.leftRenderer.setClearColor(0xffffff);
+		this.leftRenderer.setSize( viewWidth, window.innerHeight );
+		leftChild.appendChild( this.leftRenderer.domElement );
+
+		var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+		var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+		var cube = new THREE.Mesh( geometry, material );
+		this.leftView.add( cube );
+
+		this.leftCamera.position.z = 5;
+
+		this.rightView = new THREE.Scene();
+		this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
+		this.rightRenderer = new THREE.WebGLRenderer();
+		this.rightRenderer.setClearColor(0xffffff);
+		this.rightRenderer.setSize( viewWidth, window.innerHeight );
+		rightChild.appendChild( this.rightRenderer.domElement );
+
+		geometry = new THREE.BoxGeometry( 1, 1, 1 );
+		material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+		cube = new THREE.Mesh( geometry, material );
+		this.rightView.add( cube );
+
+		this.rightCamera.position.z = 5;
+
+		this.animate();
 		// Set up left view
 		// var camera = leftView.camera({
 		// 	proxy: true, // this alows interactive camera controls to override the position
@@ -87,11 +118,6 @@ var Mode2D = (function (scope) {
 		//
 		// this.leftView = leftView;
 		// this.CreateViewLine();
-
-		var rightscene = new THREE.Scene();
-		var rightcamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
-		var rightrenderer = new THREE.WebGLRenderer(); leftrenderer.setSize( viewWidth, window.innerHeight );
-		rightView.appendChild( rightrenderer.domElement );
 
 		// // Set up right view
 		// rightView = rightView.cartesian({
@@ -711,6 +737,11 @@ Mode2D.prototype.convertToPixels = function(geom_func,id){
 // 	this.gui.cleanup();
 // }
 
+Mode2D.prototype.animate = function(){
+	requestAnimationFrame( this.animate.bind(this) );
+	this.leftRenderer.render( this.leftView, this.leftCamera );
+	this.rightRenderer.render( this.rightView, this.rightCamera );
+}
 
 scope.Mode2D = Mode2D;
 return Mode2D;
