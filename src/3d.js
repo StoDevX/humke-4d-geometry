@@ -2,6 +2,14 @@ var Mode3D = (function (scope) {
 	//Constructor
 	function Mode3D(document){
 		this.document = document;
+
+		this.leftView = null;
+		this.leftCamera = null;
+		this.leftRenderer = null;
+
+		this.rightView = null;
+		this.rightCamera = null;
+		this.rightRenderer = null;
 	}
 
 	// Creates the scene and everything
@@ -17,79 +25,104 @@ var Mode3D = (function (scope) {
 		this.leftChild = leftChild; this.rightChild = rightChild;
 
 		var viewWidth = (window.innerWidth-20)/2;
-		var leftView = this.createView(leftChild,viewWidth);
-		var rightView = this.createView(rightChild,viewWidth);
-		this.leftView = leftView;
-		this.rightView = rightView;
 
 		// Init gui
 		gui.init("3D",this.callbacks,this);
 		this.gui = gui;
 
-		// Set up left view
-		var camera = leftView.camera({
-			proxy: true, // this alows interactive camera controls to override the position
-			position: [0, 1, 3],
-		})
-		leftView = leftView.cartesian({
-			range: [[-10, 10], [-10, 10],[-10,10]],
-			scale: [1, 1,1],
-		});
-		leftView
-		.axis({
-			axis: 1,
-			width: 4,
-			color:'black',
-		})
-		.axis({
-			axis: 2,
-			width: 4,
-			color:'black',
-		})
-		.axis({
-			axis: 3,
-			width: 4,
-			color:'black',
-		})
-		.grid({
-			axes: [1,3],
-			width: 1,
-			divideX: 10,
-			divideY: 10
-		});
+		this.leftView = new THREE.Scene();
+		this.leftCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
+		this.leftRenderer = new THREE.WebGLRenderer();
+		this.leftRenderer.setClearColor(0xffffff);
+		this.leftRenderer.setSize( viewWidth, window.innerHeight );
+		leftChild.appendChild( this.leftRenderer.domElement );
 
-		// Add text
-		leftView.array({
-			data: [[11,1,0], [0,12,0],[0,0,11]],
-			channels: 3, // necessary
-			live: false,
-		}).text({
-			data: ["x", "y","z"],
-		}).label({
-			color: 0x000000,
-		});
+		var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+		var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+		var cube = new THREE.Mesh( geometry, material );
+		this.leftView.add( cube );
 
-		this.leftView = leftView;
+		this.leftCamera.position.z = 5;
 
-		// Set up right view
-		rightView = rightView.cartesian({
-			range: [[-10, 10],[-10,10]],
-			scale: [1, 1],
-		});
-		rightView.camera({
-			proxy: true, // this alows interactive camera controls to override the position
-			position: [0, 0, 3],
-		})
-		this.rightView = rightView
+		this.rightView = new THREE.Scene();
+		this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
+		this.rightRenderer = new THREE.WebGLRenderer();
+		this.rightRenderer.setClearColor(0xffffff);
+		this.rightRenderer.setSize( viewWidth, window.innerHeight );
+		rightChild.appendChild( this.rightRenderer.domElement );
 
-		// Draw our main shape
-		this.setMode();
+		geometry = new THREE.BoxGeometry( 1, 1, 1 );
+		material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+		cube = new THREE.Mesh( geometry, material );
+		this.rightView.add( cube );
 
-		this.CreateViewAxis("X","Z");
-		this.CalculateIntersection();
+		this.rightCamera.position.z = 5;
 
-		// Hide the slices at start
-		this.rightView.select('#intersection_hull_geometry').set("opacity", 0)
+		this.animate();
+		// // Set up left view
+		// var camera = leftView.camera({
+		// 	proxy: true, // this alows interactive camera controls to override the position
+		// 	position: [0, 1, 3],
+		// })
+		// leftView = leftView.cartesian({
+		// 	range: [[-10, 10], [-10, 10],[-10,10]],
+		// 	scale: [1, 1,1],
+		// });
+		// leftView
+		// .axis({
+		// 	axis: 1,
+		// 	width: 4,
+		// 	color:'black',
+		// })
+		// .axis({
+		// 	axis: 2,
+		// 	width: 4,
+		// 	color:'black',
+		// })
+		// .axis({
+		// 	axis: 3,
+		// 	width: 4,
+		// 	color:'black',
+		// })
+		// .grid({
+		// 	axes: [1,3],
+		// 	width: 1,
+		// 	divideX: 10,
+		// 	divideY: 10
+		// });
+		//
+		// // Add text
+		// leftView.array({
+		// 	data: [[11,1,0], [0,12,0],[0,0,11]],
+		// 	channels: 3, // necessary
+		// 	live: false,
+		// }).text({
+		// 	data: ["x", "y","z"],
+		// }).label({
+		// 	color: 0x000000,
+		// });
+		//
+		// this.leftView = leftView;
+		//
+		// // Set up right view
+		// rightView = rightView.cartesian({
+		// 	range: [[-10, 10],[-10,10]],
+		// 	scale: [1, 1],
+		// });
+		// rightView.camera({
+		// 	proxy: true, // this alows interactive camera controls to override the position
+		// 	position: [0, 0, 3],
+		// })
+		// this.rightView = rightView
+		//
+		// // Draw our main shape
+		// this.setMode();
+		//
+		// this.CreateViewAxis("X","Z");
+		// this.CalculateIntersection();
+		//
+		// // Hide the slices at start
+		// this.rightView.select('#intersection_hull_geometry').set("opacity", 0)
 	}
 
 	Mode3D.prototype.CalculateIntersection = function(){
@@ -160,27 +193,6 @@ var Mode3D = (function (scope) {
 					points:'#intersection_hull_data',
 					opacity:1,
 				})
-		}
-
-		Mode3D.prototype.createView = function(el,width){
-			var mathbox = mathBox({
-				element: el,
-				size: {width:width,height:window.innerHeight-50},
-				plugins: ['core', 'controls', 'cursor', 'mathbox'],
-				controls: {
-					// Orbit controls, i.e. Euler angles, with gimbal lock
-					klass: THREE.OrbitControls,
-					// Trackball controls, i.e. Free quaternion rotation
-					//klass: THREE.TrackballControls,
-					parameters: {
-				      noKeys: true // Disable arrow keys to move the view
-				    }
-				},
-			});
-			if (mathbox.fallback) throw "WebGL not supported"
-			// Set the renderer color
-			mathbox.three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
-			return mathbox;
 		}
 
 		// define a function to be called when each param is updated
@@ -661,7 +673,7 @@ var Mode3D = (function (scope) {
 			var lowerBoundVerticies = lowerData[0];
 			var lowerIndices = lowerData[1];
 
-			// If we don't find BOTH a and b as variables, then draw it as a line 
+			// If we don't find BOTH a and b as variables, then draw it as a line
 			var draw_filled = true;
 			var tokens = Parser.parse(params.param_eq_x).tokens;
 			var found_a = false;
@@ -718,7 +730,7 @@ var Mode3D = (function (scope) {
 					opacity:1
 				})
 			}
-			
+
 
 			// Draw lower bound
 			this.leftView.array({
@@ -805,46 +817,52 @@ var Mode3D = (function (scope) {
 
 
 		}
-		Mode3D.prototype.parseConvexPoints = function(){
-			var params = this.gui.params
-			// Get string of points and parse it
-			// Remove whitespace
-			var points_str = params.points.replace(/\s+/g, '');
-			// Split based on the pattern (digits,digits)
-			var points_split = points_str.match(/\(-*[.\d]+,-*[.\d]+,-*[.\d]+\)/g);
-			this.pointsArray = []
+		// Mode3D.prototype.parseConvexPoints = function(){
+		// 	var params = this.gui.params
+		// 	// Get string of points and parse it
+		// 	// Remove whitespace
+		// 	var points_str = params.points.replace(/\s+/g, '');
+		// 	// Split based on the pattern (digits,digits)
+		// 	var points_split = points_str.match(/\(-*[.\d]+,-*[.\d]+,-*[.\d]+\)/g);
+		// 	this.pointsArray = []
+		//
+		// 	for(var i=0;i<points_split.length;i++){
+		// 		var p = points_split[i];
+		// 		// Remove parenthesis
+		// 		p = p.replace(/[\(\)]/g,'');
+		// 		// Split by comma
+		// 		var comma_split = p.split(",")
+		// 		var point = []
+		// 		for(var j=0;j<comma_split.length;j++) point.push(Number(comma_split[j]))
+		// 		this.pointsArray.push(point)
+		// 	}
+		//
+		// }
+		// Mode3D.prototype.cleanupConvexHull = function(){
+		// 	this.leftView.remove("#hull_data")
+		// 	this.leftView.remove("#hull_geometry")
+		// }
+		//
+		// //Destroys everything created
+		// Mode3D.prototype.cleanup = function(){
+		// 	// Destroy mathbox overlays
+		// 	var overlays = this.document.querySelector(".mathbox-overlays");
+		// 	overlays.parentNode.removeChild(overlays);
+		// 	// Destroy the canvas element
+		// 	var canvas = this.document.querySelector("canvas");
+		// 	canvas.parentNode.removeChild(canvas);
+		// 	// Remove the two child divs
+		// 	this.leftChild.parentNode.removeChild(this.leftChild);
+		// 	this.rightChild.parentNode.removeChild(this.rightChild);
+		//
+		// 	// Destroy gui
+		// 	this.gui.cleanup();
+		// }
 
-			for(var i=0;i<points_split.length;i++){
-				var p = points_split[i];
-				// Remove parenthesis
-				p = p.replace(/[\(\)]/g,'');
-				// Split by comma
-				var comma_split = p.split(",")
-				var point = []
-				for(var j=0;j<comma_split.length;j++) point.push(Number(comma_split[j]))
-				this.pointsArray.push(point)
-			}
-
-		}
-		Mode3D.prototype.cleanupConvexHull = function(){
-			this.leftView.remove("#hull_data")
-			this.leftView.remove("#hull_geometry")
-		}
-
-		//Destroys everything created
-		Mode3D.prototype.cleanup = function(){
-			// Destroy mathbox overlays
-			var overlays = this.document.querySelector(".mathbox-overlays");
-			overlays.parentNode.removeChild(overlays);
-			// Destroy the canvas element
-			var canvas = this.document.querySelector("canvas");
-			canvas.parentNode.removeChild(canvas);
-			// Remove the two child divs
-			this.leftChild.parentNode.removeChild(this.leftChild);
-			this.rightChild.parentNode.removeChild(this.rightChild);
-
-			// Destroy gui
-			this.gui.cleanup();
+		Mode3D.prototype.animate = function(){
+			requestAnimationFrame( this.animate.bind(this) );
+			this.leftRenderer.render( this.leftView, this.leftCamera );
+			this.rightRenderer.render( this.rightView, this.rightCamera );
 		}
 
 		scope.Mode3D = Mode3D;
