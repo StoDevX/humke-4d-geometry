@@ -6,10 +6,12 @@ var Mode3D = (function (scope) {
 		this.leftView = null;
 		this.leftCamera = null;
 		this.leftRenderer = null;
+		this.leftControls = null;
 
 		this.rightView = null;
 		this.rightCamera = null;
 		this.rightRenderer = null;
+		this.rightControls = null;
 	}
 
 	// Creates the scene and everything
@@ -32,31 +34,40 @@ var Mode3D = (function (scope) {
 
 		this.leftView = new THREE.Scene();
 		this.leftCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
+		this.leftCamera.position.set(0,10,20);
 		this.leftRenderer = new THREE.WebGLRenderer();
 		this.leftRenderer.setClearColor(0xffffff);
 		this.leftRenderer.setSize( viewWidth, window.innerHeight );
 		leftChild.appendChild( this.leftRenderer.domElement );
+
+		this.leftControls = new THREE.OrbitControls( this.leftCamera, this.leftRenderer.domElement );
+
+		var grid = this.createGrid(20,20,0);
+		this.leftView.add(grid);
 
 		var geometry = new THREE.BoxGeometry( 1, 1, 1 );
 		var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 		var cube = new THREE.Mesh( geometry, material );
 		this.leftView.add( cube );
 
-		this.leftCamera.position.z = 5;
-
 		this.rightView = new THREE.Scene();
 		this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
+		this.rightCamera.position.set(0,0,20);
 		this.rightRenderer = new THREE.WebGLRenderer();
 		this.rightRenderer.setClearColor(0xffffff);
 		this.rightRenderer.setSize( viewWidth, window.innerHeight );
 		rightChild.appendChild( this.rightRenderer.domElement );
 
+		this.rightControls = new THREE.OrbitControls( this.rightCamera, this.rightRenderer.domElement );
+		this.rightControls.enableRotate = false;
+
+		var grid = this.createGrid(20,20,Math.PI/2);
+		this.rightView.add(grid);
+
 		geometry = new THREE.BoxGeometry( 1, 1, 1 );
 		material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 		cube = new THREE.Mesh( geometry, material );
 		this.rightView.add( cube );
-
-		this.rightCamera.position.z = 5;
 
 		this.animate();
 		// // Set up left view
@@ -328,6 +339,12 @@ var Mode3D = (function (scope) {
 			if(this.current_mode == "cartesian") this.initCartesian();
 			if(this.current_mode == "parametric") this.initParametric();
 			if(this.current_mode == "convex-hull") this.initConvexHull();
+		}
+
+		Mode3D.prototype.createGrid = function(size, divisions, xRotation) {
+			var gridHelper = new THREE.GridHelper(size,divisions,0x444444,0xd0d0d0);
+			gridHelper.rotation.x = xRotation;
+			return gridHelper;
 		}
 
 		Mode3D.prototype.CreateViewAxis = function(labelName1,labelName2){
