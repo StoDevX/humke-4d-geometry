@@ -34,7 +34,7 @@ var Mode3D = (function (scope) {
 
 		this.leftView = new THREE.Scene();
 		this.leftCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
-		this.leftCamera.position.set(0,10,20);
+		this.leftCamera.position.set(5,10,20);
 		this.leftRenderer = new THREE.WebGLRenderer();
 		this.leftRenderer.setClearColor(0xffffff);
 		this.leftRenderer.setSize( viewWidth, window.innerHeight );
@@ -42,8 +42,15 @@ var Mode3D = (function (scope) {
 
 		this.leftControls = new THREE.OrbitControls( this.leftCamera, this.leftRenderer.domElement );
 
-		var grid = this.createGrid(20,20,0);
+		var grid = createGrid("XZ");
 		this.leftView.add(grid);
+
+		var axis = createAxis("X");
+		this.leftView.add(axis);
+		axis = createAxis("Y");
+		this.leftView.add(axis);
+		axis = createAxis("Z");
+		this.leftView.add(axis);
 
 		var geometry = new THREE.BoxGeometry( 1, 1, 1 );
 		var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
@@ -61,8 +68,13 @@ var Mode3D = (function (scope) {
 		this.rightControls = new THREE.OrbitControls( this.rightCamera, this.rightRenderer.domElement );
 		this.rightControls.enableRotate = false;
 
-		var grid = this.createGrid(20,20,Math.PI/2);
+		grid = createGrid("XY");
 		this.rightView.add(grid);
+
+		axis = createAxis("X");
+		this.rightView.add(axis);
+		axis = createAxis("Y");
+		this.rightView.add(axis);
 
 		geometry = new THREE.BoxGeometry( 1, 1, 1 );
 		material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
@@ -339,12 +351,6 @@ var Mode3D = (function (scope) {
 			if(this.current_mode == "cartesian") this.initCartesian();
 			if(this.current_mode == "parametric") this.initParametric();
 			if(this.current_mode == "convex-hull") this.initConvexHull();
-		}
-
-		Mode3D.prototype.createGrid = function(size, divisions, xRotation) {
-			var gridHelper = new THREE.GridHelper(size,divisions,0x444444,0xd0d0d0);
-			gridHelper.rotation.x = xRotation;
-			return gridHelper;
 		}
 
 		Mode3D.prototype.CreateViewAxis = function(labelName1,labelName2){

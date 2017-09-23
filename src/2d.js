@@ -61,8 +61,13 @@ var Mode2D = (function (scope) {
 		this.leftControls = new THREE.OrbitControls( this.leftCamera, this.leftRenderer.domElement );
 		this.leftControls.enableRotate = false;
 
-		var grid = this.createGrid(20,20,Math.PI/2)
+		var grid = createGrid("XY");
 		this.leftView.add(grid);
+
+		var axis = createAxis("X");
+		this.leftView.add(axis);
+		axis = createAxis("Y");
+		this.leftView.add(axis);
 
 		var geometry = new THREE.BoxGeometry( 1, 1, 1 );
 		var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
@@ -80,6 +85,9 @@ var Mode2D = (function (scope) {
 		this.rightControls = new THREE.OrbitControls( this.rightCamera, this.rightRenderer.domElement );
 		this.rightControls.enableRotate = false;
 
+		axis = createAxis("X");
+		this.rightView.add(axis);
+
 		geometry = new THREE.BoxGeometry( 1, 1, 1 );
 		material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 		cube = new THREE.Mesh( geometry, material );
@@ -94,8 +102,8 @@ var Mode2D = (function (scope) {
 		// // Set up right view intersection shader
 		// this.SetupIntersection();
 		//
-		// // Draw our main shape
-		// this.setMode()
+		// Draw our main shape
+		this.setMode()
 		// console.log(this.geometry_id);
 		//
 		// // Hide the slices at start
@@ -170,12 +178,6 @@ var Mode2D = (function (scope) {
 		})
 		.fragment()
 
-	}
-
-	Mode2D.prototype.createGrid = function(size, divisions, xRotation) {
-		var gridHelper = new THREE.GridHelper(size,divisions,0x444444,0xd0d0d0);
-		gridHelper.rotation.x = xRotation;
-		return gridHelper;
 	}
 
 	Mode2D.prototype.CreateViewAxis = function(view,axisNum,pos,labelName){
@@ -391,26 +393,25 @@ var Mode2D = (function (scope) {
 		for(var i=0;i<this.objectArray.length;i++){
 			for(var j=0;j<this.objectArray[i].length;j++) edgeArray.push(this.objectArray[i][j])
 		}
-
-		view.array({
-			items:edgeArray.length,
-			width: 1,
-			channels:2,
-			expr: function(emit,i){
-				for(var j=0;j<edgeArray.length;j++) emit(edgeArray[j][0],edgeArray[j][1])
-			},
-			live:false,
-			id:'cartesian_edge_data'
-		})
-
-		view.face({
-			color:this.gui.colors.data,
-			points:'#cartesian_edge_data',
-			opacity:1,
-			id:'cartesian_geometry'
-		})
-
-		this.numCartesianObjects = 0;
+		// view.array({
+		// 	items:edgeArray.length,
+		// 	width: 1,
+		// 	channels:2,
+		// 	expr: function(emit,i){
+		// 		for(var j=0;j<edgeArray.length;j++) emit(edgeArray[j][0],edgeArray[j][1])
+		// 	},
+		// 	live:false,
+		// 	id:'cartesian_edge_data'
+		// })
+		//
+		// view.face({
+		// 	color:this.gui.colors.data,
+		// 	points:'#cartesian_edge_data',
+		// 	opacity:1,
+		// 	id:'cartesian_geometry'
+		// })
+		//
+		// this.numCartesianObjects = 0;
 
 		this.geometry_id = "cartesian_geometry"
 	}
@@ -664,43 +665,21 @@ Mode2D.prototype.convertToPixels = function(geom_func,id){
 	return readback;
 }
 
-// Creates a new mathbox view
-// Mode2D.prototype.createView = function(el,width){
-// 	var mathbox = mathBox({
-// 		element: el,
-// 		size: {width:width,height:window.innerHeight-50},
-// 		plugins: ['core', 'controls', 'cursor', 'mathbox'],
-// 		controls: {
-// 			// Orbit controls, i.e. Euler angles, with gimbal lock
-// 			klass: THREE.OrbitControls,
-// 			// Trackball controls, i.e. Free quaternion rotation
-// 			//klass: THREE.TrackballControls,
-// 			parameters: {
-// 		      noKeys: true // Disable arrow keys to move the view
-// 		    }
-// 		}
-// 	});
-// 	if (mathbox.fallback) throw "WebGL not supported"
-// 	// Set the renderer color
-// 	mathbox.three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
-// 	return mathbox;
-// }
-//
-// //Destroys everything created
-// Mode2D.prototype.cleanup = function(){
-// 	// Destroy mathbox overlays
-// 	var overlays = this.document.querySelector(".mathbox-overlays");
-// 	overlays.parentNode.removeChild(overlays);
-// 	// Destroy the canvas element
-// 	var canvas = this.document.querySelector("canvas");
-// 	canvas.parentNode.removeChild(canvas);
-// 	// Remove the two child divs
-// 	this.leftChild.parentNode.removeChild(this.leftChild);
-// 	this.rightChild.parentNode.removeChild(this.rightChild);
-//
-// 	// Destroy gui
-// 	this.gui.cleanup();
-// }
+//Destroys everything created
+Mode2D.prototype.cleanup = function(){
+	// Destroy mathbox overlays
+	var overlays = this.document.querySelector(".mathbox-overlays");
+	overlays.parentNode.removeChild(overlays);
+	// Destroy the canvas element
+	var canvas = this.document.querySelector("canvas");
+	canvas.parentNode.removeChild(canvas);
+	// Remove the two child divs
+	this.leftChild.parentNode.removeChild(this.leftChild);
+	this.rightChild.parentNode.removeChild(this.rightChild);
+
+	// Destroy gui
+	this.gui.cleanup();
+}
 
 Mode2D.prototype.animate = function(){
 	requestAnimationFrame( this.animate.bind(this) );
