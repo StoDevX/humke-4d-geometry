@@ -26,11 +26,16 @@ var createAxis = function(axis) {
   var material = new THREE.MeshBasicMaterial( {color: 0x000000} );
   var cylinder = new THREE.Mesh( cylinderGeometry, material );
 
-  // axis is already positioned to be the Y axis
+  // axis is already positioned to be the Y axis,
+  // but for other axis...
   if(axis == "X") {
     cylinder.rotateZ(-Math.PI/2);
   } else if (axis == "Z") {
-    cylinder.rotateX(-Math.PI/2)
+    cylinder.rotateX(Math.PI/2);
+  } else if (axis == "W") {
+    // a bit confusing, but it is the not the point of the
+    // axis that looks at the point, it is the edge
+    cylinder.lookAt(10, -10, -10);
   }
 
   return cylinder;
