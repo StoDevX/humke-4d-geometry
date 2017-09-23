@@ -52,6 +52,13 @@ var Mode3D = (function (scope) {
 		axis = createAxis("Z");
 		this.leftView.add(axis);
 
+		var leftXLabel = createLabel("X",12,0,0);
+		this.leftView.add(leftXLabel);
+		var leftYLabel = createLabel("Y",0,12,0);
+		this.leftView.add(leftYLabel);
+		var leftZLabel = createLabel("Z",0,0,12);
+		this.leftView.add(leftZLabel);
+
 		var geometry = new THREE.BoxGeometry( 1, 1, 1 );
 		var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 		var cube = new THREE.Mesh( geometry, material );
@@ -75,6 +82,11 @@ var Mode3D = (function (scope) {
 		this.rightView.add(axis);
 		axis = createAxis("Y");
 		this.rightView.add(axis);
+
+		var rightXLabel = createLabel("X",12,0,0);
+		this.rightView.add(rightXLabel);
+		var rightYLabel = createLabel("Y",0,12,0);
+		this.rightView.add(rightYLabel);
 
 		geometry = new THREE.BoxGeometry( 1, 1, 1 );
 		material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );

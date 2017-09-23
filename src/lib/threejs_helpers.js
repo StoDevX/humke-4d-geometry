@@ -40,3 +40,22 @@ var createAxis = function(axis) {
 
   return cylinder;
 }
+
+var createLabel = function(message, x, y, z) {
+  var canvas = document.createElement('canvas');
+  var ctx = canvas.getContext('2d');
+  ctx.font = "Bold 80px Arial";
+
+	ctx.fillText( message, canvas.width/2, canvas.height/2);
+
+	// canvas contents will be used for a texture
+	var texture = new THREE.Texture(canvas)
+	texture.needsUpdate = true;
+
+	var spriteMaterial = new THREE.SpriteMaterial(
+		{ map: texture} );
+	var sprite = new THREE.Sprite( spriteMaterial );
+	sprite.scale.set(2,2,1);
+  sprite.position.set(x,y,z);
+	return sprite;
+}

@@ -55,6 +55,15 @@ var Mode4D = (function (scope) {
 			axis = createAxis("W");
 			this.leftView.add(axis);
 
+			var leftXLabel = createLabel("X",12,0,0);
+			this.leftView.add(leftXLabel);
+			var leftYLabel = createLabel("Y",0,12,0);
+			this.leftView.add(leftYLabel);
+			var leftZLabel = createLabel("Z",0,0,12);
+			this.leftView.add(leftZLabel);
+			var leftWLabel = createLabel("W",5,10,-5);
+			this.leftView.add(leftWLabel);
+
 			var geometry = new THREE.BoxGeometry( 1, 1, 1 );
 			var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 			var cube = new THREE.Mesh( geometry, material );
@@ -79,6 +88,13 @@ var Mode4D = (function (scope) {
 			this.rightView.add(axis);
 			axis = createAxis("Z");
 			this.rightView.add(axis);
+
+			var rightXLabel = createLabel("X",12,0,0);
+			this.rightView.add(rightXLabel);
+			var rightYLabel = createLabel("Y",0,12,0);
+			this.rightView.add(rightYLabel);
+			var rightZLabel = createLabel("Z",0,0,12);
+			this.rightView.add(rightZLabel);
 
 			geometry = new THREE.BoxGeometry( 1, 1, 1 );
 			material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
@@ -164,22 +180,22 @@ var Mode4D = (function (scope) {
 
 		var triangleArray = this.polygonizeCartesian(equation,this.gui.params.resolution,variables);
 
-		this.rightView.array({
-			width: triangleArray.length/3,
-			items: 3,
-			channels: 3,
-			data: triangleArray,
-			id: "cartesian_section_triangle_data"
-		});
-
-		this.rightView.face({
-			points: "#cartesian_section_triangle_data",
-			color: this.gui.colors.data,
-			width: 5,
-			opacity: 1,
-			shaded: true,
-			id: "cartesian_section_geometry"
-		});
+		// this.rightView.array({
+		// 	width: triangleArray.length/3,
+		// 	items: 3,
+		// 	channels: 3,
+		// 	data: triangleArray,
+		// 	id: "cartesian_section_triangle_data"
+		// });
+		//
+		// this.rightView.face({
+		// 	points: "#cartesian_section_triangle_data",
+		// 	color: this.gui.colors.data,
+		// 	width: 5,
+		// 	opacity: 1,
+		// 	shaded: true,
+		// 	id: "cartesian_section_geometry"
+		// });
 
 	}
 	Mode4D.prototype.cleanupCartesian_Section = function(){

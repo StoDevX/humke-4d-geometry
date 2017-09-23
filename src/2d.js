@@ -69,6 +69,11 @@ var Mode2D = (function (scope) {
 		axis = createAxis("Y");
 		this.leftView.add(axis);
 
+		var leftXLabel = createLabel("X",12,0,0);
+		this.leftView.add(leftXLabel);
+		var leftYLabel = createLabel("Y",0,12,0);
+		this.leftView.add(leftYLabel);
+
 		var geometry = new THREE.BoxGeometry( 1, 1, 1 );
 		var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 		var cube = new THREE.Mesh( geometry, material );
@@ -87,6 +92,9 @@ var Mode2D = (function (scope) {
 
 		axis = createAxis("X");
 		this.rightView.add(axis);
+
+		var rightXLabel = createLabel("X",12,0,0);
+		this.rightView.add(rightXLabel);
 
 		geometry = new THREE.BoxGeometry( 1, 1, 1 );
 		material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
