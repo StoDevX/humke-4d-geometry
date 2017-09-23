@@ -3,6 +3,15 @@ var Mode4D = (function (scope) {
 	function Mode4D(document){
 		this.document = document;
 
+		this.leftView = null;
+		this.leftCamera = null;
+		this.leftRenderer = null;
+		this.leftControls = null;
+
+		this.rightView = null;
+		this.rightCamera = null;
+		this.rightRenderer = null;
+		this.rightControls = null;
 	}
 
 	// Creates the scene and everything
@@ -18,127 +27,65 @@ var Mode4D = (function (scope) {
 		this.leftChild = leftChild; this.rightChild = rightChild;
 
 		var viewWidth = (window.innerWidth-20)/2;
-		var leftView = this.createView(leftChild,viewWidth);
-		var rightView = this.createView(rightChild,viewWidth);
-		this.originalLeftView = leftView;
-		this.leftView = leftView;
-		this.rightView = rightView;
 
 		// Init gui
 	    gui.init("4D",this.callbacks,this);
 	    this.gui = gui;
 
 	    // Set up left view
-		var camera = leftView.camera({
-		  proxy: true, // this alows interactive camera controls to override the position
-		  position: [0, 1, 3],
-		})
-	
-		 var rot_matrix = [
-	        1, 0, 0, .577,
-	        0, 1, 0, .577,
-	        0, 0, 1, .577,
-	        0, 0, 0, 1,
-	      ]
+			this.leftView = new THREE.Scene();
+			this.leftCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
+			this.leftCamera.position.set(5,10,20);
+			this.leftRenderer = new THREE.WebGLRenderer();
+			this.leftRenderer.setClearColor(0xffffff);
+			this.leftRenderer.setSize( viewWidth, window.innerHeight );
+			leftChild.appendChild( this.leftRenderer.domElement );
 
-		leftView = leftView.transform4({
-			matrix: rot_matrix,
-		}).cartesian4({
-		  range: [[-10,10], [-10,10],[-10,10], [-10,10]],
-		  scale: [1,1,1,1],
-		});
+			this.leftControls = new THREE.OrbitControls( this.leftCamera, this.leftRenderer.domElement );
 
+			var grid = createGrid("XZ");
+			this.leftView.add(grid);
 
-		leftView
-		  .axis({
-		    axis: 1,
-		    width: 4,
-		    color:'black',
-		  })
-		  .axis({
-		    axis: 2,
-		    width: 4,
-		    color:'black',
-		  })
-		  .axis({
-		    axis: 3,
-		    width: 4,
-		    color:'black',
-		  })
-			.axis({
-		    axis: 4,
-		    width: 4,
-		    color:'black',
-		  })
-		  .grid({
-		    axes: [1,3],
-		    width: 1,
-		    divideX: 10,
-		    divideY: 10
-		  });
+			var axis = createAxis("X");
+			this.leftView.add(axis);
+			axis = createAxis("Y");
+			this.leftView.add(axis);
+			axis = createAxis("Z");
+			this.leftView.add(axis);
+			axis = createAxis("W");
+			this.leftView.add(axis);
 
-		 // Add text
-		leftView.array({
-			data: [[12,0,0,0], [0,12,0,0], [0,0,12,0], [0,0,0,12]],
-		  channels: 4, // necessary
-		  live: false,
-		}).text({
-		  data: ["x", "y","z","w"],
-		}).label({
-		  color: 0x000000,
-		});
+			var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+			var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+			var cube = new THREE.Mesh( geometry, material );
+			this.leftView.add( cube );
 
-		this.leftView = leftView;
+			this.rightView = new THREE.Scene();
+			this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
+			this.rightCamera.position.set(5,10,20);
+			this.rightRenderer = new THREE.WebGLRenderer();
+			this.rightRenderer.setClearColor(0xffffff);
+			this.rightRenderer.setSize( viewWidth, window.innerHeight );
+			rightChild.appendChild( this.rightRenderer.domElement );
 
+			this.rightControls = new THREE.OrbitControls( this.rightCamera, this.rightRenderer.domElement );
 
-		// Set up right view
-		rightView = rightView.cartesian({
-		  range: [[-10, 10],[-10,10],[-10,10]],
-		  scale: [1, 1,1],
-		});
+			grid = createGrid("XZ");
+			this.rightView.add(grid);
 
-		rightView = rightView.transform({
-		  position: [0, 0, 0,0],
-		  rotation: [0,0,0]
-		});
+			axis = createAxis("X");
+			this.rightView.add(axis);
+			axis = createAxis("Y");
+			this.rightView.add(axis);
+			axis = createAxis("Z");
+			this.rightView.add(axis);
 
-		rightView.camera({
-		  proxy: true, // this alows interactive camera controls to override the position
-		  position: [0, 1, 3],
-		})
-		 .axis({
-		    axis: 1,
-		    width: 4,
-		    color:'black',
-		  })
-		  .axis({
-		    axis: 2,
-		    width: 4,
-		    color:'black',
-		  })
-		  .axis({
-		    axis: 3,
-		    width: 4,
-		    color:'black',
-		  })
-		  .grid({
-		    axes: [1,3],
-		    width: 1,
-		    divideX: 10,
-		    divideY: 10
-		  })
-		  .array({
-		  data: [[11,1,0], [0,12,0],[0,0,11]],
-		  channels: 3, // necessary
-		  live: false,
-		}).text({
-		  data: ["x", "y","z"],
-		}).label({
-		  color: 0x000000,
-		});
+			geometry = new THREE.BoxGeometry( 1, 1, 1 );
+			material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+			cube = new THREE.Mesh( geometry, material );
+			this.rightView.add( cube );
 
-		this.rightView = rightView
-
+			this.animate();
 
 		// Draw our main shape
 		this.setMode()
@@ -148,42 +95,21 @@ var Mode4D = (function (scope) {
 
 	Mode4D.prototype.setMode = function(){
 		var params = this.gui.params
-		//Switch the mode based on the gui value 
+		//Switch the mode based on the gui value
 		if(this.current_mode != null){
-			//Clean up previous 
+			//Clean up previous
 			if(this.current_mode == "cartesian") this.cleanupCartesian_Section();
 		}
 		this.current_mode = params.source;
-		//Init new 
+		//Init new
 		if(this.current_mode == "cartesian") this.initCartesian_Section();
-	}
-
-	Mode4D.prototype.createView = function(el,width){
-		var mathbox = mathBox({
-		  element: el,
-		  size: {width:width,height:window.innerHeight-50},
-	      plugins: ['core', 'controls', 'cursor', 'mathbox'],
-	      controls: {
-	        // Orbit controls, i.e. Euler angles, with gimbal lock
-	        klass: THREE.OrbitControls,
-	        // Trackball controls, i.e. Free quaternion rotation
-	        //klass: THREE.TrackballControls,
-	        parameters: {
-		      noKeys: true // Disable arrow keys to move the view
-		    }
-	      },
-	    });
-	    if (mathbox.fallback) throw "WebGL not supported"
-	    // Set the renderer color
-		mathbox.three.renderer.setClearColor(new THREE.Color(0xFFFFFF), 1.0);
-		return mathbox;
 	}
 
 	Mode4D.prototype.callbacks = {
 		'source': function(self,val){
 			self.setMode();
 			self.gui.params.render_shape = true; //Reset this back to true
-		}, 
+		},
 		'resolution': function(self,val){
 			self.cleanupCartesian_Section();
 			self.initCartesian_Section();
@@ -198,7 +124,7 @@ var Mode4D = (function (scope) {
 		},
 	};
 
-	// Generalizing the 3D cartesian drawing 
+	// Generalizing the 3D cartesian drawing
 	Mode4D.prototype.polygonizeCartesian = function(equation_string,resolution,variables){
 
 		let sides = equation_string.split('=');
@@ -208,11 +134,11 @@ var Mode4D = (function (scope) {
 		let RHSfunc = Parser.parse(RHS).toJSFunction(variables);
 		var eq = function(x,y,z) { return LHSfunc(x,y,z) - RHSfunc(x,y,z); };
 
-		//Parses the equation, and polygonizes it 
+		//Parses the equation, and polygonizes it
 		try {
 			var triangleArray = [];
 			triangleArray = Polygonize.generate(eq, [[-10, 10], [-10, 10], [-10, 10]], resolution);
-			return triangleArray;			
+			return triangleArray;
 
 		} catch(err){
 			console.log("Error rendering equation",err);
@@ -224,8 +150,8 @@ var Mode4D = (function (scope) {
 	Mode4D.prototype.initCartesian_Section = function(){
 		/* To draw a section of a 4d cartesian:
 			- Grab the equation
-			- Replace the axis variable with the axis value 
-			- Draw that 3D shape 
+			- Replace the axis variable with the axis value
+			- Draw that 3D shape
 		*/
 		var equation = this.gui.params.equation
 		var axis_variable = this.gui.params.axis.toLowerCase()
@@ -275,6 +201,12 @@ var Mode4D = (function (scope) {
 
 		// Destroy gui
 		this.gui.cleanup();
+	}
+
+	Mode4D.prototype.animate = function(){
+		requestAnimationFrame( this.animate.bind(this) );
+		this.leftRenderer.render( this.leftView, this.leftCamera );
+		this.rightRenderer.render( this.rightView, this.rightCamera );
 	}
 
 	scope.Mode4D = Mode4D;
