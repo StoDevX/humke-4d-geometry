@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Basic Settings -->
+    <meta charset="UTF-8" />
+    <title>4D Geometry Viewer</title>
+    <meta name="author" content="Joe, Justin, Omar, Tianyu" />
+    <meta name="description" content="A project for Professor Paul Humke" />
+    <meta name="keywords" content="4d, geometry" />
+    <link rel="icon", href="src/img/favicon.png" />
+
+    <!-- Support for Different Devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <!-- Stylesheets (Libraries) -->
+    <link rel="stylesheet" type="text/css" href="src/lib/normalize.css" />
+    <!-- Stylesheets -->
+    <link rel="stylesheet" type="text/css" href="src/css/index.css" />
+</head>
+<body>
+    <!-- Warning when Javascript is Disabled -->
+    <noscript>
+        <p>Please enable JavaScript for this website in your browser.</p>
+    </noscript>
+    <!-- Header and Navbar -->
+    <hgroup>
+        <!-- Header -->
+        <header id="header">
+            <h1><span id="world_title">4D</span> Geometry Viewer</h1>
+            <p>Created at St. Olaf College for Professor Paul Humke. <span id="open_about">More about this Project</span></p>
+        </header>
+        <!-- Menu, Different Modes -->
+        <nav>
+            <ul>
+                <!-- 2D -->
+                <li class="nav_button" id="btn_2d">
+                    <p>2D</p>
+                </li>
+                <!-- 3D -->
+                <li div class="nav_button" id="btn_3d">
+                    <p>3D</p>
+                </li>
+                <!-- 4D -->
+                <li class="nav_button" id="btn_4d">
+                    <p>4D</p>
+                </li>
+            </ul>
+        </nav>
+    </hgroup>
+
+    <!-- About Section, Hidden until Click Link -->
+    <section id="about" class="modal">
+        <div class="modal_content">
+            <span id="close_btn">×</span>
+            <h1>About 4D Geometry Viewer</h1>
+            <p>This project was developed by students at <a target="_blank" href="https://wp.stolaf.edu">St. Olaf College</a>: Omar Shehata ('18), Joe Peterson ('18), Tianyu Pang ('18'), Justin Pacholec ('18), Elijah Verdoon ('18) and Nick Nooney ('16) under the direction of <a target="_blank" href="https://www.stolaf.edu/people/humke/">Professor Paul Humke</a> in 2017.</p>
+            <p>You can check out the project on <a target="_blank" href="https://github.com/StoDevX/humke-4d-geometry">GitHub</a>.</p>
+            <h2>Credits</h2>
+            <ol>
+                <li>Cube icon by <a target="_blank" href="https://thenounproject.com/mffajes/">Michel Faz Fajes</a>, and Tesseract icon by <a target="_blank" href="https://thenounproject.com/kemesh/">Kemesh Maharjan</a>; both from <a target="_blank" href="https://thenounproject.com">Noun Project</a>.</li>
+                <li>This project relies on <a target="_blank" href="https://threejs.org">three.js</a>, <a target="_blank" href="https://threejs.org/examples/js/controls/OrbitControls.js">OrbitControls.js</a> and <a target="_blank" href="https://github.com/dataarts/dat.gui">dat.GUI</a>.</li>
+            </ol>
+        </div>
+    </section>
+
+    <!-- Viewer Section, Actual 2D/3D/4D Viewer, Hidden until Choose Mode -->
+    <section id="viewer">
+        <div id="viewer_left"></div>
+        <div id="viewer_right"></div>
+    </section>
+
+    <!-- Scripts (Libaries) -->
+    <script src="src/lib/dat.gui.min.js"></script>
+    <script src="src/lib/three.min.js"></script>
+    <script src="src/lib/OrbitControls.js"></script>
+    <!-- Scripts -->
+    <script src="src/gui.js"></script>
+    <script src="src/threejs_helpers.js"></script>
+    <script src="src/2d.js"></script>
+    <script src="src/index.js"></script>
+</body>
+</html>

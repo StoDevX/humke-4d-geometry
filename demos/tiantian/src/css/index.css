@@ -1,0 +1,310 @@
+html {
+    overflow-x: hidden;
+}
+
+body {
+    font-family: "Avenir Next", "HelveticaNeue-Light", "Helvetica Neue Light", 
+                 "Helvetica Neue", Helvetica, Arial, "Lucida Grande", 
+                 "SF UI Display", sans-serif;
+    font-weight: 350;
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+}
+
+div, span, header, hgroup, 
+section, article, footer, 
+h1, h2, h3, h4, h5, h6, ul, ol, p{
+    border: 0 solid black;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+  font-size: 36px;
+  font-weight: 400;
+}
+
+h2 {
+  font-size: 24px;
+  font-weight: 400;
+}
+
+p {
+  font-size: 16px;
+}
+
+a {
+    color: #c58f56;
+    font-weight: 500;
+    text-decoration: underline;
+}
+
+a:hover {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+noscript {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: 1;
+    background: #ffffff;
+    text-align: center;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+hgroup {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    overflow-x: hidden;
+    text-align: center;
+    width: 100%;
+}
+
+@media screen and (min-width: 600px) {
+    hgroup {
+        transform: translateY(33vh);
+        animation-name: header_fade_in_down;
+        animation-duration: 0.4s;
+    }
+}
+
+@keyframes header_fade_in_down {
+    from {opacity: 0; transform: none;}
+    to {opacity: 1; transform: translateY(33vh);}
+}
+
+#header {
+    margin: 0 0 10px 0;
+}
+
+#header h1 {
+    margin: 0 0 10px 0;
+}
+
+#open_about {
+    color: #c58f56;
+    font-weight: 500;
+    text-decoration: underline;
+}
+
+#open_about:hover {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+hgroup nav {
+    width: 100%;
+}
+
+hgroup nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+
+@media screen and (min-width: 600px) {
+    hgroup nav ul {
+        flex-direction: row;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    hgroup nav ul{
+        flex-direction: column;
+    }
+}
+
+hgroup nav ul li {
+    flex-grow: 1;
+    list-style: none;
+    display: inline-block;
+}
+
+.nav_button {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+
+    margin: 0 5% 10px 5%;
+    min-width: 100px;
+    max-width: 100px;
+    text-align: center;
+
+    font-weight: 500;
+    height: 50px;
+
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 0px 0px;
+}
+
+.nav_button:hover {
+    cursor: pointer;
+}
+
+#btn_2d {
+    color: #ffa0a3;
+    background-image: url(../img/square.svg);
+}
+
+.nav_button:hover {
+    animation-name: btn_show_icon;
+    animation-fill-mode: forwards;
+    animation-duration: 0.2s;
+}
+
+@keyframes btn_show_icon{
+    from{}
+    to{background-size: 50px 50px; color: rgba(1,1,1,0)}
+}
+
+#btn_3d {
+    color: #00afef;
+    background-image: url(../img/cube.svg);
+}
+
+#btn_4d {
+    color: #815aa4;
+    background-image: url(../img/tesseract.svg);
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.7);
+
+    justify-content: center;
+    align-items: center;
+
+    animation-name: fade_in;
+    animation-duration: 0.4s;
+}
+
+@keyframes fade_in {
+    from {opacity: 0} 
+    to {opacity: 1}
+}
+
+@keyframes fade_out {
+    from {opacity: 1} 
+    to {opacity: 0}
+}
+
+.modal_content {
+    position: relative;
+
+    background-color: #fefefe;
+    padding: 20px;
+    border: 1px solid black;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 720px;
+
+    animation-name: slide_in_from_top;
+    animation-duration: 0.4s;
+}
+
+@keyframes slide_in_from_top {
+    from {transform: translateY(-100px); opacity: 0}
+    to {transform: translateY(0); opacity: 1}
+}
+
+@keyframes slide_out {
+    from {transform: translateY(0); opacity: 1}
+    to {transform: translateY(-100px); opacity: 0}
+}
+
+.modal_content h1 {
+    margin-bottom: 15px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #dddddd;
+}
+
+.modal_content h2 {
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+
+.modal_content p {
+    line-height: 2;
+}
+
+.modal_content li {
+    line-height: 2;
+    margin-left: 18px;
+}
+
+#close_btn {
+    position: absolute;
+    top: -11px;
+    right: -11px;
+
+    width: 25px;
+    height: 25px;
+    background: #c58f56;
+    border: 0px solid #000000;
+    border-radius: 25px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 24px;
+}
+
+#close_btn:hover {
+    cursor: pointer;
+}
+
+#viewer {
+    display: none;
+
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    align-self: center;
+
+    overflow-x: hidden;
+    overflow-y: scroll;
+    text-align: center;
+    width: 95%;
+
+    animation-name: fade_in;
+    animation-duration: 0.5s;
+}
+
+#viewer_left {
+    flex-grow: 1;
+    width: 50%;
+}
+
+#viewer_right {
+    flex-grow: 1;
+    width: 50%;
+}
