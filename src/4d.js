@@ -205,12 +205,6 @@ var Mode4D = (function (scope) {
 
 	//Destroys everything created
 	Mode4D.prototype.cleanup = function(){
-		// Destroy mathbox overlays
-		var overlays = this.document.querySelector(".mathbox-overlays");
-		overlays.parentNode.removeChild(overlays);
-		// Destroy the canvas element
-		var canvas = this.document.querySelector("canvas");
-		canvas.parentNode.removeChild(canvas);
 		// Remove the two child divs
 		this.leftChild.parentNode.removeChild(this.leftChild);
 		this.rightChild.parentNode.removeChild(this.rightChild);

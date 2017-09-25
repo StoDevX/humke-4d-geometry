@@ -56,7 +56,7 @@ var Mode2D = (function (scope) {
 		this.leftRenderer = new THREE.WebGLRenderer();
 		this.leftRenderer.setClearColor(0xffffff);
 		this.leftRenderer.setSize( viewWidth, window.innerHeight );
-		leftChild.appendChild( this.leftRenderer.domElement );
+		this.leftChild.appendChild( this.leftRenderer.domElement );
 
 		this.leftControls = new THREE.OrbitControls( this.leftCamera, this.leftRenderer.domElement );
 		this.leftControls.enableRotate = false;
@@ -85,7 +85,7 @@ var Mode2D = (function (scope) {
 		this.rightRenderer = new THREE.WebGLRenderer();
 		this.rightRenderer.setClearColor(0xffffff);
 		this.rightRenderer.setSize( viewWidth, window.innerHeight );
-		rightChild.appendChild( this.rightRenderer.domElement );
+		this.rightChild.appendChild( this.rightRenderer.domElement );
 
 		this.rightControls = new THREE.OrbitControls( this.rightCamera, this.rightRenderer.domElement );
 		this.rightControls.enableRotate = false;
@@ -675,12 +675,6 @@ Mode2D.prototype.convertToPixels = function(geom_func,id){
 
 //Destroys everything created
 Mode2D.prototype.cleanup = function(){
-	// Destroy mathbox overlays
-	var overlays = this.document.querySelector(".mathbox-overlays");
-	overlays.parentNode.removeChild(overlays);
-	// Destroy the canvas element
-	var canvas = this.document.querySelector("canvas");
-	canvas.parentNode.removeChild(canvas);
 	// Remove the two child divs
 	this.leftChild.parentNode.removeChild(this.leftChild);
 	this.rightChild.parentNode.removeChild(this.rightChild);
@@ -691,9 +685,7 @@ Mode2D.prototype.cleanup = function(){
 
 Mode2D.prototype.animate = function(){
 	requestAnimationFrame( this.animate.bind(this) );
-
 	this.leftRenderer.render( this.leftView, this.leftCamera );
-
 	this.rightRenderer.render( this.rightView, this.rightCamera );
 }
 

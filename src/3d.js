@@ -852,47 +852,41 @@ var Mode3D = (function (scope) {
 
 
 		}
-		// Mode3D.prototype.parseConvexPoints = function(){
-		// 	var params = this.gui.params
-		// 	// Get string of points and parse it
-		// 	// Remove whitespace
-		// 	var points_str = params.points.replace(/\s+/g, '');
-		// 	// Split based on the pattern (digits,digits)
-		// 	var points_split = points_str.match(/\(-*[.\d]+,-*[.\d]+,-*[.\d]+\)/g);
-		// 	this.pointsArray = []
-		//
-		// 	for(var i=0;i<points_split.length;i++){
-		// 		var p = points_split[i];
-		// 		// Remove parenthesis
-		// 		p = p.replace(/[\(\)]/g,'');
-		// 		// Split by comma
-		// 		var comma_split = p.split(",")
-		// 		var point = []
-		// 		for(var j=0;j<comma_split.length;j++) point.push(Number(comma_split[j]))
-		// 		this.pointsArray.push(point)
-		// 	}
-		//
-		// }
-		// Mode3D.prototype.cleanupConvexHull = function(){
-		// 	this.leftView.remove("#hull_data")
-		// 	this.leftView.remove("#hull_geometry")
-		// }
-		//
-		// //Destroys everything created
-		// Mode3D.prototype.cleanup = function(){
-		// 	// Destroy mathbox overlays
-		// 	var overlays = this.document.querySelector(".mathbox-overlays");
-		// 	overlays.parentNode.removeChild(overlays);
-		// 	// Destroy the canvas element
-		// 	var canvas = this.document.querySelector("canvas");
-		// 	canvas.parentNode.removeChild(canvas);
-		// 	// Remove the two child divs
-		// 	this.leftChild.parentNode.removeChild(this.leftChild);
-		// 	this.rightChild.parentNode.removeChild(this.rightChild);
-		//
-		// 	// Destroy gui
-		// 	this.gui.cleanup();
-		// }
+		Mode3D.prototype.parseConvexPoints = function(){
+			var params = this.gui.params
+			// Get string of points and parse it
+			// Remove whitespace
+			var points_str = params.points.replace(/\s+/g, '');
+			// Split based on the pattern (digits,digits)
+			var points_split = points_str.match(/\(-*[.\d]+,-*[.\d]+,-*[.\d]+\)/g);
+			this.pointsArray = []
+
+			for(var i=0;i<points_split.length;i++){
+				var p = points_split[i];
+				// Remove parenthesis
+				p = p.replace(/[\(\)]/g,'');
+				// Split by comma
+				var comma_split = p.split(",")
+				var point = []
+				for(var j=0;j<comma_split.length;j++) point.push(Number(comma_split[j]))
+				this.pointsArray.push(point)
+			}
+
+		}
+		Mode3D.prototype.cleanupConvexHull = function(){
+			this.leftView.remove("#hull_data")
+			this.leftView.remove("#hull_geometry")
+		}
+
+		//Destroys everything created
+		Mode3D.prototype.cleanup = function(){
+			// Remove the two child divs
+			this.leftChild.parentNode.removeChild(this.leftChild);
+			this.rightChild.parentNode.removeChild(this.rightChild);
+
+			// Destroy gui
+			this.gui.cleanup();
+		}
 
 		Mode3D.prototype.animate = function(){
 			requestAnimationFrame( this.animate.bind(this) );
