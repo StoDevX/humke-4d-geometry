@@ -8,6 +8,9 @@
 var Mode2D = (function (scope) {
 	//Constructor
 	function Mode2D(document){
+
+		this.animId = null;
+
 		this.document = document;
 		this.thicknessValuesTable = {'thin':0.2,'medium':0.5,'thick':1}
 
@@ -105,15 +108,13 @@ var Mode2D = (function (scope) {
 
 		// this.CreateViewLine();
 
-		// this.axis_object  = this.CreateViewAxis(this.rightView,1,[11,1],"x")
 		//
 		// // Set up right view intersection shader
 		// this.SetupIntersection();
-		//
+
 		// Draw our main shape
 		this.setMode()
-		// console.log(this.geometry_id);
-		//
+
 		// // Hide the slices at start
 		// if(this.numCartesianObjects != 0){
 		// 	for(var i=0;i<this.numCartesianObjects;i++){
@@ -675,6 +676,32 @@ Mode2D.prototype.convertToPixels = function(geom_func,id){
 
 //Destroys everything created
 Mode2D.prototype.cleanup = function(){
+	cancelAnimationFrame(this.animId); // stop the animation loop
+
+	while (this.leftView.children.length) {
+			var obj = this.leftView.children[0];
+
+	    this.leftView.remove(obj);
+	}
+
+	this.leftView = null;
+	this.leftRenderer.dispose();
+	this.leftRenderer = null;
+	this.leftCamera = null;
+	this.leftControls = null;
+
+	while (this.rightView.children.length) {
+			var obj = this.rightView.children[0];
+
+	    this.rightView.remove(obj);
+	}
+
+	this.rightView = null;
+	this.rightRenderer.dispose();
+	this.rightRenderer = null;
+	this.rightCamera = null;
+	this.rightControls = null;
+
 	// Remove the two child divs
 	this.leftChild.parentNode.removeChild(this.leftChild);
 	this.rightChild.parentNode.removeChild(this.rightChild);
@@ -684,7 +711,7 @@ Mode2D.prototype.cleanup = function(){
 }
 
 Mode2D.prototype.animate = function(){
-	requestAnimationFrame( this.animate.bind(this) );
+	this.animId = requestAnimationFrame( this.animate.bind(this) );
 	this.leftRenderer.render( this.leftView, this.leftCamera );
 	this.rightRenderer.render( this.rightView, this.rightCamera );
 }
