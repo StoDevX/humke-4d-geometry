@@ -679,8 +679,17 @@ Mode2D.prototype.cleanup = function(){
 	cancelAnimationFrame(this.animId); // stop the animation loop
 
 	while (this.leftView.children.length) {
+
 			var obj = this.leftView.children[0];
 
+			if (obj.isMesh || obj.isLine) {
+				obj.geometry.dispose();
+				obj.material.dispose();
+			} else if (obj.isSprite) {
+				obj.material.dispose();
+			} else {
+				console.log(obj.type); // an unidentified object type has been encountered
+			}
 	    this.leftView.remove(obj);
 	}
 
@@ -691,8 +700,17 @@ Mode2D.prototype.cleanup = function(){
 	this.leftControls = null;
 
 	while (this.rightView.children.length) {
+
 			var obj = this.rightView.children[0];
 
+			if (obj.isMesh || obj.isLine) {
+				obj.geometry.dispose();
+				obj.material.dispose();
+			} else if (obj.isSprite) {
+				obj.material.dispose();
+			} else {
+				console.log(obj.type);  // an unidentified object type has been encountered
+			}
 	    this.rightView.remove(obj);
 	}
 
