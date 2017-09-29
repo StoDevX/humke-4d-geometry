@@ -59,11 +59,6 @@ var Mode3D = (function (scope) {
 		var leftZLabel = createLabel("Z",0,0,12);
 		this.leftView.add(leftZLabel);
 
-		var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-		var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-		var cube = new THREE.Mesh( geometry, material );
-		this.leftView.add( cube );
-
 		this.rightView = new THREE.Scene();
 		this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
 		this.rightCamera.position.set(0,0,20);
@@ -88,79 +83,13 @@ var Mode3D = (function (scope) {
 		var rightYLabel = createLabel("Y",0,12,0);
 		this.rightView.add(rightYLabel);
 
-		geometry = new THREE.BoxGeometry( 1, 1, 1 );
-		material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-		cube = new THREE.Mesh( geometry, material );
-		this.rightView.add( cube );
 
 		this.animate();
-		// // Set up left view
-		// var camera = leftView.camera({
-		// 	proxy: true, // this alows interactive camera controls to override the position
-		// 	position: [0, 1, 3],
-		// })
-		// leftView = leftView.cartesian({
-		// 	range: [[-10, 10], [-10, 10],[-10,10]],
-		// 	scale: [1, 1,1],
-		// });
-		// leftView
-		// .axis({
-		// 	axis: 1,
-		// 	width: 4,
-		// 	color:'black',
-		// })
-		// .axis({
-		// 	axis: 2,
-		// 	width: 4,
-		// 	color:'black',
-		// })
-		// .axis({
-		// 	axis: 3,
-		// 	width: 4,
-		// 	color:'black',
-		// })
-		// .grid({
-		// 	axes: [1,3],
-		// 	width: 1,
-		// 	divideX: 10,
-		// 	divideY: 10
-		// });
-		//
-		// // Add text
-		// leftView.array({
-		// 	data: [[11,1,0], [0,12,0],[0,0,11]],
-		// 	channels: 3, // necessary
-		// 	live: false,
-		// }).text({
-		// 	data: ["x", "y","z"],
-		// }).label({
-		// 	color: 0x000000,
-		// });
-		//
-		// this.leftView = leftView;
-		//
-		// // Set up right view
-		// rightView = rightView.cartesian({
-		// 	range: [[-10, 10],[-10,10]],
-		// 	scale: [1, 1],
-		// });
-		// rightView.camera({
-		// 	proxy: true, // this alows interactive camera controls to override the position
-		// 	position: [0, 0, 3],
-		// })
-		// this.rightView = rightView
-		//
-		// // Draw our main shape
-		// this.setMode();
-		//
-		// this.CreateViewAxis("X","Z");
-		// this.CalculateIntersection();
-		//
-		// // Hide the slices at start
-		// this.rightView.select('#intersection_hull_geometry').set("opacity", 0)
-	}
+		}
 
 	Mode3D.prototype.CalculateIntersection = function(){
+		return;
+
 		var params = this.gui.params;
 
 		var source = params.source;
@@ -255,9 +184,7 @@ var Mode3D = (function (scope) {
 				self.leftView.select('#param_geometry_lower').set("opacity",flipped_opacity)
 			}
 			if (source == "convex-hull") {
-				var flipped_opacity = self.leftView.select('#hull_geometry').get("opacity") == 1 ? 0 : 1 ;
-				if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
-				self.leftView.select('#hull_geometry').set("opacity",flipped_opacity)
+				// TODO: Toggle making the shape hidden 
 			}
 		}
 
@@ -268,9 +195,7 @@ var Mode3D = (function (scope) {
 			var params = self.gui.params;
 			var source = params.source;
 
-			var flipped_opacity = self.rightView.select('#intersection_hull_geometry').get("opacity") == 1 ? 0 : 1 ;
-			if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
-			self.rightView.select('#intersection_hull_geometry').set("opacity",flipped_opacity)
+			// TODO: Toggle making the slices hidden
 		}
 
 		Mode3D.prototype.callbacks = {
@@ -811,55 +736,33 @@ var Mode3D = (function (scope) {
 
 
 		Mode3D.prototype.initConvexHull = function(){
-			this.parseConvexPoints()
-			var pointsArray = this.pointsArray;
-
-			// Generate convex hull
-			var instance = new QuickHull(pointsArray);
-			instance.build()
-			var vertices = instance.collectFaces()
-			this.triangleArray = []
-
-			for(var i=0;i<vertices.length;i++){
-				var v1 = pointsArray[vertices[i][0]];
-				var v2 = pointsArray[vertices[i][1]];
-				var v3 = pointsArray[vertices[i][2]];
-				this.triangleArray.push(v1);
-				this.triangleArray.push(v2);
-				this.triangleArray.push(v3);
+			var pointsRaw = this.parseConvexPoints(this.gui.params.points);
+			// Convert the points into Vector3 objects:
+			var points = [];
+			for(var i=0;i<pointsRaw.length;i++){
+				var rawPoint = pointsRaw[i];
+				var newPoint = new THREE.Vector3(rawPoint.x,rawPoint.y,rawPoint.z);
+				points.push(newPoint);
 			}
 
-			this.leftView.array({
-				expr: function (emit, i, t) {
-					var v1 = pointsArray[vertices[i][0]];
-					var v2 = pointsArray[vertices[i][1]];
-					var v3 = pointsArray[vertices[i][2]];
-					emit(v1[0],v1[1],v1[2],0)
-					emit(v2[0],v2[1],v2[2],0)
-					emit(v3[0],v3[1],v3[2],0)
-				},
-				width: vertices.length,
-				items: 3,
-				channels: 4,
-				id:'hull_data'
-			})
-			this.leftView.face({
-				color:this.gui.colors.data,
-				shaded: true,
-				id:'hull_geometry',
-				points:'#hull_data',
-			})
+			var geometry = new THREE.ConvexGeometry( points );
+			var material = new THREE.MeshPhongMaterial( {color: 0x00ff00, flatShading:true} );
+			var mesh = new THREE.Mesh( geometry, material );
+			this.convexMesh = mesh;
+			this.leftView.add( mesh );
 
 
 		}
-		Mode3D.prototype.parseConvexPoints = function(){
-			var params = this.gui.params
-			// Get string of points and parse it
+		Mode3D.prototype.parseConvexPoints = function(string){
+			/* Takes in a string a points, and returns an array of points [p1,p2] 
+				where pi = {x:[Number],y:[Number],z:[Number]} 
+			*/
+
 			// Remove whitespace
-			var points_str = params.points.replace(/\s+/g, '');
+			var points_str = string.replace(/\s+/g, '');
 			// Split based on the pattern (digits,digits)
 			var points_split = points_str.match(/\(-*[.\d]+,-*[.\d]+,-*[.\d]+\)/g);
-			this.pointsArray = []
+			var pointsArray = [];
 
 			for(var i=0;i<points_split.length;i++){
 				var p = points_split[i];
@@ -867,15 +770,19 @@ var Mode3D = (function (scope) {
 				p = p.replace(/[\(\)]/g,'');
 				// Split by comma
 				var comma_split = p.split(",")
-				var point = []
-				for(var j=0;j<comma_split.length;j++) point.push(Number(comma_split[j]))
-				this.pointsArray.push(point)
+				var point = {};
+				var map = ['x','y','z','w'];
+				for(var j=0;j<comma_split.length;j++){
+					point[map[j]] = Number(comma_split[j]);
+				}
+				pointsArray.push(point)
 			}
 
+			return pointsArray;
 		}
 		Mode3D.prototype.cleanupConvexHull = function(){
-			this.leftView.remove("#hull_data")
-			this.leftView.remove("#hull_geometry")
+			this.leftView.remove(this.convexMesh);
+			
 		}
 
 		//Destroys everything created
