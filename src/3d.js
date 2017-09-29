@@ -41,6 +41,7 @@ var Mode3D = (function (scope) {
 		leftChild.appendChild( this.leftRenderer.domElement );
 
 		this.leftControls = new THREE.OrbitControls( this.leftCamera, this.leftRenderer.domElement );
+		this.leftControls.enableKeys  = false;
 
 		var grid = createGrid("XZ");
 		this.leftView.add(grid);
@@ -69,6 +70,7 @@ var Mode3D = (function (scope) {
 
 		this.rightControls = new THREE.OrbitControls( this.rightCamera, this.rightRenderer.domElement );
 		this.rightControls.enableRotate = false;
+		this.rightControls.enableKeys  = false;
 
 		grid = createGrid("XY");
 		this.rightView.add(grid);
