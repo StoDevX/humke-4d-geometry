@@ -82,7 +82,13 @@ var Mode3D = (function (scope) {
 		this.rightView.add(rightXLabel);
 		var rightYLabel = createLabel("Y",0,12,0);
 		this.rightView.add(rightYLabel);
-
+		// Add lights to the scene
+		var lightSky = new THREE.HemisphereLight( 0xffffbb, 0x080820, .7 );
+		this.leftView.add( lightSky );
+		var lightGround = new THREE.HemisphereLight( 0xffffbb, 0x080820, .4 );
+		this.leftView.add( lightGround );
+		lightGround.position.y = -5;
+		lightGround.position.x = 2;
 
 		this.animate();
 		}
