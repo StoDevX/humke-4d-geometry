@@ -1,9 +1,20 @@
 # Humke 4D Geometry Viewer
-A project for Professor Paul Humke at St. Olaf College to teach 4D geometry by analogy (see [Flatland](https://en.wikipedia.org/wiki/Flatland)). Developed with the Mathbox library (https://gitgud.io/unconed/mathbox), this project seeks to meet the goals outlined [here](project-resources/SoftwareProject2017.pdf).
+A project for Professor Paul Humke at St. Olaf College to teach 4D geometry by analogy (see [Flatland](https://en.wikipedia.org/wiki/Flatland)), made with Threejs. 
 
-![title_screen](project-resources/reports/media/title_screen.gif)
+![cartesian_slicing_example](project-resources/reports/media/april_3d_cartesian_cut.gif)
 
 ## Project Structure
 
-**index.html** is the main entry point. The folder **/project-resources** contains the features & requirements and any other useful resources or documents. The folder **/src** contains all of our code & implementation and **/src/lib** contains any third party libraries we're using. 
+* **index.html** is the main entry point where we include all the files and set up the title screen.
 
+The following files are all under **src/**:
+
+* **2d.js**, **3d.js** & **4d.js** run the logic for each mode. 
+* **Slicing.js** contains all the functions for computing & rendering slices of shapes.
+* **Projecting.js** contains all the functions for rendering n-dimensional shapes on the screen.   
+* **util/** includes various utility functions, such as **gui.js** for managing the interface and **grid.js** for creating axes and grids in Threejs, etc. 
+
+The following are not part of the main app but are still useful:
+
+* **project-resources/** contains useful links, reports and gifs.
+* **demos/** contains isolated files for testing or demonstration specific features without integrating them into the app.
