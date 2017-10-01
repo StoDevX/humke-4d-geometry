@@ -42,7 +42,8 @@ var Grid = (function (scope) {
     } else if (axis == "W") {
       // a bit confusing, but it is the not the point of the
       // axis that looks at the point, it is the edge
-      cylinder.lookAt(10, -10, -10);
+      cylinder.lookAt(new THREE.Vector3(10, -10, -10));
+
     }
 
     return cylinder;
