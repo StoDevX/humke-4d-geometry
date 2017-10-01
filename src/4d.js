@@ -101,7 +101,9 @@ var Mode4D = (function (scope) {
 		// Draw our main shape
 		this.setMode()
 
-
+		this.util = new Util();
+		this.projector = new Projecting();
+		this.slicer = new Slicing();
 	}
 
 	Mode4D.prototype.setMode = function(){
