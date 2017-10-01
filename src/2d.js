@@ -61,6 +61,7 @@ var Mode2D = (function (scope) {
 
 		this.leftControls = new THREE.OrbitControls( this.leftCamera, this.leftRenderer.domElement );
 		this.leftControls.enableRotate = false;
+		this.leftControls.enableKeys = false;
 
 		var GridHelper = new Grid();
 		var grid = GridHelper.CreateGrid("XY");
@@ -79,13 +80,14 @@ var Mode2D = (function (scope) {
 		this.rightView = new THREE.Scene();
 		this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
 		this.rightCamera.position.set(0,0,20);
-		this.rightRenderer = new THREE.WebGLRenderer();
+		this.rightRenderer = new THREE.WebGLRenderer({ antialias: true });
 		this.rightRenderer.setClearColor(0xffffff);
 		this.rightRenderer.setSize( viewWidth, window.innerHeight );
 		this.rightChild.appendChild( this.rightRenderer.domElement );
 
 		this.rightControls = new THREE.OrbitControls( this.rightCamera, this.rightRenderer.domElement );
 		this.rightControls.enableRotate = false;
+		this.rightControls.enableKeys = false;
 
 		axis = GridHelper.CreateAxis("X");
 		this.rightView.add(axis);
