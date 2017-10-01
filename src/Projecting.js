@@ -18,7 +18,7 @@ var Projecting = (function (scope) {
 
 		var newVectorArray = [];
 		for(var i=0;i<vectorArray.length;i++){
-			var vec = new THREE.Vector3(vectorArray[i].x,vectorArray[i].y,0);
+			var vec = new THREE.Vector3(vectorArray[i].x,vectorArray[i].y,Math.random()*0.01);
 			newVectorArray.push(vec);
 		}
 
