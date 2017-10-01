@@ -414,7 +414,6 @@
 				var extremes = this.computeExtremes();
 				var min = extremes.min;
 				var max = extremes.max;
-				console.log("min",min,'max',max);
 
 				var v0, v1, v2, v3;
 				var i, l, j;
@@ -457,7 +456,6 @@
 						line3.closestPointToPoint( vertex.point, true, closestPoint );
 
 						distance = closestPoint.distanceToSquared( vertex.point );
-						console.log("Closest point",closestPoint,"Vertex point",vertex.point,"Max Dist",maxDistance);
 						if ( distance > maxDistance ) {
 
 							maxDistance = distance;
