@@ -95,6 +95,8 @@ var Mode2D = (function (scope) {
 		var rightXLabel = GridHelper.CreateLabel("X",11,-0.25,0);
 		this.rightView.add(rightXLabel);
 
+		this.util = new Util();
+
 		this.animate();
 
 		// Draw our main shape
@@ -301,32 +303,11 @@ var Mode2D = (function (scope) {
 
 	//  >>>>>>>>>>> Convex Hull mode functions
 	Mode2D.prototype.initConvexHull = function(view){
-		this.parseConvexPoints()
-		var pointsArray = this.pointsArray;
+		var pointsArray = this.util.ParseConvexPoints(this.gui.params);
 
 		// TODO: Draw 2D Convex Hull
 	}
-	Mode2D.prototype.parseConvexPoints = function(){
-		var params = this.gui.params
-		// Get string of points and parse it
-		// Remove whitespace
-		var points_str = params.points.replace(/\s+/g, '');
-		// Split based on the pattern (digits,digits)
-		var points_split = points_str.match(/\(-*[.\d]+,-*[.\d]+\)/g);
-		this.pointsArray = []
 
-		for(var i=0;i<points_split.length;i++){
-			var p = points_split[i];
-			// Remove parenthesis
-			p = p.replace(/[\(\)]/g,'');
-			// Split by comma
-			var comma_split = p.split(",")
-			var point = []
-			for(var j=0;j<comma_split.length;j++) point.push(Number(comma_split[j]))
-			this.pointsArray.push(point)
-		}
-
-	}
 	Mode2D.prototype.updateConvexHull = function(){
 		this.cleanupConvexHull();
 		this.initConvexHull(this.leftView);

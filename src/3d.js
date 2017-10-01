@@ -93,6 +93,8 @@ var Mode3D = (function (scope) {
 		lightGround.position.y = -5;
 		lightGround.position.x = 2;
 
+		this.util = new Util();
+
 		this.animate();
 		}
 
@@ -348,7 +350,7 @@ var Mode3D = (function (scope) {
 
 
 	Mode3D.prototype.initConvexHull = function(){
-		var pointsRaw = this.parseConvexPoints(this.gui.params.points);
+		var pointsRaw = this.util.ParseConvexPoints(this.gui.params.points);
 		// Convert the points into Vector3 objects:
 		var points = [];
 		for(var i=0;i<pointsRaw.length;i++){
@@ -365,33 +367,7 @@ var Mode3D = (function (scope) {
 
 
 	}
-	Mode3D.prototype.parseConvexPoints = function(string){
-		/* Takes in a string a points, and returns an array of points [p1,p2] 
-			where pi = {x:[Number],y:[Number],z:[Number]} 
-		*/
-
-		// Remove whitespace
-		var points_str = string.replace(/\s+/g, '');
-		// Split based on the pattern (digits,digits)
-		var points_split = points_str.match(/\(-*[.\d]+,-*[.\d]+,-*[.\d]+\)/g);
-		var pointsArray = [];
-
-		for(var i=0;i<points_split.length;i++){
-			var p = points_split[i];
-			// Remove parenthesis
-			p = p.replace(/[\(\)]/g,'');
-			// Split by comma
-			var comma_split = p.split(",")
-			var point = {};
-			var map = ['x','y','z','w'];
-			for(var j=0;j<comma_split.length;j++){
-				point[map[j]] = Number(comma_split[j]);
-			}
-			pointsArray.push(point)
-		}
-
-		return pointsArray;
-	}
+	
 	Mode3D.prototype.cleanupConvexHull = function(){
 		this.leftView.remove(this.convexMesh);
 		
