@@ -66,10 +66,10 @@ var Mode2D = (function (scope) {
 		var grid = GridHelper.CreateGrid("XY");
 		this.leftView.add(grid);
 
-		//var axis = GridHelper.CreateAxis("X");
-		//this.leftView.add(axis);
-		//axis = GridHelper.CreateAxis("Y");
-		//this.leftView.add(axis);
+		var axis = GridHelper.CreateAxis("X");
+		this.leftView.add(axis);
+		axis = GridHelper.CreateAxis("Y");
+		this.leftView.add(axis);
 
 		var leftXLabel = GridHelper.CreateLabel("X",11,-0.25,0);
 		this.leftView.add(leftXLabel);
