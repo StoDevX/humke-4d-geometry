@@ -75,11 +75,6 @@ var Mode2D = (function (scope) {
 		var leftYLabel = createLabel("Y",0,12,0);
 		this.leftView.add(leftYLabel);
 
-		var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-		var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-		var cube = new THREE.Mesh( geometry, material );
-		this.leftView.add( cube );
-
 		this.rightView = new THREE.Scene();
 		this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
 		this.rightCamera.position.set(0,0,20);
@@ -96,11 +91,6 @@ var Mode2D = (function (scope) {
 
 		var rightXLabel = createLabel("X",12,0,0);
 		this.rightView.add(rightXLabel);
-
-		geometry = new THREE.BoxGeometry( 1, 1, 1 );
-		material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-		cube = new THREE.Mesh( geometry, material );
-		this.rightView.add( cube );
 
 		this.animate();
 
