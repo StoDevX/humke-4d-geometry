@@ -54,7 +54,7 @@ var Mode2D = (function (scope) {
 		this.leftView = new THREE.Scene();
 		this.leftCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
 		this.leftCamera.position.set(0,0,20);
-		this.leftRenderer = new THREE.WebGLRenderer();
+		this.leftRenderer = new THREE.WebGLRenderer({ antialias: true });
 		this.leftRenderer.setClearColor(0xffffff);
 		this.leftRenderer.setSize( viewWidth, window.innerHeight );
 		this.leftChild.appendChild( this.leftRenderer.domElement );
@@ -62,17 +62,18 @@ var Mode2D = (function (scope) {
 		this.leftControls = new THREE.OrbitControls( this.leftCamera, this.leftRenderer.domElement );
 		this.leftControls.enableRotate = false;
 
-		var grid = createGrid("XY");
+		var GridHelper = new Grid();
+		var grid = GridHelper.CreateGrid("XY");
 		this.leftView.add(grid);
 
-		var axis = createAxis("X");
-		this.leftView.add(axis);
-		axis = createAxis("Y");
-		this.leftView.add(axis);
+		//var axis = GridHelper.CreateAxis("X");
+		//this.leftView.add(axis);
+		//axis = GridHelper.CreateAxis("Y");
+		//this.leftView.add(axis);
 
-		var leftXLabel = createLabel("X",12,0,0);
+		var leftXLabel = GridHelper.CreateLabel("X",11,-0.25,0);
 		this.leftView.add(leftXLabel);
-		var leftYLabel = createLabel("Y",0,12,0);
+		var leftYLabel = GridHelper.CreateLabel("Y",-0.25,11,0);
 		this.leftView.add(leftYLabel);
 
 		this.rightView = new THREE.Scene();
@@ -86,10 +87,10 @@ var Mode2D = (function (scope) {
 		this.rightControls = new THREE.OrbitControls( this.rightCamera, this.rightRenderer.domElement );
 		this.rightControls.enableRotate = false;
 
-		axis = createAxis("X");
+		axis = GridHelper.CreateAxis("X");
 		this.rightView.add(axis);
 
-		var rightXLabel = createLabel("X",12,0,0);
+		var rightXLabel = GridHelper.CreateLabel("X",11,-0.25,0);
 		this.rightView.add(rightXLabel);
 
 		this.animate();

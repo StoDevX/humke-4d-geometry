@@ -35,7 +35,7 @@ var Mode3D = (function (scope) {
 		this.leftView = new THREE.Scene();
 		this.leftCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
 		this.leftCamera.position.set(5,10,20);
-		this.leftRenderer = new THREE.WebGLRenderer();
+		this.leftRenderer = new THREE.WebGLRenderer({ antialias: true });
 		this.leftRenderer.setClearColor(0xffffff);
 		this.leftRenderer.setSize( viewWidth, window.innerHeight );
 		leftChild.appendChild( this.leftRenderer.domElement );
@@ -43,21 +43,22 @@ var Mode3D = (function (scope) {
 		this.leftControls = new THREE.OrbitControls( this.leftCamera, this.leftRenderer.domElement );
 		this.leftControls.enableKeys  = false;
 
-		var grid = createGrid("XZ");
+		var GridHelper = new Grid();
+		var grid = GridHelper.CreateGrid("XZ");
 		this.leftView.add(grid);
 
-		var axis = createAxis("X");
+		var axis = GridHelper.CreateAxis("X");
 		this.leftView.add(axis);
-		axis = createAxis("Y");
+		axis = GridHelper.CreateAxis("Y");
 		this.leftView.add(axis);
-		axis = createAxis("Z");
+		axis = GridHelper.CreateAxis("Z");
 		this.leftView.add(axis);
 
-		var leftXLabel = createLabel("X",12,0,0);
+		var leftXLabel = GridHelper.CreateLabel("X",12,0,0);
 		this.leftView.add(leftXLabel);
-		var leftYLabel = createLabel("Y",0,12,0);
+		var leftYLabel = GridHelper.CreateLabel("Y",0,12,0);
 		this.leftView.add(leftYLabel);
-		var leftZLabel = createLabel("Z",0,0,12);
+		var leftZLabel = GridHelper.CreateLabel("Z",0,0,12);
 		this.leftView.add(leftZLabel);
 
 		this.rightView = new THREE.Scene();
@@ -72,17 +73,17 @@ var Mode3D = (function (scope) {
 		this.rightControls.enableRotate = false;
 		this.rightControls.enableKeys  = false;
 
-		grid = createGrid("XY");
+		grid = GridHelper.CreateGrid("XY");
 		this.rightView.add(grid);
 
-		axis = createAxis("X");
+		axis = GridHelper.CreateAxis("X");
 		this.rightView.add(axis);
-		axis = createAxis("Y");
+		axis = GridHelper.CreateAxis("Y");
 		this.rightView.add(axis);
 
-		var rightXLabel = createLabel("X",12,0,0);
+		var rightXLabel = GridHelper.CreateLabel("X",12,0,0);
 		this.rightView.add(rightXLabel);
-		var rightYLabel = createLabel("Y",0,12,0);
+		var rightYLabel = GridHelper.CreateLabel("Y",0,12,0);
 		this.rightView.add(rightYLabel);
 		// Add lights to the scene
 		var lightSky = new THREE.HemisphereLight( 0xffffbb, 0x080820, .7 );

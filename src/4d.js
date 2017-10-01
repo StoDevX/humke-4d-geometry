@@ -67,28 +67,28 @@ var Mode4D = (function (scope) {
 		this.rightView = new THREE.Scene();
 		this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
 		this.rightCamera.position.set(5,10,20);
-		this.rightRenderer = new THREE.WebGLRenderer();
+		this.rightRenderer = new THREE.WebGLRenderer({ antialias: true });
 		this.rightRenderer.setClearColor(0xffffff);
 		this.rightRenderer.setSize( viewWidth, window.innerHeight );
 		rightChild.appendChild( this.rightRenderer.domElement );
 
 		this.rightControls = new THREE.OrbitControls( this.rightCamera, this.rightRenderer.domElement );
 
-		grid = createGrid("XZ");
+		grid = GridHelper.CreateGrid("XZ");
 		this.rightView.add(grid);
 
-		axis = createAxis("X");
+		axis = GridHelper.CreateAxis("X");
 		this.rightView.add(axis);
-		axis = createAxis("Y");
+		axis = GridHelper.CreateAxis("Y");
 		this.rightView.add(axis);
-		axis = createAxis("Z");
+		axis = GridHelper.CreateAxis("Z");
 		this.rightView.add(axis);
 
-		var rightXLabel = createLabel("X",12,0,0);
+		var rightXLabel = GridHelper.CreateLabel("X",12,0,0);
 		this.rightView.add(rightXLabel);
-		var rightYLabel = createLabel("Y",0,12,0);
+		var rightYLabel = GridHelper.CreateLabel("Y",0,12,0);
 		this.rightView.add(rightYLabel);
-		var rightZLabel = createLabel("Z",0,0,12);
+		var rightZLabel = GridHelper.CreateLabel("Z",0,0,12);
 		this.rightView.add(rightZLabel);
 
 		this.animate();
