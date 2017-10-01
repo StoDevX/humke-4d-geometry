@@ -33,75 +33,65 @@ var Mode4D = (function (scope) {
 	    this.gui = gui;
 
 	    // Set up left view
-			this.leftView = new THREE.Scene();
-			this.leftCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
-			this.leftCamera.position.set(5,10,20);
-			this.leftRenderer = new THREE.WebGLRenderer();
-			this.leftRenderer.setClearColor(0xffffff);
-			this.leftRenderer.setSize( viewWidth, window.innerHeight );
-			leftChild.appendChild( this.leftRenderer.domElement );
+		this.leftView = new THREE.Scene();
+		this.leftCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
+		this.leftCamera.position.set(5,10,20);
+		this.leftRenderer = new THREE.WebGLRenderer();
+		this.leftRenderer.setClearColor(0xffffff);
+		this.leftRenderer.setSize( viewWidth, window.innerHeight );
+		leftChild.appendChild( this.leftRenderer.domElement );
 
-			this.leftControls = new THREE.OrbitControls( this.leftCamera, this.leftRenderer.domElement );
+		this.leftControls = new THREE.OrbitControls( this.leftCamera, this.leftRenderer.domElement );
 
-			var grid = createGrid("XZ");
-			this.leftView.add(grid);
+		var grid = createGrid("XZ");
+		this.leftView.add(grid);
 
-			var axis = createAxis("X");
-			this.leftView.add(axis);
-			axis = createAxis("Y");
-			this.leftView.add(axis);
-			axis = createAxis("Z");
-			this.leftView.add(axis);
-			axis = createAxis("W");
-			this.leftView.add(axis);
+		var axis = createAxis("X");
+		this.leftView.add(axis);
+		axis = createAxis("Y");
+		this.leftView.add(axis);
+		axis = createAxis("Z");
+		this.leftView.add(axis);
+		axis = createAxis("W");
+		this.leftView.add(axis);
 
-			var leftXLabel = createLabel("X",12,0,0);
-			this.leftView.add(leftXLabel);
-			var leftYLabel = createLabel("Y",0,12,0);
-			this.leftView.add(leftYLabel);
-			var leftZLabel = createLabel("Z",0,0,12);
-			this.leftView.add(leftZLabel);
-			var leftWLabel = createLabel("W",5,10,-5);
-			this.leftView.add(leftWLabel);
+		var leftXLabel = createLabel("X",12,0,0);
+		this.leftView.add(leftXLabel);
+		var leftYLabel = createLabel("Y",0,12,0);
+		this.leftView.add(leftYLabel);
+		var leftZLabel = createLabel("Z",0,0,12);
+		this.leftView.add(leftZLabel);
+		var leftWLabel = createLabel("W",5,10,-5);
+		this.leftView.add(leftWLabel);
 
-			var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-			var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-			var cube = new THREE.Mesh( geometry, material );
-			this.leftView.add( cube );
+		this.rightView = new THREE.Scene();
+		this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
+		this.rightCamera.position.set(5,10,20);
+		this.rightRenderer = new THREE.WebGLRenderer();
+		this.rightRenderer.setClearColor(0xffffff);
+		this.rightRenderer.setSize( viewWidth, window.innerHeight );
+		rightChild.appendChild( this.rightRenderer.domElement );
 
-			this.rightView = new THREE.Scene();
-			this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
-			this.rightCamera.position.set(5,10,20);
-			this.rightRenderer = new THREE.WebGLRenderer();
-			this.rightRenderer.setClearColor(0xffffff);
-			this.rightRenderer.setSize( viewWidth, window.innerHeight );
-			rightChild.appendChild( this.rightRenderer.domElement );
+		this.rightControls = new THREE.OrbitControls( this.rightCamera, this.rightRenderer.domElement );
 
-			this.rightControls = new THREE.OrbitControls( this.rightCamera, this.rightRenderer.domElement );
+		grid = createGrid("XZ");
+		this.rightView.add(grid);
 
-			grid = createGrid("XZ");
-			this.rightView.add(grid);
+		axis = createAxis("X");
+		this.rightView.add(axis);
+		axis = createAxis("Y");
+		this.rightView.add(axis);
+		axis = createAxis("Z");
+		this.rightView.add(axis);
 
-			axis = createAxis("X");
-			this.rightView.add(axis);
-			axis = createAxis("Y");
-			this.rightView.add(axis);
-			axis = createAxis("Z");
-			this.rightView.add(axis);
+		var rightXLabel = createLabel("X",12,0,0);
+		this.rightView.add(rightXLabel);
+		var rightYLabel = createLabel("Y",0,12,0);
+		this.rightView.add(rightYLabel);
+		var rightZLabel = createLabel("Z",0,0,12);
+		this.rightView.add(rightZLabel);
 
-			var rightXLabel = createLabel("X",12,0,0);
-			this.rightView.add(rightXLabel);
-			var rightYLabel = createLabel("Y",0,12,0);
-			this.rightView.add(rightYLabel);
-			var rightZLabel = createLabel("Z",0,0,12);
-			this.rightView.add(rightZLabel);
-
-			geometry = new THREE.BoxGeometry( 1, 1, 1 );
-			material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-			cube = new THREE.Mesh( geometry, material );
-			this.rightView.add( cube );
-
-			this.animate();
+		this.animate();
 
 		// Draw our main shape
 		this.setMode()
@@ -180,31 +170,17 @@ var Mode4D = (function (scope) {
 
 		var triangleArray = this.polygonizeCartesian(equation,this.gui.params.resolution,variables);
 
-		// this.rightView.array({
-		// 	width: triangleArray.length/3,
-		// 	items: 3,
-		// 	channels: 3,
-		// 	data: triangleArray,
-		// 	id: "cartesian_section_triangle_data"
-		// });
-		//
-		// this.rightView.face({
-		// 	points: "#cartesian_section_triangle_data",
-		// 	color: this.gui.colors.data,
-		// 	width: 5,
-		// 	opacity: 1,
-		// 	shaded: true,
-		// 	id: "cartesian_section_geometry"
-		// });
+		// TODO: Rendering cartesian
 
 	}
 	Mode4D.prototype.cleanupCartesian_Section = function(){
-		this.rightView.remove("#cartesian_section_triangle_data");
-		this.rightView.remove("#cartesian_section_geometry");
+		// TODO: Cleanup cartesian
 	}
 
 	//Destroys everything created
 	Mode4D.prototype.cleanup = function(){
+		// TODO: Propr cleanup with removal of animationFrame and all 
+		
 		// Remove the two child divs
 		this.leftChild.parentNode.removeChild(this.leftChild);
 		this.rightChild.parentNode.removeChild(this.rightChild);
