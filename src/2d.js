@@ -1,8 +1,6 @@
-// All logic & rendering of the 2D mode is contained here
-// depends on Mathbox existing in the scope as well as the gui class
-
 /*
-
+All logic to running 2D mode resides here. This file merely orchestrates various functions.
+The actual algorithms live in Slicing.js and Projecting.js. 
 */
 
 var Mode2D = (function (scope) {
@@ -106,133 +104,9 @@ var Mode2D = (function (scope) {
 
 		this.animate();
 
-		// this.CreateViewLine();
-
-		//
-		// // Set up right view intersection shader
-		// this.SetupIntersection();
-
 		// Draw our main shape
 		this.setMode()
 
-		// // Hide the slices at start
-		// if(this.numCartesianObjects != 0){
-		// 	for(var i=0;i<this.numCartesianObjects;i++){
-		// 		this.rightView.select('#'+this.geometry_id+ String(i)).set("opacity",0)
-		// 	}
-		// } else {
-		// 	this.rightView.select('#'+this.geometry_id).set("opacity",0)
-		// }
-
-	}
-
-	function hexToRgb(hex) {
-		// from: http://stackoverflow.com/a/5624139/1278023
-		var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-		return result ? {
-			r: parseInt(result[1], 16)/255,
-			g: parseInt(result[2], 16)/255,
-			b: parseInt(result[3], 16)/255
-		} : null;
-	}
-
-
-	Mode2D.prototype.SetupIntersection = function(){
-		var params = this.gui.params
-		// Apply the intersection shader
-		// Run vertex shader to get fragment positions, then fragment shader to discard pixels
-		this.rightView = this.rightView.shader({
-			code : [
-				"#define POSITION_STPQ",
-				"uniform float axis_value;",
-				"uniform float axis;",
-				"void getPosition(inout vec4 xyzw, inout vec4 stpq) {",
-				"if(axis == 1.0) xyzw.y -= axis_value - 1.0;",
-				"if(axis == 0.0) xyzw.x -= axis_value - 1.0;",
-				"stpq = xyzw;",
-				"}"
-			].join("\n")
-		}, {
-			axis_value: function(){ return params.axis_value },
-			axis: function(){
-				if( params.axis == "X") return 0;
-				if( params.axis == "Y") return 1;
-			}
-		}).vertex({pass: 'data'})
-
-		var rgb_color = hexToRgb(this.gui.colors.data)
-		// Make it a little darker
-		var factor = 0.8;
-		rgb_color.r *= factor;
-		rgb_color.g *= factor;
-		rgb_color.b *= factor;
-
-		this.rightView = this.rightView.shader({
-			code: [
-				"#define POSITION_STPQ",
-				"uniform float axis_value;",
-				"uniform float axis;",
-				"vec4 getColor(vec4 xyzw, inout vec4 stpq) {",
-				"if(axis == 1.0 && abs(stpq.y - 1.0) > 0.1) discard;", // Y axis
-				"if(axis == 0.0 && abs(stpq.x - 1.0) > 0.1) discard;", // X axis
-				"return vec4("+rgb_color.r+","+rgb_color.g+","+rgb_color.b+",1.0);",
-				"}"
-			].join("\n")
-		}, {
-			axis_value: function(){ return params.axis_value },
-			axis: function(){
-				if( params.axis == "X") return 0;
-				if( params.axis == "Y") return 1;
-			}
-		})
-		.fragment()
-
-	}
-
-	Mode2D.prototype.CreateViewAxis = function(view,axisNum,pos,labelName){
-		view.axis({
-			axis: axisNum,
-			width: 4,
-			color:'black',
-			id:'viewing_1d_axis',
-		})
-
-		view.array({
-			data: [pos],
-			channels: 2, // necessary
-			live: false,
-			id:"viewing_1d_axis_pos"
-		}).text({
-			data: [labelName],
-			id:"viewing_1d_axis_text"
-		}).label({
-			color: 0x000000,
-			id:'viewing_1d_axis_label',
-		});
-
-		return view;
-	}
-
-	Mode2D.prototype.CreateViewLine = function(){
-		//The line on the left to show you what it's intersecting
-		var params = this.gui.params
-		var thickness = this.thicknessValuesTable[params.thickness]
-		this.leftView.interval({
-			expr: function(emit,x,i,t){
-				if(!this.gui.params.render_slices) return;
-				if(params.axis == "Y")
-				emit(x,params.axis_value);
-				else
-				emit(params.axis_value,x);
-			},
-			width:2,
-			channels:2,
-			id:"viewing_axis"
-		}).line({
-			width:5 + 5 * thickness,
-			color:this.gui.colors.viewing,
-			id:"viewing_axis_line"
-		})
 	}
 
 	// define a function to be called when each param is updated
@@ -246,65 +120,30 @@ var Mode2D = (function (scope) {
 		if(opacity_val === undefined){
 			opacity_val = val ? 1 : 0;
 		}
-		// Toggle opacity
-		if(self.geometry_id == "") return;
-		// If it's cartesian, there might be more objects
-		if(self.numCartesianObjects != 0){
-			for(var i=0;i<self.numCartesianObjects;i++){
-				var flipped_opacity = self.leftView.select('#'+self.geometry_id + String(i)).get("opacity") == 1 ? 0 : 1 ;
-				if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
-				self.leftView.select('#'+self.geometry_id+ String(i)).set("opacity",flipped_opacity)
-			}
-
-		} else {
-			var flipped_opacity = self.leftView.select('#'+self.geometry_id).get("opacity") == 1 ? 0 : 1 ;
-			if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
-			self.leftView.select('#'+self.geometry_id).set("opacity",flipped_opacity)
-		}
+		
+		// TODO: Toggle projection visibility 
+		
 	}
 
 	function updateRenderSlices(self,val,opacity_val){
 		if(opacity_val === undefined){
 			opacity_val = val ? 1 : 0;
 		}
-		// Toggle opacity
-		if(self.geometry_id == "") return;
-		// If it's cartesian, there might be more objects
-		if(self.numCartesianObjects != 0){
-			for(var i=0;i<self.numCartesianObjects;i++){
-				var flipped_opacity = self.rightView.select('#'+self.geometry_id + String(i)).get("opacity") == 1 ? 0 : 1 ;
-				if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
-				self.rightView.select('#'+self.geometry_id+ String(i)).set("opacity",flipped_opacity)
-			}
-
-		} else {
-			var flipped_opacity = self.rightView.select('#'+self.geometry_id).get("opacity") == 1 ? 0 : 1 ;
-			if(opacity_val != undefined) flipped_opacity = opacity_val; // opacity_val can override the toggle
-			self.rightView.select('#'+self.geometry_id).set("opacity",flipped_opacity)
-		}
+		// TODO: Toggle slices visibility 
 	}
 
 	Mode2D.prototype.callbacks = {
 		'axis': function(self,val){
 			if(val == "X"){
-				self.axis_object.select("#viewing_1d_axis").set("axis",2);
-				self.axis_object.select("#viewing_1d_axis_pos").set("data",[1,12]);
-				self.axis_object.select("#viewing_1d_axis_text").set("data",["y"]);
+				// TODO: Set axis to X
 			}
 			if(val == "Y"){
-				self.axis_object.select("#viewing_1d_axis").set("axis",1);
-				self.axis_object.select("#viewing_1d_axis_pos").set("data",[11,1]);
-				self.axis_object.select("#viewing_1d_axis_text").set("data",["x"]);
+				// TODO: Set axis to Y
 			}
 
-			// self.axis_object.remove("#viewing_1d_axis")
-			//   	self.axis_object.remove("#viewing_1d_axis_label")
-			// if(val == "Y") self.axis_object = self.CreateViewAxis(self.rightView,1,[11,1],"x")
-			// if(val == "X") self.axis_object = self.CreateViewAxis(self.rightView,2,[1,12],"y")
 		},
 		'thickness': function(self,val){
-			// need to change the line's property when thickness changes
-			self.leftView.select("#viewing_axis_line").set("width",5+5*self.thicknessValuesTable[self.gui.params.thickness])
+			// TODO: Adjust slicing line thickness 
 		},
 		'source': function(self,val){
 			self.setMode();
@@ -312,15 +151,6 @@ var Mode2D = (function (scope) {
 			self.gui.params.render_slices = false; //Reset this back to true
 			updateRenderShape(self,val,1);
 			updateRenderSlices(self,val,0);
-
-			// if(self.numCartesianObjects != 0){
-			// 	for(var i=0;i<self.numCartesianObjects;i++){
-			// 		self.rightView.select('#'+self.geometry_id+ String(i)).set("opacity",0)
-			// 	}
-			// } else {
-			// 	self.rightView.select('#'+self.geometry_id).set("opacity",0)
-			// }
-
 
 		},
 		'resolution': function(self,val){
@@ -330,11 +160,6 @@ var Mode2D = (function (scope) {
 		},
 		'fill': function(self,val){
 			self.cleanupCartesian();
-
-			// console.log(" == LEFT == ");
-			// self.leftView.print();f
-			// console.log(" == RIGHT == ");
-			// self.rightView.print();
 
 			self.initCartesian(self.leftView);
 			self.initCartesian(self.rightView);
@@ -402,27 +227,9 @@ var Mode2D = (function (scope) {
 		for(var i=0;i<this.objectArray.length;i++){
 			for(var j=0;j<this.objectArray[i].length;j++) edgeArray.push(this.objectArray[i][j])
 		}
-		// view.array({
-		// 	items:edgeArray.length,
-		// 	width: 1,
-		// 	channels:2,
-		// 	expr: function(emit,i){
-		// 		for(var j=0;j<edgeArray.length;j++) emit(edgeArray[j][0],edgeArray[j][1])
-		// 	},
-		// 	live:false,
-		// 	id:'cartesian_edge_data'
-		// })
-		//
-		// view.face({
-		// 	color:this.gui.colors.data,
-		// 	points:'#cartesian_edge_data',
-		// 	opacity:1,
-		// 	id:'cartesian_geometry'
-		// })
-		//
-		// this.numCartesianObjects = 0;
+		
+		// TODO: Actually render these edges 
 
-		this.geometry_id = "cartesian_geometry"
 	}
 
 	Mode2D.prototype.polygonizeCartesian = function(){
@@ -457,27 +264,7 @@ var Mode2D = (function (scope) {
 		}
 	}
 	Mode2D.prototype.cleanupCartesian = function(view){
-		if(this.numCartesianObjects != 0){
-			for(var i=0;i<this.numCartesianObjects;i++){
-				this.leftView.remove("#cartesian_edge_data" + String(i)); this.rightView.remove("#cartesian_edge_data" + String(i));
-				this.leftView.remove("#cartesian_geometry" + String(i)); this.rightView.remove("#cartesian_geometry" + String(i));
-				this.leftView.remove("#cartesian_pixel_geometry" + String(i)); this.rightView.remove("#cartesian_pixel_geometry" + String(i));
-			}
-		} else {
-			this.leftView.remove("#cartesian_edge_data" );
-			this.leftView.remove("#cartesian_geometry" );
-			this.leftView.remove("#cartesian_pixel_geometry" );
-			this.rightView.remove("#cartesian_edge_data" );
-			this.rightView.remove("#cartesian_geometry" );
-			this.rightView.remove("#cartesian_pixel_geometry" );
-		}
-
-		this.leftView.remove("#indexbuffer");
-		this.rightView.remove("#indexbuffer");
-		this.geometry_id = ""
-		this.numCartesianObjects = 0;
-
-
+		// TODO: Cleanup whatever was created 
 	}
 
 
@@ -512,68 +299,11 @@ var Mode2D = (function (scope) {
 		}
 		if(!found_a || !found_b) draw_filled = false;
 
-		view.area({
-			rangeX: a_range,
-			rangeY: b_range,
-			width: 30,
-			height: 30,
-			expr: function(emit, a,b,i,j){
-				var x = Parser.evaluate(params.param_eq_x,{a:a,b:b});
-				var y = Parser.evaluate(params.param_eq_y,{a:a,b:b});
-
-				emit(x,y);
-			},
-			channels:2,
-			id:'param_data',
-			live:false
-		})
-
-
-		if(draw_filled){
-			view.surface({
-				color:this.gui.colors.data,
-				id:'param_geometry',
-				opacity:1
-			})
-		} else {
-			// This is ideal, except when you have only b instead of only a, you see nothing
-			// I think that's because of the order the points are in. If they're not orderered right the line won't be drawn right
-			// view.line({
-			// 	color:this.gui.colors.data,
-			// 	width:5,
-			// 	id:"param_geometry",
-			// 	opacity:1
-			// })
-			view.point({
-				color:this.gui.colors.data,
-				size:5,
-				id:"param_geometry",
-				opacity:1
-			})
-		}
-
-
-		this.geometry_id = "param_geometry"
-
-		// this.leftView.line({
-		// 	color:this.gui.colors.data,
-		// 	width:5,
-		// 	id:'param_geometry',
-		// 	points:'#param_data'
-		// })
-
+		// TODO: Render parametric equation
 	}
 
 	Mode2D.prototype.cleanupParametric = function(){
-		this.leftView.remove("#param_data");
-		this.leftView.remove("#param_geometry");
-		this.leftView.remove("#param_pixel_geometry");
-
-		this.rightView.remove("#param_data");
-		this.rightView.remove("#param_geometry");
-		this.rightView.remove("#param_pixel_geometry");
-
-		this.geometry_id = ""
+		// TODO: Clean up parametric 
 	}
 
 	//  >>>>>>>>>>> Convex Hull mode functions
@@ -581,26 +311,7 @@ var Mode2D = (function (scope) {
 		this.parseConvexPoints()
 		var pointsArray = this.pointsArray;
 
-		// Set the data
-		view.array({
-			expr: function (emit, i, t) {
-				for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
-			},
-			width: 1,
-			items:pointsArray.length,
-			channels: 2,
-			id:'hull_data'
-		})
-		// Draw the geometry
-		view.face({
-			color:this.gui.colors.data,
-			id:'hull_geometry',
-			points:'#hull_data',
-			opacity:1,
-		})
-
-
-		this.geometry_id = "hull_geometry"
+		// TODO: Draw 2D Convex Hull
 	}
 	Mode2D.prototype.parseConvexPoints = function(){
 		var params = this.gui.params
@@ -624,55 +335,15 @@ var Mode2D = (function (scope) {
 
 	}
 	Mode2D.prototype.updateConvexHull = function(){
-		/*
-		// Re-parse
-		this.parseConvexPoints();
-		var pointsArray = this.pointsArray;
-		// Update the data
-		this.leftView.select("#hull_data").set("items",pointsArray.length)
-		this.leftView.select("#hull_data").set("expr",function(emit,i,t){
-		for(var j=0;j<pointsArray.length;j++) emit(pointsArray[j][0], pointsArray[j][1]);
-	}) */
-	this.cleanupConvexHull();
-	this.initConvexHull(this.leftView);
-	this.initConvexHull(this.rightView);
-}
-Mode2D.prototype.cleanupConvexHull = function(){
-	this.leftView.remove("#hull_data")
-	this.leftView.remove("#hull_geometry")
-	this.leftView.remove("#hull_pixel_geometry")
+		this.cleanupConvexHull();
+		this.initConvexHull(this.leftView);
+		this.initConvexHull(this.rightView);
+	}
 
-	this.rightView.remove("#hull_data")
-	this.rightView.remove("#hull_geometry")
-	this.rightView.remove("#hull_pixel_geometry")
+	Mode2D.prototype.cleanupConvexHull = function(){
+		//TODO: Clean up convex hull
+	}
 
-	this.geometry_id = ""
-}
-
-Mode2D.prototype.convertToPixels = function(geom_func,id){
-	//This converts some geometry to pixel data by rendering it to a texture and grabbing that data
-	var scale = 1 / 4;
-	var view = this.leftView
-	.rtt({
-		size:   'relative',
-		width:  scale,
-		height: scale,
-	})
-	.camera({
-		position: [2, 0, 18],// I just found this experimentally, seems to make it fit the best?
-	})
-	view = geom_func(view);
-	view
-	.end();
-	// Readback RTT pixels
-	var readback =
-	this.leftView
-	.readback({
-		id: id,
-		type: 'unsignedByte',
-	});
-	return readback;
-}
 
 //Destroys everything created
 Mode2D.prototype.cleanup = function(){
