@@ -96,6 +96,8 @@ var Mode2D = (function (scope) {
 		this.rightView.add(rightXLabel);
 
 		this.util = new Util();
+		this.projector = new Projecting();
+		this.slicer = new Slicing();
 
 		this.animate();
 
@@ -206,7 +208,6 @@ var Mode2D = (function (scope) {
 		}
 		if(this.current_mode == "convex-hull") {
 			this.initConvexHull(this.leftView);
-			this.initConvexHull(this.rightView);
 		}
 
 	}
@@ -303,19 +304,37 @@ var Mode2D = (function (scope) {
 
 	//  >>>>>>>>>>> Convex Hull mode functions
 	Mode2D.prototype.initConvexHull = function(view){
-		var pointsArray = this.util.ParseConvexPoints(this.gui.params);
+		var pointsRaw = this.util.ParseConvexPoints(this.gui.params.points);
 
-		// TODO: Draw 2D Convex Hull
+		// Convert the points into Vector2 objects:
+		var points = [];
+		for(var i=0;i<pointsRaw.length;i++){
+			var rawPoint = pointsRaw[i];
+			var newPoint = new THREE.Vector2(rawPoint.x,rawPoint.y);
+			points.push(newPoint);
+		}
+
+		if(points.length < 4){
+			return;
+		}
+
+		this.convexMesh = this.projector.ConvexHullMesh2D(points);
+		this.convexMesh.position.z = 0.1;
+		this.leftView.add(this.convexMesh);
 	}
 
 	Mode2D.prototype.updateConvexHull = function(){
 		this.cleanupConvexHull();
 		this.initConvexHull(this.leftView);
-		this.initConvexHull(this.rightView);
 	}
 
 	Mode2D.prototype.cleanupConvexHull = function(){
-		//TODO: Clean up convex hull
+		console.log("CLEANING UP");
+		if(this.convexMesh){
+			this.leftView.remove(this.convexMesh);
+			this.convexMesh = null;
+		}
+		
 	}
 
 

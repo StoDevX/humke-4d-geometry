@@ -94,6 +94,8 @@ var Mode3D = (function (scope) {
 		lightGround.position.x = 2;
 
 		this.util = new Util();
+		this.projector = new Projecting();
+		this.slicer = new Slicing();
 
 		this.animate();
 		}
@@ -359,13 +361,8 @@ var Mode3D = (function (scope) {
 			points.push(newPoint);
 		}
 
-		var geometry = new THREE.ConvexGeometry( points );
-		var material = new THREE.MeshPhongMaterial( {color: 0x00ff00, flatShading:false} );
-		var mesh = new THREE.Mesh( geometry, material );
-		this.convexMesh = mesh;
-		this.leftView.add( mesh );
-
-
+		this.convexMesh = this.projector.ConvexHullMesh3D(points);
+		this.leftView.add( this.convexMesh );
 	}
 	
 	Mode3D.prototype.cleanupConvexHull = function(){

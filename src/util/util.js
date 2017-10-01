@@ -19,9 +19,15 @@ var Util = (function (scope) {
 
 		// Remove whitespace
 		var points_str = string.replace(/\s+/g, '');
-		// Split based on the pattern (digits,digits)
-		var points_split = points_str.match(/\(-*[.\d]+,-*[.\d]+,-*[.\d]+\)/g);
+		// Split based on the regex pattern. Should match all of the following:
+		//				 (1,2), (3,4),(4,3,32), (-3,4,67.5,3), (4,-4.6,5,332,3)
+		var points_split = points_str.match(/\((-*[.\d]+,)+-*[.\d]+\)/g);
 		var pointsArray = [];
+
+		if(points_split == null){
+			console.error("Convex Hull Parsing Error:","Failed to parse points. Malformed input.");
+			return pointsArray;
+		}
 
 		for(var i=0;i<points_split.length;i++){
 			var p = points_split[i];
@@ -32,7 +38,16 @@ var Util = (function (scope) {
 			var point = {};
 			var map = ['x','y','z','w'];
 			for(var j=0;j<comma_split.length;j++){
+				if(j >= 4){
+					console.error("Convex Hull Parsing Error:","Detected points with more than 4 coordinates. Ignoring extra coordinates.");
+					break;
+				}
+				if(Number(comma_split[j]) == undefined){
+					console.error("Convex Hull Parsing Error:","Found undefined number. Returning empty array.");
+					return [];
+				}
 				point[map[j]] = Number(comma_split[j]);
+
 			}
 			pointsArray.push(point)
 		}
