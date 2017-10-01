@@ -482,7 +482,7 @@
 
 						distance = Math.abs( plane.distanceToPoint( vertex.point ) );
 
-						if ( distance > maxDistance ) {
+						if ( distance >= maxDistance ) {
 
 							maxDistance = distance;
 							v3 = vertex;
