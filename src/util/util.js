@@ -5,6 +5,22 @@ var Util = (function (scope) {
 	function Util(){
 		
 	}
+	Util.prototype.RenderPoints = function(pointsArray){
+		/*
+			Given an array of 3D points, return an object holding them, ready to be 
+			added to a scene
+		 */
+		var pointsGeometry = new THREE.Geometry();
+
+		for ( var i = 0; i < pointsArray.length; i ++ ) {
+			pointsGeometry.vertices.push( pointsArray[i] );
+		}
+
+		var material = new THREE.PointsMaterial( { color:0xff0000, size:10, sizeAttenuation:false } );
+		var mesh = new THREE.Points( pointsGeometry, material );
+
+		return mesh;
+	}
 	Util.prototype.ParseConvexPoints = function(string){
 		/* 
 			Takes in a string a points, and returns an array of points. 
