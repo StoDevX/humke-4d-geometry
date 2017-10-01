@@ -1,7 +1,31 @@
 body {
-    font-family: sans-serif;
+    font-family: "Avenir Next", "HelveticaNeue-Light", "Helvetica Neue Light", 
+                 "Helvetica Neue", Helvetica, Arial, "Lucida Grande", 
+                 "SF UI Display", sans-serif;
+    font-weight: 350;
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
 }
+
+h1 {
+  font-size: 36px;
+  font-weight: 400;
+}
+
+a {
+    color: #c58f56;
+    font-weight: 500;
+    text-decoration: underline;
+}
+
+a:hover {
+    text-decoration: none;
+    cursor: pointer;
+}
+
 
 #display {
     width: 100%;
