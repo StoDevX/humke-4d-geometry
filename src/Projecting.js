@@ -43,7 +43,31 @@ var Projecting = (function (scope) {
 
 		return mesh;
 	}
-	
+	Projecting.prototype.CartesianMesh2D = function(cartesianFunc){
+		/* 
+			Takes in a cartesian equation as a JS func and returns a mesh to render it 
+		*/
+
+		var edgeArray = Polygonize.generate(cartesianFunc, [[-10, 10], [-10, 10]], 60);
+		var container = new THREE.Object3D();
+
+		for(var i=0;i<edgeArray.length-1;i+=2){
+			var edge = edgeArray[i];
+			var nextEdge = edgeArray[i+1];
+			var v1 = new THREE.Vector3( edge[0],edge[1], 0 );
+			var v2 = new THREE.Vector3( nextEdge[0],nextEdge[1], 0 );
+			var geometry = new THREE.Geometry();
+			geometry.vertices.push( v1 );
+			geometry.vertices.push( v2 );
+			var line = new MeshLine();
+			line.setGeometry( geometry );
+			var material = new MeshLineMaterial({color:new THREE.Color(0x5a9b00),lineWidth:0.1});
+			var mesh = new THREE.Mesh( line.geometry, material );
+			container.add(mesh);
+		}
+
+		return container;;
+	}
 
 	scope.Projecting = Projecting;
 	return Projecting;
