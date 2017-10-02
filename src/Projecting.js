@@ -1,15 +1,15 @@
 /*
-The projecting class contains pure functions for computing and rendering 
+The projecting class contains pure functions for computing and rendering
 anything related to the left side of the screen (projection n dimensional objects)
 */
 var Projecting = (function (scope) {
 	function Projecting(){
-		
+
 	}
 	Projecting.prototype.ConvexHullMesh2D = function(vectorArray){
-		/* 
-			Takes in an array of points in 2D space, and returns a mesh object 
-			covering their convex hull, ready to be added to a scene 
+		/*
+			Takes in an array of points in 2D space, and returns a mesh object
+			covering their convex hull, ready to be added to a scene
 				Input:
 					Array of THREE.Vector2
 				Output:
@@ -29,9 +29,9 @@ var Projecting = (function (scope) {
 		return mesh;
 	}
 	Projecting.prototype.ConvexHullMesh3D = function(vectorArray){
-		/* 
-			Takes in an array of points in 3D space, and returns a mesh object 
-			covering their convex hull, ready to be added to a scene 
+		/*
+			Takes in an array of points in 3D space, and returns a mesh object
+			covering their convex hull, ready to be added to a scene
 				Input:
 					Array of THREE.Vector3
 				Output:
@@ -44,8 +44,8 @@ var Projecting = (function (scope) {
 		return mesh;
 	}
 	Projecting.prototype.CartesianMesh2D = function(cartesianFunc){
-		/* 
-			Takes in a cartesian equation as a JS func and returns a mesh to render it 
+		/*
+			Takes in a cartesian equation as a JS func and returns a mesh to render it
 		*/
 
 		var edgeArray = Polygonize.generate(cartesianFunc, [[-10, 10], [-10, 10]], 60);
@@ -66,7 +66,7 @@ var Projecting = (function (scope) {
 			container.add(mesh);
 		}
 
-		return container;;
+		return container;
 	}
 
 	scope.Projecting = Projecting;

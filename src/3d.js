@@ -3,15 +3,20 @@ var Mode3D = (function (scope) {
 	function Mode3D(document){
 		this.document = document;
 
+		this.animId = null;
+
 		this.leftView = null;
 		this.leftCamera = null;
 		this.leftRenderer = null;
 		this.leftControls = null;
+		this.leftMesh = null;
 
 		this.rightView = null;
 		this.rightCamera = null;
 		this.rightRenderer = null;
 		this.rightControls = null;
+
+		this.leftMesh = null;
 	}
 
 	// Creates the scene and everything
@@ -98,6 +103,9 @@ var Mode3D = (function (scope) {
 		this.slicer = new Slicing();
 
 		this.animate();
+
+		this.setMode();
+
 		}
 
 	Mode3D.prototype.CalculateIntersection = function(){
@@ -106,7 +114,7 @@ var Mode3D = (function (scope) {
 
 	// define a function to be called when each param is updated
 	function updateParametricCallback(self,val){
-		self.cleanupParametric();
+		self.cleanupLeftMesh();
 		self.initParametric()
 	}
 
@@ -114,7 +122,7 @@ var Mode3D = (function (scope) {
 		if(opacity_val === undefined){
 			opacity_val = val ? 1 : 0;
 		}
-		// TODO: Toggle projection visibility 
+		// TODO: Toggle projection visibility
 	}
 
 	function updateRenderSlices(self,val,opacity_val){
@@ -134,7 +142,7 @@ var Mode3D = (function (scope) {
 			self.CalculateIntersection();
 		},
 		'axis_value': function(self,val){
-			
+
 
 			self.CalculateIntersection();
 		},
@@ -153,31 +161,30 @@ var Mode3D = (function (scope) {
 
 		},
 		'fill': function(self,val){
-			
+
 			self.CalculateIntersection();
 		},
 		'source': function(self,val){
 			self.setMode();
-			
+
 			self.gui.params.render_shape = true; //Reset this back to true
 			self.gui.params.render_slices = false; //Reset this back to false
 			updateRenderShape(self,val,1);
 			updateRenderSlices(self,val,0);
 
-			
 			self.CalculateIntersection();
 
 		},
 		'resolution': function(self,val){
-			self.cleanupCartesian();
+			self.cleanupLeftMesh();
 			self.initCartesian();
 		},
 		'equation': function(self,val){
-			self.cleanupCartesian();
+			self.cleanupLeftMesh();
 			self.initCartesian();
 		},
 		'points': function(self,val){
-			self.cleanupConvexHull()
+			self.cleanupLeftMesh()
 			self.initConvexHull()
 		},
 		'param_eq_x': updateParametricCallback,
@@ -193,9 +200,7 @@ var Mode3D = (function (scope) {
 		//Switch the mode based on the gui value
 		if(this.current_mode != null){
 			//Clean up previous
-			if(this.current_mode == "cartesian") this.cleanupCartesian();
-			if(this.current_mode == "parametric") this.cleanupParametric();
-			if(this.current_mode == "convex-hull") this.cleanupConvexHull();
+			this.cleanupLeftMesh();
 		}
 		this.current_mode = params.source;
 		//Init new
@@ -209,7 +214,7 @@ var Mode3D = (function (scope) {
 		this.polygonizeCartesian();
 		if(this.triangleArray == null) return; //Failed to parse
 		var triangleArray = this.triangleArray;
-		
+
 		// TODO: Render triangles
 	}
 	Mode3D.prototype.polygonizeCartesian = function(){
@@ -233,10 +238,6 @@ var Mode3D = (function (scope) {
 		} catch(err){
 			console.log("Error rendering equation",err);
 		}
-	}
-
-	Mode3D.prototype.cleanupCartesian = function(){
-		//TODO: Cleanup cartesian
 	}
 
 	Mode3D.prototype.tesselateParametric = function(a_range,b_range,c_value){
@@ -346,10 +347,6 @@ var Mode3D = (function (scope) {
 		// TODO: Render parametric
 
 	}
-	Mode3D.prototype.cleanupParametric = function(){
-		// TODO: Cleanup parametric
-	}
-
 
 	Mode3D.prototype.initConvexHull = function(){
 		var pointsRaw = this.util.ParseConvexPoints(this.gui.params.points);
@@ -361,18 +358,39 @@ var Mode3D = (function (scope) {
 			points.push(newPoint);
 		}
 
-		this.convexMesh = this.projector.ConvexHullMesh3D(points);
-		this.leftView.add( this.convexMesh );
+		this.leftMesh = this.projector.ConvexHullMesh3D(points);
+		this.leftView.add( this.leftMesh );
 	}
-	
-	Mode3D.prototype.cleanupConvexHull = function(){
-		this.leftView.remove(this.convexMesh);
-		
+
+	//  >>>>>>>>>>> Destroy the shared leftMesh mesh.
+	Mode3D.prototype.cleanupLeftMesh = function(){
+		console.log("CLEANING UP");
+		if(this.leftMesh){
+			this.leftView.remove(this.leftMesh);
+			this.leftMesh = null;
+		}
 	}
 
 	//Destroys everything created
 	Mode3D.prototype.cleanup = function(){
-		// TODO: Proper clean up to remove animationFrame and all that 
+		cancelAnimationFrame(this.animId); // stop the animation loop
+
+		this.util.CleanUpScene(this.leftView);
+
+		this.leftView = null;
+		this.leftRenderer.dispose();
+		this.leftRenderer = null;
+		this.leftCamera = null;
+		this.leftControls = null;
+		this.leftMesh = null;
+
+		this.util.CleanUpScene(this.rightView);
+
+		this.rightView = null;
+		this.rightRenderer.dispose();
+		this.rightRenderer = null;
+		this.rightCamera = null;
+		this.rightControls = null;
 
 		// Remove the two child divs
 		this.leftChild.parentNode.removeChild(this.leftChild);
@@ -383,7 +401,7 @@ var Mode3D = (function (scope) {
 	}
 
 	Mode3D.prototype.animate = function(){
-		requestAnimationFrame( this.animate.bind(this) );
+		this.animId = requestAnimationFrame( this.animate.bind(this) );
 		this.leftRenderer.render( this.leftView, this.leftCamera );
 		this.rightRenderer.render( this.rightView, this.rightCamera );
 	}

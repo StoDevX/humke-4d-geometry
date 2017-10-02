@@ -3,11 +3,11 @@ This class is for misc. functions that don't fit anywhere else.
 */
 var Util = (function (scope) {
 	function Util(){
-		
+
 	}
 	Util.prototype.RenderPoints = function(pointsArray){
 		/*
-			Given an array of 3D points, return an object holding them, ready to be 
+			Given an array of 3D points, return an object holding them, ready to be
 			added to a scene
 		 */
 		var pointsGeometry = new THREE.Geometry();
@@ -22,8 +22,8 @@ var Util = (function (scope) {
 		return mesh;
 	}
 	Util.prototype.ParseConvexPoints = function(string){
-		/* 
-			Takes in a string a points, and returns an array of points. 
+		/*
+			Takes in a string a points, and returns an array of points.
 			Turns "(1,1),(2,2),(3,3)" 			  -> [{x:1,y:1},{x:2,y:2},{x:3,y:3}]
 			and	  "(1,1,1),(2,2,2),(3,3,3)" 	  -> [{x:1,y:1,z:1},{x:2,y:2,z:2},{x:3,y:3,z:3}]
 			and	  "(1,1,1,1),(2,2,2,2),(3,3,3,3)" -> [{x:1,y:1,z:1,w:1},{x:2,y:2,z:2,w:2},{x:3,y:3,z:3,w:3}]
@@ -69,6 +69,30 @@ var Util = (function (scope) {
 		}
 
 		return pointsArray;
+	}
+	Util.prototype.CleanUpScene = function(scene) {
+		/*
+			Given an three.js scene, remove all of the
+			objects (the children) in the scene
+		 */
+		while (scene.children.length) {
+
+				var obj = scene.children[0];
+
+				if (obj.isMesh || obj.isLine) {
+					obj.geometry.dispose();
+					obj.material.dispose();
+				} else if (obj.isSprite) {
+					obj.material.dispose();
+				} else if (obj.isLight) {
+					// lights only need to be removed
+				}
+				else {
+					console.log("unidentified object of type " + obj.type + " was not destroyed")
+					console.log(obj);
+				}
+		    scene.remove(obj);
+		}
 	}
 
 	scope.Util = Util;

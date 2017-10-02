@@ -1,15 +1,14 @@
 /*
 All logic to running 2D mode resides here. This file merely orchestrates various functions.
-The actual algorithms live in Slicing.js and Projecting.js. 
+The actual algorithms live in Slicing.js and Projecting.js.
 */
 
 var Mode2D = (function (scope) {
 	//Constructor
 	function Mode2D(document){
+		this.document = document;
 
 		this.animId = null;
-
-		this.document = document;
 		this.thicknessValuesTable = {'thin':0.2,'medium':0.5,'thick':1}
 
 		this.geometry_id = "" //ID of active geometry in the left view
@@ -25,6 +24,7 @@ var Mode2D = (function (scope) {
 		this.leftCamera = null;
 		this.leftRenderer = null;
 		this.leftControls = null;
+		this.leftMesh = null;
 
 		this.rightView = null;
 		this.rightCamera = null;
@@ -102,7 +102,7 @@ var Mode2D = (function (scope) {
 		this.animate();
 
 		// Draw our main shape
-		this.setMode()
+		this.setMode();
 
 	}
 
@@ -117,16 +117,16 @@ var Mode2D = (function (scope) {
 		if(opacity_val === undefined){
 			opacity_val = val ? 1 : 0;
 		}
-		
-		// TODO: Toggle projection visibility 
-		
+
+		// TODO: Toggle projection visibility
+
 	}
 
 	function updateRenderSlices(self,val,opacity_val){
 		if(opacity_val === undefined){
 			opacity_val = val ? 1 : 0;
 		}
-		// TODO: Toggle slices visibility 
+		// TODO: Toggle slices visibility
 	}
 
 	Mode2D.prototype.callbacks = {
@@ -140,7 +140,7 @@ var Mode2D = (function (scope) {
 
 		},
 		'thickness': function(self,val){
-			// TODO: Adjust slicing line thickness 
+			// TODO: Adjust slicing line thickness
 		},
 		'source': function(self,val){
 			self.setMode();
@@ -151,16 +151,15 @@ var Mode2D = (function (scope) {
 
 		},
 		'resolution': function(self,val){
-			self.cleanupCartesian();
+			self.cleanupLeftMesh();
 			self.initCartesian(self.leftView);
 		},
 		'fill': function(self,val){
-			self.cleanupCartesian();
-
+			self.cleanupLeftMesh();
 			self.initCartesian(self.leftView);
 		},
 		'equation': function(self,val){
-			self.cleanupCartesian();
+			self.cleanupLeftMesh();
 			self.initCartesian(self.leftView);
 		},
 		'points': function(self,val){
@@ -189,9 +188,7 @@ var Mode2D = (function (scope) {
 		//Switch the mode based on the gui value
 		if(this.current_mode != null){
 			//Clean up previous
-			if(this.current_mode == "cartesian") this.cleanupCartesian();
-			if(this.current_mode == "parametric") this.cleanupParametric();
-			if(this.current_mode == "convex-hull") this.cleanupConvexHull();
+			this.cleanupLeftMesh();
 		}
 		this.current_mode = params.source;
 		//Init new
@@ -220,18 +217,10 @@ var Mode2D = (function (scope) {
 		var RHSfunc = Parser.parse(RHS).toJSFunction(['x','y']);
 		var equationFunc = function(x,y){ return LHSfunc(x,y) - RHSfunc(x,y);}
 
-		var mesh = this.projector.CartesianMesh2D(equationFunc);
-		mesh.position.z = 0.1;
-		this.leftView.add(mesh);
-		this.cartesianMesh = mesh;
-
+		this.leftMesh = this.projector.CartesianMesh2D(equationFunc);
+		this.leftMesh.position.z = 0.1;
+		this.leftView.add(this.leftMesh);
 	}
-
-
-	Mode2D.prototype.cleanupCartesian = function(view){
-		this.leftView.remove(this.cartesianMesh);
-	}
-
 
 	// >>>>>>>>>>> Parametric mode functions
 	Mode2D.prototype.initParametric = function(view){
@@ -267,10 +256,6 @@ var Mode2D = (function (scope) {
 		// TODO: Render parametric equation
 	}
 
-	Mode2D.prototype.cleanupParametric = function(){
-		// TODO: Clean up parametric 
-	}
-
 	//  >>>>>>>>>>> Convex Hull mode functions
 	Mode2D.prototype.initConvexHull = function(view){
 		var pointsRaw = this.util.ParseConvexPoints(this.gui.params.points);
@@ -287,65 +272,39 @@ var Mode2D = (function (scope) {
 			return;
 		}
 
-		this.convexMesh = this.projector.ConvexHullMesh2D(points);
-		this.convexMesh.position.z = 0.1;
-		this.leftView.add(this.convexMesh);
+		this.leftMesh = this.projector.ConvexHullMesh2D(points);
+		this.leftMesh.position.z = 0.1;
+		this.leftView.add(this.leftMesh);
 	}
 
 	Mode2D.prototype.updateConvexHull = function(){
-		this.cleanupConvexHull();
+		this.cleanupLeftMesh();
 		this.initConvexHull(this.leftView);
 	}
 
-	Mode2D.prototype.cleanupConvexHull = function(){
+	//  >>>>>>>>>>> Destroy the shared leftMesh mesh.
+	Mode2D.prototype.cleanupLeftMesh = function(){
 		console.log("CLEANING UP");
-		if(this.convexMesh){
-			this.leftView.remove(this.convexMesh);
-			this.convexMesh = null;
+		if(this.leftMesh){
+			this.leftView.remove(this.leftMesh);
+			this.leftMesh = null;
 		}
-		
 	}
-
 
 //Destroys everything created
 Mode2D.prototype.cleanup = function(){
 	cancelAnimationFrame(this.animId); // stop the animation loop
 
-	while (this.leftView.children.length) {
-
-			var obj = this.leftView.children[0];
-
-			if (obj.isMesh || obj.isLine) {
-				obj.geometry.dispose();
-				obj.material.dispose();
-			} else if (obj.isSprite) {
-				obj.material.dispose();
-			} else {
-				console.log(obj.type); // an unidentified object type has been encountered
-			}
-	    this.leftView.remove(obj);
-	}
+	this.util.CleanUpScene(this.leftView);
 
 	this.leftView = null;
 	this.leftRenderer.dispose();
 	this.leftRenderer = null;
 	this.leftCamera = null;
 	this.leftControls = null;
+	this.leftMesh = null;
 
-	while (this.rightView.children.length) {
-
-			var obj = this.rightView.children[0];
-
-			if (obj.isMesh || obj.isLine) {
-				obj.geometry.dispose();
-				obj.material.dispose();
-			} else if (obj.isSprite) {
-				obj.material.dispose();
-			} else {
-				console.log(obj.type);  // an unidentified object type has been encountered
-			}
-	    this.rightView.remove(obj);
-	}
+	this.util.CleanUpScene(this.rightView);
 
 	this.rightView = null;
 	this.rightRenderer.dispose();
