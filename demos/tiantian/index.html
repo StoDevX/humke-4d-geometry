@@ -15,17 +15,32 @@
         #define PI 3.14159265359
 
         uniform vec2 u_resolution;
+        varying vec4 vertexPosition;
+
+        float eq(float x,float y){
+            return pow(x,2.0) + pow(y,2.0) - 10.0;
+        }
 
         void main() {
-            vec2 st = gl_FragCoord.xy/u_resolution;
+            vec4 color = vec4(0.0);
+            float val = eq(vertexPosition.x,vertexPosition.y);
+            float thickness = 0.5;
+            //if(val < 0.0) color.r = 1.0; else discard;
+            // if(val < 0.0) color.r = 1.0; else discard;
+            if(val <= thickness && val >= -thickness) color.r = 1.0; else discard;
 
-            vec4 color = vec4(1.0, 1.0, 1.0, 0.0);
-            if (st.y > st.x) {
-                color.r = 0.0;
-                color.a = 1.0;
-            }
             gl_FragColor = color;
         }
+    </script>
+    <script id="vertexShader" type="x-shader/x-vertex">
+            varying vec4 vertexPosition;
+            void main() {
+                vertexPosition = modelMatrix * vec4(position,1.0);
+
+                gl_Position = projectionMatrix *
+                              modelViewMatrix *
+                              vec4(position,1.0); 
+            }   
     </script>
     <script src="three.min.js"></script>
     <script type="text/javascript">
@@ -74,13 +89,13 @@
 
             var equation = "x^2 + y^2 = 9";
             var graph = initCartesian(equation);
-            graph.position.z = -aspect*11;
+            graph.position.z = -15+ 0.1;
             scene.add(graph);
 
             var size = 20, divisions = 20, colorCenterLine = 0x444444, colorGrid = 0xd0d0d0;
             var grid = new THREE.GridHelper(size, divisions, colorCenterLine, colorGrid);
             grid.rotation.x = Math.PI/2;
-            grid.position.z = -aspect*11;
+            grid.position.z = -15;
             scene.add(grid);
 
             var g1 = grid.clone();
@@ -123,9 +138,11 @@
             };
             var material = new THREE.ShaderMaterial({
                 uniforms: uniforms,
-                fragmentShader: document.querySelector("#fragmentShader").textContent
+                fragmentShader: document.querySelector("#fragmentShader").textContent,
+                vertexShader: document.querySelector("#vertexShader").textContent
             });
             var graph = new THREE.Mesh(geometry, material);
+            graph.position.z = -15;
 
             return graph;
         }
