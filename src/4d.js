@@ -17,14 +17,8 @@ var Mode4D = (function (scope) {
 	// Creates the scene and everything
 	Mode4D.prototype.init = function(div,gui){
 		// Create two child divs
-		var leftChild = document.createElement("div");
-		var rightChild = document.createElement("div");
-		div.appendChild(leftChild); leftChild.id = "left-view";
-		div.appendChild(rightChild); rightChild.id = "right-view";
-		var style = "display:inline-block;"
-		leftChild.style = style;
-		rightChild.style = style;
-		this.leftChild = leftChild; this.rightChild = rightChild;
+		var leftCanvas = document.getElementById("left-view").getElementsByTagName("canvas")[0];
+		var rightCanvas = document.getElementById("right-view").getElementsByTagName("canvas")[0];
 
 		var viewWidth = (window.innerWidth-20)/2;
 
@@ -36,10 +30,9 @@ var Mode4D = (function (scope) {
 		this.leftView = new THREE.Scene();
 		this.leftCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
 		this.leftCamera.position.set(5,10,20);
-		this.leftRenderer = new THREE.WebGLRenderer({ antialias: true });
+		this.leftRenderer = new THREE.WebGLRenderer({ canvas: leftCanvas, antialias: true });
 		this.leftRenderer.setClearColor(0xffffff);
 		this.leftRenderer.setSize( viewWidth, window.innerHeight );
-		leftChild.appendChild( this.leftRenderer.domElement );
 
 		this.leftControls = new THREE.OrbitControls( this.leftCamera, this.leftRenderer.domElement );
 		this.leftControls.enableKeys = false;
@@ -70,14 +63,12 @@ var Mode4D = (function (scope) {
 		this.rightView = new THREE.Scene();
 		this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
 		this.rightCamera.position.set(5,10,20);
-		this.rightRenderer = new THREE.WebGLRenderer({ antialias: true });
+		this.rightRenderer = new THREE.WebGLRenderer({ canvas: rightCanvas, antialias: true });
 		this.rightRenderer.setClearColor(0xffffff);
 		this.rightRenderer.setSize( viewWidth, window.innerHeight );
-		rightChild.appendChild( this.rightRenderer.domElement );
 
 		this.rightControls = new THREE.OrbitControls( this.rightCamera, this.rightRenderer.domElement );
 		this.rightControls.enableKeys = false;
-
 
 		grid = GridHelper.CreateGrid("XZ");
 		this.rightView.add(grid);
@@ -186,11 +177,7 @@ var Mode4D = (function (scope) {
 
 	//Destroys everything created
 	Mode4D.prototype.cleanup = function(){
-		// TODO: Propr cleanup with removal of animationFrame and all 
-
-		// Remove the two child divs
-		this.leftChild.parentNode.removeChild(this.leftChild);
-		this.rightChild.parentNode.removeChild(this.rightChild);
+		// TODO: Propr cleanup with removal of animationFrame and all
 
 		// Destroy gui
 		this.gui.cleanup();
