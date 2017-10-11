@@ -47,31 +47,33 @@ var Projecting = (function (scope) {
 		/* 
 			Takes in a glsl function and an operator (>,< or =) and renders that 
 		*/
-		var vertexShader = "varying vec4 vertexPosition;"
-        vertexShader +=    "void main() {"
-        vertexShader +=        "vertexPosition = modelMatrix * vec4(position,1.0);"
-        vertexShader +=        "gl_Position = projectionMatrix *"
-        vertexShader +=                     " modelViewMatrix *"
-        vertexShader +=                     "vec4(position,1.0); "
-        vertexShader +=         "}"
+  		vertexShader = `
+			varying vec4 vertexPosition;
+			void main() {
+				vertexPosition = modelMatrix * vec4(position,1.0);
+				gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); 
+			}
+  		`;
 
-        var fragmentShader = "varying vec4 vertexPosition;";
-        fragmentShader += "float eq(float x,float y){";
-        fragmentShader += glslFuncString;
-        fragmentShader += "}"
-        fragmentShader += "void main() {"
-        fragmentShader += "vec4 color = vec4(0.0);"
-        fragmentShader += "float val = eq(vertexPosition.x,vertexPosition.y);"
-        fragmentShader += "float thickness = 0.5;"
-        if(operator == "<")
-        	fragmentShader += "if(val < 0.0) color.r = 1.0; else discard;"
-        else if (operator == ">")
-        	fragmentShader += "if(val > 0.0) color.r = 1.0; else discard;"
-        else
-        	fragmentShader += "if(val <= thickness && val >= -thickness) color.r = 1.0; else discard;"
-        
-        fragmentShader += "gl_FragColor = color;"
-        fragmentShader += "}"  
+        var fragmentShader =`
+        varying vec4 vertexPosition;
+        float eq(float x,float y){
+        	${glslFuncString}
+        }
+        void main(){
+        	vec4 color = vec4(0.0);
+        	float val = eq(vertexPosition.x,vertexPosition.y);
+        	float thickness = 0.5;
+        	${ 
+        		(operator == "<") ? 
+        			'if(val < 0.0) color.r = 1.0; else discard;' 
+        		: (operator == ">") ?
+        			'if(val > 0.0) color.r = 1.0; else discard;'
+        		: 	'if(val <= thickness && val >= -thickness) color.r = 1.0; else discard;'
+        	}
+        	gl_FragColor = color;
+        }
+        `;
 
         var geometry = new THREE.PlaneBufferGeometry(20, 20);
         var material = new THREE.ShaderMaterial({
