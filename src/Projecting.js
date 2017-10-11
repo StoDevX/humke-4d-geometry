@@ -60,6 +60,7 @@ var Projecting = (function (scope) {
         uniform vec2 axisValue;
         uniform float axis; // 0 is x, 1 is y  
         uniform float slice; 
+        uniform float renderWholeShape;
         float eq(float x,float y){
         	${glslFuncString}
         }
@@ -91,12 +92,24 @@ var Projecting = (function (scope) {
  			gl_FragColor.a = 1.0;
  			float sliceThickness = 0.1;
         	if(axis == 0.0){
-        		if(abs(vertexPosition.x) > sliceThickness) discard;
-        		//if(abs(vertexPosition.x) > sliceThickness) gl_FragColor.a = 0.15;
+        		if(abs(vertexPosition.x) > sliceThickness) {
+        			if(renderWholeShape == 1.0){
+        				gl_FragColor.a = 0.15;
+        			}
+        			else {
+        				discard;
+        			}
+        		}
         	}
         	if(axis == 1.0){
-        		if(abs(vertexPosition.y) > sliceThickness) discard;
-        		//if(abs(vertexPosition.y) > sliceThickness) gl_FragColor.a = 0.15;
+        		if(abs(vertexPosition.y) > sliceThickness) {
+        			if(renderWholeShape == 1.0){
+        				gl_FragColor.a = 0.15;
+        			}
+        			else {
+        				discard;
+        			}
+        		}
         	}
         	
         }

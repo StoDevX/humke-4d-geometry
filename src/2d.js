@@ -88,7 +88,7 @@ var Mode2D = (function (scope) {
 
 		// Create intersection line 
 		var axisY = this.gui.params.axis_value;
-		this.intersectionLine = this.util.Line({x:-10,y:axisY,z:0.2},{x:10,y:axisY,z:0.2})
+		this.intersectionLine = this.util.Line({x:-10,y:axisY,z:0.2},{x:10,y:axisY,z:0.2},null,0.15)
 		this.leftView.add(this.intersectionLine);
 
 		this.animate();
@@ -110,7 +110,8 @@ var Mode2D = (function (scope) {
 			opacity_val = val ? 1 : 0;
 		}
 
-		// TODO: Toggle projection visibility
+		/// I'm hijacking this to toggle the visibility of the rest of the shape on the slices 
+		self.uniforms.renderWholeShape.value = Number(val);
 
 	}
 
@@ -277,11 +278,14 @@ var Mode2D = (function (scope) {
 		var glslFuncString = output[0];
 		var operator = output[1];
 
+		var renderWholeShape = Number(this.gui.params.render_shape); 
+
 		//this.leftMesh = this.projector.CartesianMesh2D(equationFunc);
 		var defaultUniforms = {
 			axis: { type: "f", value: 0 } ,
 			axisValue: { type: "v2", value: new THREE.Vector2( 0, 0 ) },
-			slice: {type: "f", value: 0}
+			slice: {type: "f", value: 0},
+			renderWholeShape: {type:"f", value:renderWholeShape }
 		};
 		this.leftMesh = this.projector.CartesianShaderMesh2D(glslFuncString,operator,defaultUniforms);
 		this.leftMesh.position.z = 0.1;
@@ -293,7 +297,8 @@ var Mode2D = (function (scope) {
 		this.uniforms = {
 			axis: { type: "f", value: axis == "Y" ? 1 : 0 } ,
 			axisValue: { type: "v2", value: axisValue},
-			slice: {type: "f", value: 1}
+			slice: {type: "f", value: 1},
+			renderWholeShape: {type:"f", value:renderWholeShape }
 		};
 		this.rightMesh = this.projector.CartesianShaderMesh2D(glslFuncString,operator,this.uniforms);
 		this.rightMesh.position.z = 0.1;
