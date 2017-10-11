@@ -108,6 +108,15 @@ var Projecting = (function (scope) {
 		return container;
 	}
 
+	
+
+	Projecting.prototype.ParametricMesh3D = function(paramFunc){
+		var geometry = new THREE.ParametricBufferGeometry( paramFunc, 25, 25 );
+		var material = new THREE.MeshPhongMaterial( {color: 0x00ff00, flatShading:false} );
+		var mesh = new THREE.Mesh( geometry, material );
+		return mesh;
+	}
+
 	scope.Projecting = Projecting;
 	return Projecting;
 })(typeof exports === 'undefined' ? {} : exports);

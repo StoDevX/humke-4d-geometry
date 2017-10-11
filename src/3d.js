@@ -294,57 +294,32 @@ var Mode3D = (function (scope) {
 	}
 
 	Mode3D.prototype.initParametric = function(){
-		var params = this.gui.params
-		var a_range = [0,1];
-		var b_range = [0,1];
-		var c_range = [0,1];
-		// get range from string
-		var splitArrayA = params.param_a.split("<"); // should return 3 pieces. We want the first and last
-		a_range[0] = Parser.evaluate(splitArrayA[0]);
-		a_range[1] = Parser.evaluate(splitArrayA[2]);
-		var splitArrayB = params.param_b.split("<");
-		b_range[0] = Parser.evaluate(splitArrayB[0]);
-		b_range[1] = Parser.evaluate(splitArrayB[2]);
-		var splitArrayC = params.param_c.split("<");
-		c_range[0] = Parser.evaluate(splitArrayC[0]);
-		c_range[1] = Parser.evaluate(splitArrayC[2]);
+		function paramFunc ( u, t, optionalTarget ) {
 
-		this.triangleArray = []
+		var result = optionalTarget || new THREE.Vector3();
 
-		var upperData = this.tesselateParametric(a_range,b_range,c_range[1]);
-		var upperBoundVerticies = upperData[0];
-		var upperIndices = upperData[1];
+		// volumetric mobius strip
 
-		var lowerData = this.tesselateParametric(a_range,b_range,c_range[0]);
-		var lowerBoundVerticies = lowerData[0];
-		var lowerIndices = lowerData[1];
+		u *= Math.PI;
+		t *= 2 * Math.PI;
 
-		// If we don't find BOTH a and b as variables, then draw it as a line
-		var draw_filled = true;
-		var tokens = Parser.parse(params.param_eq_x).tokens;
-		var found_a = false;
-		var found_b = false;
-		var found_c = false;
-		for(var i=0;i<tokens.length;i++){
-			if(tokens[i].toString() == "a") found_a = true;
-			if(tokens[i].toString() == "b") found_b = true;
-			if(tokens[i].toString() == "c") found_c = true;
-		}
-		tokens = Parser.parse(params.param_eq_y).tokens;
-		for(var i=0;i<tokens.length;i++){
-			if(tokens[i].toString() == "a") found_a = true;
-			if(tokens[i].toString() == "b") found_b = true;
-			if(tokens[i].toString() == "c") found_c = true;
-		}
-		tokens = Parser.parse(params.param_eq_z).tokens;
-		for(var i=0;i<tokens.length;i++){
-			if(tokens[i].toString() == "a") found_a = true;
-			if(tokens[i].toString() == "b") found_b = true;
-			if(tokens[i].toString() == "c") found_c = true;
-		}
-		if(!found_a || !found_b || !found_c) draw_filled = false;
+		u = u * 2;
+		var phi = u / 2;
+		var major = 2.25, a = 0.125, b = 0.65;
 
-		// TODO: Render parametric
+		var x, y, z;
+
+		x = a * Math.cos( t ) * Math.cos( phi ) - b * Math.sin( t ) * Math.sin( phi );
+		z = a * Math.cos( t ) * Math.sin( phi ) + b * Math.sin( t ) * Math.cos( phi );
+		y = ( major + x ) * Math.sin( u );
+		x = ( major + x ) * Math.cos( u );
+
+		return result.set( x, y, z );
+
+}
+
+		this.leftMesh = this.projector.ParametricMesh3D(paramFunc);
+		this.leftView.add( this.leftMesh );
 
 	}
 
