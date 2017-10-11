@@ -123,10 +123,10 @@ var Mode2D = (function (scope) {
 	Mode2D.prototype.callbacks = {
 		'axis': function(self,val){
 			if(val == "X"){
-				// TODO: Set axis to X
+				self.uniforms.axis.value = 0;
 			}
 			if(val == "Y"){
-				// TODO: Set axis to Y
+				self.uniforms.axis.value = 1;
 			}
 
 		},
@@ -158,7 +158,14 @@ var Mode2D = (function (scope) {
 		},
 		'axis_value': function(self,val){
 
+			if(self.gui.params.axis == 'Y'){
+				self.uniforms.axisValue.value.y = val;	
+			}
+			if(self.gui.params.axis == 'X'){
+				self.uniforms.axisValue.value.x = val;	
+			}
 
+			
 		},
 		'param_eq_x': updateParametricCallback,
 		'param_eq_y': updateParametricCallback,
@@ -240,9 +247,27 @@ var Mode2D = (function (scope) {
 		var operator = output[1];
 
 		//this.leftMesh = this.projector.CartesianMesh2D(equationFunc);
-		this.leftMesh = this.projector.CartesianShaderMesh2D(glslFuncString,operator);
+		var defaultUniforms = {
+			axis: { type: "f", value: 0 } ,
+			axisValue: { type: "v2", value: new THREE.Vector2( 0, 0 ) },
+			slice: {type: "f", value: 0}
+		};
+		this.leftMesh = this.projector.CartesianShaderMesh2D(glslFuncString,operator,defaultUniforms);
 		this.leftMesh.position.z = 0.1;
 		this.leftView.add(this.leftMesh);
+
+		var axis = this.gui.params.axis;
+		var axisValue = new THREE.Vector2(this.gui.params.axis_value,this.gui.params.axis_value);
+
+		this.uniforms = {
+			axis: { type: "f", value: axis == "Y" ? 1 : 0 } ,
+			axisValue: { type: "v2", value: axisValue},
+			slice: {type: "f", value: 1}
+		};
+		this.rightMesh = this.projector.CartesianShaderMesh2D(glslFuncString,operator,this.uniforms);
+		this.rightMesh.position.z = 0.1;
+		this.rightView.add(this.rightMesh);
+
 	}
 
 	// >>>>>>>>>>> Parametric mode functions
@@ -311,6 +336,10 @@ var Mode2D = (function (scope) {
 		if(this.leftMesh){
 			this.leftView.remove(this.leftMesh);
 			this.leftMesh = null;
+		}
+		if(this.rightMesh){
+			this.rightView.remove(this.rightMesh);
+			this.rightMesh = null;
 		}
 	}
 

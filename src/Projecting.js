@@ -43,7 +43,7 @@ var Projecting = (function (scope) {
 
 		return mesh;
 	}
-	Projecting.prototype.CartesianShaderMesh2D = function(glslFuncString,operator){
+	Projecting.prototype.CartesianShaderMesh2D = function(glslFuncString,operator,uniforms){
 		/* 
 			Takes in a glsl function and an operator (>,< or =) and renders that 
 		*/
@@ -57,12 +57,26 @@ var Projecting = (function (scope) {
 
         var fragmentShader =`
         varying vec4 vertexPosition;
+        uniform vec2 axisValue;
+        uniform float axis; // 0 is x, 1 is y  
+        uniform float slice; 
         float eq(float x,float y){
         	${glslFuncString}
         }
         void main(){
         	vec4 color = vec4(0.0);
-        	float val = eq(vertexPosition.x,vertexPosition.y);
+        	vec2 p = vec2(vertexPosition.x,vertexPosition.y);
+
+        	if(slice != 0.0){
+        		if(axis == 0.0){
+	        		p.x += axisValue.x;
+	        	}
+	        	if(axis == 1.0){
+	        		p.y += axisValue.y;
+	        	}
+        	}
+
+        	float val = eq(p.x,p.y);
         	float thickness = 0.5;
         	${ 
         		(operator == "<") ? 
@@ -72,14 +86,29 @@ var Projecting = (function (scope) {
         		: 	'if(val <= thickness && val >= -thickness) color.r = 1.0; else discard;'
         	}
         	gl_FragColor = color;
+ 			if(slice == 0.0) return;
+ 			// Slicing code 
+ 			gl_FragColor.a = 1.0;
+ 			float sliceThickness = 0.1;
+        	if(axis == 0.0){
+        		if(abs(vertexPosition.x) > sliceThickness) discard;
+        		//if(abs(vertexPosition.x) > sliceThickness) gl_FragColor.a = 0.15;
+        	}
+        	if(axis == 1.0){
+        		if(abs(vertexPosition.y) > sliceThickness) discard;
+        		//if(abs(vertexPosition.y) > sliceThickness) gl_FragColor.a = 0.15;
+        	}
+        	
         }
         `;
 
         var geometry = new THREE.PlaneBufferGeometry(20, 20);
         var material = new THREE.ShaderMaterial({
             fragmentShader: fragmentShader,
-            vertexShader: vertexShader
+            vertexShader: vertexShader, 
+            uniforms: uniforms
         });
+        if(uniforms.slice.value) material.transparent = true;
         var mesh = new THREE.Mesh(geometry, material);
 
         return mesh;
