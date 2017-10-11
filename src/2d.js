@@ -86,6 +86,11 @@ var Mode2D = (function (scope) {
 		this.projector = new Projecting();
 		this.slicer = new Slicing();
 
+		// Create intersection line 
+		var axisY = this.gui.params.axis_value;
+		this.intersectionLine = this.util.Line({x:-10,y:axisY,z:0.2},{x:10,y:axisY,z:0.2})
+		this.leftView.add(this.intersectionLine);
+
 		this.animate();
 
 		// Draw our main shape
@@ -120,11 +125,17 @@ var Mode2D = (function (scope) {
 		'axis': function(self,val){
 			if(val == "X"){
 				self.uniforms.axis.value = 0;
+				self.intersectionLine.rotation.z = Math.PI / 2;
+				self.intersectionLine.position.y = 0;
 			}
 			if(val == "Y"){
 				self.uniforms.axis.value = 1;
+				self.intersectionLine.rotation.z = 0;
+				self.intersectionLine.position.x = 0;
 			}
 			self.setRightAxis.call(self,val == "X" ? "Y" : "X");
+			// Rotate the intersection line 
+
 
 		},
 		'thickness': function(self,val){
@@ -157,9 +168,11 @@ var Mode2D = (function (scope) {
 
 			if(self.gui.params.axis == 'Y'){
 				self.uniforms.axisValue.value.y = val;	
+				self.intersectionLine.position.y = val;
 			}
 			if(self.gui.params.axis == 'X'){
 				self.uniforms.axisValue.value.x = val;	
+				self.intersectionLine.position.x = val;
 			}
 
 			
@@ -373,6 +386,9 @@ Mode2D.prototype.cleanup = function(){
 	this.leftCamera = null;
 	this.leftControls = null;
 	this.leftMesh = null;
+
+	this.leftView.remove(this.intersectionLine);
+	this.intersectionLine = null;
 
 	this.util.CleanUpScene(this.rightView);
 
