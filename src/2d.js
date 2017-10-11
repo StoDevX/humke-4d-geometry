@@ -38,7 +38,7 @@ var Mode2D = (function (scope) {
 		var leftCanvas = document.getElementById("left-view").getElementsByTagName("canvas")[0];
 		var rightCanvas = document.getElementById("right-view").getElementsByTagName("canvas")[0];
 
-		var viewWidth = (window.innerWidth-20)/2;
+		var viewWidth = (window.innerWidth-50)/2;
 
 		// Init gui
 		gui.init("2D",this.callbacks,this);
