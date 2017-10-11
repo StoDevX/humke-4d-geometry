@@ -5,6 +5,24 @@ var Util = (function (scope) {
 	function Util(){
 
 	}
+	Util.prototype.Line = function(p1, p2,color,lineWidth){
+		/*
+			Creates a mesh line out of two points that look like {x:[num],y:[num],z:[num]}
+		 */
+		if(color == undefined) color = 0x5a9b00;
+		if(lineWidth == undefined) lineWidth = 0.1;
+		var v1 = new THREE.Vector3( p1.x,p1.y,p1.z );
+		var v2 = new THREE.Vector3( p2.x,p2.y,p2.z );
+		var geometry = new THREE.Geometry();
+		geometry.vertices.push( v1 );
+		geometry.vertices.push( v2 );
+		var line = new MeshLine();
+		line.setGeometry( geometry );
+		var material = new MeshLineMaterial({color:new THREE.Color(color),lineWidth:lineWidth});
+		var mesh = new THREE.Mesh( line.geometry, material );
+		
+		return mesh;
+	}
 	Util.prototype.RenderPoints = function(pointsArray){
 		/*
 			Given an array of 3D points, return an object holding them, ready to be
