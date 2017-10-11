@@ -6,6 +6,69 @@ var Slicing = (function (scope) {
 	function Slicing(){
 		
 	}
+
+	Slicing.prototype.Slice2DMesh = function(mesh,uniforms,color){
+		/* Takes a mesh and returns a version of it with a shader material that slices */
+		vertexShader = `
+			varying vec4 vertexPosition;
+			void main() {
+				vertexPosition = modelMatrix * vec4(position,1.0);
+				gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); 
+			}
+  		`;
+
+  		var fragmentShader =`
+        varying vec4 vertexPosition;
+        uniform vec2 axisValue;
+        uniform float axis; // 0 is x, 1 is y  
+        uniform float slice; 
+        uniform float renderWholeShape;
+        
+        void main(){
+        	vec4 color = vec4(${color.r/255},${color.g/255},${color.b/255},1.0);
+        	vec2 p = vec2(vertexPosition.x,vertexPosition.y);
+
+        	gl_FragColor = color;
+ 			if(slice == 0.0) return;
+ 			// Slicing code 
+ 			gl_FragColor.a = 1.0;
+ 			float sliceThickness = 0.1;
+        	if(axis == 0.0){
+        		if(abs(p.x) > sliceThickness) {
+        			if(renderWholeShape == 1.0){
+        				gl_FragColor.a = 0.15;
+        			}
+        			else {
+        				discard;
+        			}
+        		}
+        	}
+        	if(axis == 1.0){
+        		if(abs(p.y) > sliceThickness) {
+        			if(renderWholeShape == 1.0){
+        				gl_FragColor.a = 0.15;
+        			}
+        			else {
+        				discard;
+        			}
+        		}
+        	}
+        	
+        }
+        `;
+
+		var geometry = mesh.geometry.clone();
+		var material = new THREE.ShaderMaterial({
+            fragmentShader: fragmentShader,
+            vertexShader: vertexShader, 
+            uniforms: uniforms
+        });
+        material.transparent = true;
+		var mesh = new THREE.Mesh( geometry, material );
+
+		return mesh;
+	}
+
 	Slicing.prototype.CalculateIntersectionPoints = function(p1,p2,p3,axis,axis_value) {
 		/*
 		Given a triangle (as 3 points) and a line (an axis), return the two points of intersection 

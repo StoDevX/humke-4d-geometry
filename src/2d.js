@@ -170,11 +170,18 @@ var Mode2D = (function (scope) {
 			if(self.gui.params.axis == 'Y'){
 				self.uniforms.axisValue.value.y = val;	
 				self.intersectionLine.position.y = val;
+				if(self.current_mode == "convex-hull"){
+					self.rightMesh.position.y = -val;
+				}
 			}
 			if(self.gui.params.axis == 'X'){
 				self.uniforms.axisValue.value.x = val;	
 				self.intersectionLine.position.x = val;
+				if(self.current_mode == "convex-hull"){
+					self.rightMesh.position.x = -val;
+				}
 			}
+
 
 			
 		},
@@ -363,6 +370,20 @@ var Mode2D = (function (scope) {
 		this.leftMesh = this.projector.ConvexHullMesh2D(points,projectingColor);
 		this.leftMesh.position.z = 0.1;
 		this.leftView.add(this.leftMesh);
+
+		var slicingColor = this.util.HexToRgb(this.gui.colors.slices);
+		var axis = this.gui.params.axis;
+		var axisValue = new THREE.Vector2(this.gui.params.axis_value,this.gui.params.axis_value);
+		var renderWholeShape = Number(this.gui.params.render_shape); 
+		this.uniforms = {
+			axis: { type: "f", value: axis == "Y" ? 1 : 0 } ,
+			axisValue: { type: "v2", value: axisValue},
+			slice: {type: "f", value: 1},
+			renderWholeShape: {type:"f", value:renderWholeShape }
+		};
+		this.rightMesh = this.slicer.Slice2DMesh(this.leftMesh,this.uniforms,slicingColor);
+		this.rightMesh.position.z = 0.2;
+		this.rightView.add(this.rightMesh);
 	}
 
 	Mode2D.prototype.updateConvexHull = function(){
