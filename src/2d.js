@@ -80,11 +80,7 @@ var Mode2D = (function (scope) {
 		this.rightControls.enableRotate = false;
 		this.rightControls.enableKeys = false;
 
-		axis = GridHelper.CreateAxis("X");
-		this.rightView.add(axis);
-
-		var rightXLabel = GridHelper.CreateLabel("X",11,-0.25,0);
-		this.rightView.add(rightXLabel);
+		this.setRightAxis("X");
 
 		this.util = new Util();
 		this.projector = new Projecting();
@@ -128,6 +124,7 @@ var Mode2D = (function (scope) {
 			if(val == "Y"){
 				self.uniforms.axis.value = 1;
 			}
+			self.setRightAxis.call(self,val == "X" ? "Y" : "X");
 
 		},
 		'thickness': function(self,val){
@@ -180,6 +177,27 @@ var Mode2D = (function (scope) {
 
 		}
 	};
+
+	Mode2D.prototype.setRightAxis = function(type){
+		// first delete the axis if it exists
+		if(this.rightAxis){
+			this.rightView.remove(this.rightAxis);
+			this.rightView.remove(this.rightLabel);
+		}
+		var GridHelper = new Grid();
+		this.rightAxis = GridHelper.CreateAxis(type);
+		// Offset the axes a bit 
+		if(type == "X")
+			this.rightAxis.position.y -= 0.5;
+		if(type == "Y")
+			this.rightAxis.position.x -= 0.5;
+		this.rightView.add(this.rightAxis);
+
+		var LabelPositions = {'X':{x:11,y:-0.75,z:0},'Y':{x:-0.75,y:11,z:0}}
+		var p = LabelPositions[type];
+		this.rightLabel = GridHelper.CreateLabel(type,p.x,p.y,p.z);
+		this.rightView.add(this.rightLabel);
+	}
 
 	Mode2D.prototype.setMode = function(){
 		var params = this.gui.params
