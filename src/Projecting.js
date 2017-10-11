@@ -6,7 +6,7 @@ var Projecting = (function (scope) {
 	function Projecting(){
 
 	}
-	Projecting.prototype.ConvexHullMesh2D = function(vectorArray){
+	Projecting.prototype.ConvexHullMesh2D = function(vectorArray,color){
 		/*
 			Takes in an array of points in 2D space, and returns a mesh object
 			covering their convex hull, ready to be added to a scene
@@ -23,7 +23,7 @@ var Projecting = (function (scope) {
 		}
 
 		var geometry = new THREE.ConvexGeometry( newVectorArray );
-		var material = new THREE.MeshBasicMaterial( {color: 0x5a9b00} );
+		var material = new THREE.MeshBasicMaterial( {color: color} );
 		var mesh = new THREE.Mesh( geometry, material );
 
 		return mesh;
@@ -43,10 +43,11 @@ var Projecting = (function (scope) {
 
 		return mesh;
 	}
-	Projecting.prototype.CartesianShaderMesh2D = function(glslFuncString,operator,uniforms){
+	Projecting.prototype.CartesianShaderMesh2D = function(glslFuncString,operator,uniforms,color){
 		/* 
 			Takes in a glsl function and an operator (>,< or =) and renders that 
 		*/
+
   		vertexShader = `
 			varying vec4 vertexPosition;
 			void main() {
@@ -65,7 +66,7 @@ var Projecting = (function (scope) {
         	${glslFuncString}
         }
         void main(){
-        	vec4 color = vec4(0.0);
+        	vec4 color = vec4(${color.r/255},${color.g/255},${color.b/255},1.0);
         	vec2 p = vec2(vertexPosition.x,vertexPosition.y);
 
         	if(slice != 0.0){
@@ -81,10 +82,10 @@ var Projecting = (function (scope) {
         	float thickness = 0.5;
         	${ 
         		(operator == "<") ? 
-        			'if(val < 0.0) color.r = 1.0; else discard;' 
+        			'if(val > 0.0) discard;' 
         		: (operator == ">") ?
-        			'if(val > 0.0) color.r = 1.0; else discard;'
-        		: 	'if(val <= thickness && val >= -thickness) color.r = 1.0; else discard;'
+        			'if(val < 0.0) discard;'
+        		: 	'if(val > thickness || val < -thickness) discard;'
         	}
         	gl_FragColor = color;
  			if(slice == 0.0) return;

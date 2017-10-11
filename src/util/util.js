@@ -5,6 +5,15 @@ var Util = (function (scope) {
 	function Util(){
 
 	}
+	Util.prototype.HexToRgb = function(hex) {
+		// Source: https://stackoverflow.com/a/5624139/1278023
+	    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+	    return result ? {
+	        r: parseInt(result[1], 16),
+	        g: parseInt(result[2], 16),
+	        b: parseInt(result[3], 16)
+	    } : null;
+	}
 	Util.prototype.Line = function(p1, p2,color,lineWidth){
 		/*
 			Creates a mesh line out of two points that look like {x:[num],y:[num],z:[num]}

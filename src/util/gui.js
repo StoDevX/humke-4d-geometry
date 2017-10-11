@@ -10,8 +10,8 @@ var GUI = (function (scope) {
 	GUI.prototype.init = function(mode,callbacks,mode_obj){
 		// Colors to use throughout
 		this.colors = {
-			'viewing':'#e59a1c', // For the line/place of intersection
-			'data':'#3090FF' // For the actual shape/data
+			'projections':'#e59a1c', // For the line/place of intersection
+			'slices':'#3090FF' // For the actual shape/data
 		}
 
 		// These are all the possible parameters to keep track of
@@ -174,9 +174,9 @@ var GUI = (function (scope) {
 	    var sliders = document.querySelectorAll(".slider-fg")
 	    for(var i=1;i<sliders.length;i++){ //notice i=1
 	    	var slider = sliders[i]
-	    	slider.style.background = this.colors.viewing
-		    slider.parentNode.parentNode.querySelector(".dg .cr.number input[type='text']").style.color = this.colors.viewing
-	    	slider.parentNode.parentNode.parentNode.parentNode.style['border-left'] = "3px solid " + this.colors.viewing
+	    	slider.style.background = this.colors.projections
+		    slider.parentNode.parentNode.querySelector(".dg .cr.number input[type='text']").style.color = this.colors.projections
+	    	slider.parentNode.parentNode.parentNode.parentNode.style['border-left'] = "3px solid " + this.colors.projections
 	    }
 	}
 

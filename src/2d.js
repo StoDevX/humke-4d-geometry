@@ -88,7 +88,7 @@ var Mode2D = (function (scope) {
 
 		// Create intersection line 
 		var axisY = this.gui.params.axis_value;
-		this.intersectionLine = this.util.Line({x:-10,y:axisY,z:0.2},{x:10,y:axisY,z:0.2},null,0.15)
+		this.intersectionLine = this.util.Line({x:-10,y:axisY,z:0.2},{x:10,y:axisY,z:0.2},this.gui.colors.slices,0.15)
 		this.leftView.add(this.intersectionLine);
 
 		this.animate();
@@ -279,6 +279,8 @@ var Mode2D = (function (scope) {
 		var operator = output[1];
 
 		var renderWholeShape = Number(this.gui.params.render_shape); 
+		var projectingColor = this.util.HexToRgb(this.gui.colors.projections);
+		var slicingColor = this.util.HexToRgb(this.gui.colors.slices);
 
 		//this.leftMesh = this.projector.CartesianMesh2D(equationFunc);
 		var defaultUniforms = {
@@ -287,7 +289,7 @@ var Mode2D = (function (scope) {
 			slice: {type: "f", value: 0},
 			renderWholeShape: {type:"f", value:renderWholeShape }
 		};
-		this.leftMesh = this.projector.CartesianShaderMesh2D(glslFuncString,operator,defaultUniforms);
+		this.leftMesh = this.projector.CartesianShaderMesh2D(glslFuncString,operator,defaultUniforms,projectingColor);
 		this.leftMesh.position.z = 0.1;
 		this.leftView.add(this.leftMesh);
 
@@ -300,7 +302,7 @@ var Mode2D = (function (scope) {
 			slice: {type: "f", value: 1},
 			renderWholeShape: {type:"f", value:renderWholeShape }
 		};
-		this.rightMesh = this.projector.CartesianShaderMesh2D(glslFuncString,operator,this.uniforms);
+		this.rightMesh = this.projector.CartesianShaderMesh2D(glslFuncString,operator,this.uniforms,slicingColor);
 		this.rightMesh.position.z = 0.1;
 		this.rightView.add(this.rightMesh);
 
@@ -356,7 +358,9 @@ var Mode2D = (function (scope) {
 			return;
 		}
 
-		this.leftMesh = this.projector.ConvexHullMesh2D(points);
+		var projectingColor = this.gui.colors.projections;
+
+		this.leftMesh = this.projector.ConvexHullMesh2D(points,projectingColor);
 		this.leftMesh.position.z = 0.1;
 		this.leftView.add(this.leftMesh);
 	}
