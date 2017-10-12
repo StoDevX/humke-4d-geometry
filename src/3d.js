@@ -363,6 +363,20 @@ var Mode3D = (function (scope) {
 		this.gui.cleanup();
 	}
 
+	Mode3D.prototype.handleEvent = function(event) {
+		if(event.type == 'resize') {
+			var viewWidth = (window.innerWidth-50)/2;
+
+			this.leftRenderer.setSize(viewWidth, window.innerHeight);
+		  this.leftCamera.aspect = viewWidth / window.innerHeight;
+		  this.leftCamera.updateProjectionMatrix();
+
+			this.rightRenderer.setSize(viewWidth, window.innerHeight);
+		  this.rightCamera.aspect = viewWidth / window.innerHeight;
+		  this.rightCamera.updateProjectionMatrix();
+		}
+	}
+
 	Mode3D.prototype.animate = function(){
 		this.animId = requestAnimationFrame( this.animate.bind(this) );
 		this.leftRenderer.render( this.leftView, this.leftCamera );

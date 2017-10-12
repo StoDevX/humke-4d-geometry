@@ -120,6 +120,7 @@
 			document.querySelector("#world_title").innerHTML = text_map[clicked_name] + " World"
 			// Init the mode (the mode inits the gui with its own options)
 			mode_objects[current_mode].init(document.querySelector("#display"),gui);
+			window.addEventListener('resize',mode_objects[current_mode]);
 		}
 	}
 

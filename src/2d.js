@@ -86,7 +86,7 @@ var Mode2D = (function (scope) {
 		this.projector = new Projecting();
 		this.slicer = new Slicing();
 
-		// Create intersection line 
+		// Create intersection line
 		var axisY = this.gui.params.axis_value;
 		this.intersectionLine = this.util.Line({x:-10,y:axisY,z:0.2},{x:10,y:axisY,z:0.2},this.gui.colors.slices,0.15)
 		this.leftView.add(this.intersectionLine);
@@ -110,7 +110,7 @@ var Mode2D = (function (scope) {
 			opacity_val = val ? 1 : 0;
 		}
 
-		/// I'm hijacking this to toggle the visibility of the rest of the shape on the slices 
+		/// I'm hijacking this to toggle the visibility of the rest of the shape on the slices
 		self.uniforms.renderWholeShape.value = Number(val);
 
 	}
@@ -135,7 +135,7 @@ var Mode2D = (function (scope) {
 				self.intersectionLine.position.x = 0;
 			}
 			self.setRightAxis.call(self,val == "X" ? "Y" : "X");
-			// Rotate the intersection line 
+			// Rotate the intersection line
 
 
 		},
@@ -168,14 +168,14 @@ var Mode2D = (function (scope) {
 		'axis_value': function(self,val){
 
 			if(self.gui.params.axis == 'Y'){
-				self.uniforms.axisValue.value.y = val;	
+				self.uniforms.axisValue.value.y = val;
 				self.intersectionLine.position.y = val;
 				if(self.current_mode == "convex-hull"){
 					self.rightMesh.position.y = -val;
 				}
 			}
 			if(self.gui.params.axis == 'X'){
-				self.uniforms.axisValue.value.x = val;	
+				self.uniforms.axisValue.value.x = val;
 				self.intersectionLine.position.x = val;
 				if(self.current_mode == "convex-hull"){
 					self.rightMesh.position.x = -val;
@@ -183,7 +183,7 @@ var Mode2D = (function (scope) {
 			}
 
 
-			
+
 		},
 		'param_eq_x': updateParametricCallback,
 		'param_eq_y': updateParametricCallback,
@@ -207,7 +207,7 @@ var Mode2D = (function (scope) {
 		}
 		var GridHelper = new Grid();
 		this.rightAxis = GridHelper.CreateAxis(type);
-		// Offset the axes a bit 
+		// Offset the axes a bit
 		if(type == "X")
 			this.rightAxis.position.y -= 0.5;
 		if(type == "Y")
@@ -285,7 +285,7 @@ var Mode2D = (function (scope) {
 		var glslFuncString = output[0];
 		var operator = output[1];
 
-		var renderWholeShape = Number(this.gui.params.render_shape); 
+		var renderWholeShape = Number(this.gui.params.render_shape);
 		var projectingColor = this.util.HexToRgb(this.gui.colors.projections);
 		var slicingColor = this.util.HexToRgb(this.gui.colors.slices);
 
@@ -374,7 +374,7 @@ var Mode2D = (function (scope) {
 		var slicingColor = this.util.HexToRgb(this.gui.colors.slices);
 		var axis = this.gui.params.axis;
 		var axisValue = new THREE.Vector2(this.gui.params.axis_value,this.gui.params.axis_value);
-		var renderWholeShape = Number(this.gui.params.render_shape); 
+		var renderWholeShape = Number(this.gui.params.render_shape);
 		this.uniforms = {
 			axis: { type: "f", value: axis == "Y" ? 1 : 0 } ,
 			axisValue: { type: "v2", value: axisValue},
@@ -432,7 +432,22 @@ Mode2D.prototype.cleanup = function(){
 	this.gui.cleanup();
 }
 
+Mode2D.prototype.handleEvent = function(event) {
+	if(event.type == 'resize') {
+		var viewWidth = (window.innerWidth-50)/2;
+
+		this.leftRenderer.setSize(viewWidth, window.innerHeight);
+	  this.leftCamera.aspect = viewWidth / window.innerHeight;
+	  this.leftCamera.updateProjectionMatrix();
+
+		this.rightRenderer.setSize(viewWidth, window.innerHeight);
+	  this.rightCamera.aspect = viewWidth / window.innerHeight;
+	  this.rightCamera.updateProjectionMatrix();
+	}
+}
+
 Mode2D.prototype.animate = function(){
+
 	this.animId = requestAnimationFrame( this.animate.bind(this) );
 	this.leftRenderer.render( this.leftView, this.leftCamera );
 	this.rightRenderer.render( this.rightView, this.rightCamera );
