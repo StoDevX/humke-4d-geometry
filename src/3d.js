@@ -94,11 +94,68 @@ var Mode3D = (function (scope) {
 		this.projector = new Projecting();
 		this.slicer = new Slicing();
 
+		this.intersectionPlane = this.CreateIntersectionPlane();
+		this.intersectionPlane.position.y = this.gui.params.axis_value;
+		this.leftView.add(this.intersectionPlane);
+
 		this.animate();
 
 		this.setMode();
 
 		}
+
+	Mode3D.prototype.CreateIntersectionPlane = function(){
+		var color =  this.gui.colors.slices;
+
+		var v1 = new THREE.Vector3( 10, 0, 10 );
+		var v2 = new THREE.Vector3( -10, 0, 10 );
+		var v3 = new THREE.Vector3( -10, 0, -10 );
+		var v4 = new THREE.Vector3( 10, 0, -10 );
+
+		var geometry = new THREE.Geometry();
+		geometry.vertices.push( v1 );
+		geometry.vertices.push( v2 );
+		geometry.vertices.push( v3 );
+		geometry.vertices.push( v4 );
+		geometry.faces.push(new THREE.Face3(0,1,2));
+		geometry.faces.push(new THREE.Face3(2,3,0));
+
+		var material = new THREE.MeshPhongMaterial( {color: color, flatShading:true, transparent:true, opacity:0.5, side:THREE.DoubleSide} );
+		var mesh = new THREE.Mesh( geometry, material );
+
+		mesh.updatePosition = function(val){
+			if(this.axis == "Y")
+				this.position.y = val;
+			if(this.axis == "X")
+				this.position.x = val;
+			if(this.axis == "Z")
+				this.position.z = val;
+		}
+
+		mesh.flip = function(newAxis){
+			this.rotation.z = 0;
+			this.rotation.x = 0;
+			this.position.x = 0;
+			this.position.y = 0;
+			this.position.z = 0;
+
+			if(newAxis == "Y"){
+				
+			}
+			if(newAxis == "X"){
+				this.rotation.z = Math.PI/2;
+			}
+			if(newAxis == "Z"){
+				this.rotation.x = Math.PI/2;
+			}
+
+			this.axis = newAxis;
+		}
+
+		mesh.axis = "Y";
+
+		return mesh;
+	}
 
 	Mode3D.prototype.CalculateIntersection = function(){
 		// TODO: Compute and render intersection
@@ -129,12 +186,12 @@ var Mode3D = (function (scope) {
 
 	Mode3D.prototype.callbacks = {
 		'axis': function(self,val) {
-			// TODO: Set axis to val
+			self.intersectionPlane.flip(val);
 
 			self.CalculateIntersection();
 		},
 		'axis_value': function(self,val){
-
+			self.intersectionPlane.updatePosition(val);
 
 			self.CalculateIntersection();
 		},
@@ -334,6 +391,7 @@ var Mode3D = (function (scope) {
 		this.leftCamera = null;
 		this.leftControls = null;
 		this.leftMesh = null;
+		this.intersectionPlane = null;
 
 		this.util.CleanUpScene(this.rightView);
 
