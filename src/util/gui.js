@@ -174,9 +174,9 @@ var GUI = (function (scope) {
 	    var sliders = document.querySelectorAll(".slider-fg")
 	    for(var i=1;i<sliders.length;i++){ //notice i=1
 	    	var slider = sliders[i]
-	    	slider.style.background = this.colors.projections
-		    slider.parentNode.parentNode.querySelector(".dg .cr.number input[type='text']").style.color = this.colors.projections
-	    	slider.parentNode.parentNode.parentNode.parentNode.style['border-left'] = "3px solid " + this.colors.projections
+	    	slider.style.background = this.colors.slices
+		    slider.parentNode.parentNode.querySelector(".dg .cr.number input[type='text']").style.color = this.colors.slices
+	    	slider.parentNode.parentNode.parentNode.parentNode.style['border-left'] = "3px solid " + this.colors.slices
 	    }
 	}
 
