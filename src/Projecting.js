@@ -65,6 +65,11 @@ var Projecting = (function (scope) {
         float eq(float x,float y){
         	${glslFuncString}
         }
+
+        float distFromEq(float x, float y, float offX, float offY){
+        	return (eq(x,y) - eq(x+offX,y+offY));
+        }
+
         void main(){
         	vec4 color = vec4(${color.r/255},${color.g/255},${color.b/255},1.0);
         	vec2 p = vec2(vertexPosition.x,vertexPosition.y);
@@ -79,7 +84,14 @@ var Projecting = (function (scope) {
         	}
 
         	float val = eq(p.x,p.y);
-        	float thickness = 0.5;
+        	
+        	float d = 0.01;
+        	float delta = (abs(distFromEq(p.x,p.y,0.0,d))
+        				 +abs(distFromEq(p.x,p.y,d,0.0))
+        				 +abs(distFromEq(p.x,p.y,-1.0*d,0.0))
+        				 +abs(distFromEq(p.x,p.y,0.0,-1.0*d))) /4.0 ;
+
+        	float thickness = delta * 13.0;
         	${ 
         		(operator == "<") ? 
         			'if(val > 0.0) discard;' 
