@@ -29,7 +29,7 @@ var Util = (function (scope) {
 		line.setGeometry( geometry );
 		var material = new MeshLineMaterial({color:new THREE.Color(color),lineWidth:lineWidth});
 		var mesh = new THREE.Mesh( line.geometry, material );
-		
+
 		return mesh;
 	}
 	Util.prototype.RenderPoints = function(pointsArray){
@@ -96,6 +96,17 @@ var Util = (function (scope) {
 		}
 
 		return pointsArray;
+	}
+	Util.prototype.ResizeScenes = function(self) {
+		var viewWidth = (window.innerWidth-50)/2;
+
+		self.leftRenderer.setSize(viewWidth, window.innerHeight);
+		self.leftCamera.aspect = viewWidth / window.innerHeight;
+		self.leftCamera.updateProjectionMatrix();
+
+		self.rightRenderer.setSize(viewWidth, window.innerHeight);
+		self.rightCamera.aspect = viewWidth / window.innerHeight;
+		self.rightCamera.updateProjectionMatrix();
 	}
 	Util.prototype.CleanUpScene = function(scene) {
 		/*

@@ -185,15 +185,7 @@ var Mode4D = (function (scope) {
 
 	Mode4D.prototype.handleEvent = function(event) {
 		if(event.type == 'resize') {
-			var viewWidth = (window.innerWidth-50)/2;
-
-			this.leftRenderer.setSize(viewWidth, window.innerHeight);
-		  this.leftCamera.aspect = viewWidth / window.innerHeight;
-		  this.leftCamera.updateProjectionMatrix();
-
-			this.rightRenderer.setSize(viewWidth, window.innerHeight);
-		  this.rightCamera.aspect = viewWidth / window.innerHeight;
-		  this.rightCamera.updateProjectionMatrix();
+			this.util.ResizeScenes(this);
 		}
 	}
 
