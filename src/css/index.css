@@ -1,6 +1,6 @@
 body {
-    font-family: "Avenir Next", "HelveticaNeue-Light", "Helvetica Neue Light", 
-                 "Helvetica Neue", Helvetica, Arial, "Lucida Grande", 
+    font-family: "Avenir Next", "HelveticaNeue-Light", "Helvetica Neue Light",
+                 "Helvetica Neue", Helvetica, Arial, "Lucida Grande",
                  "SF UI Display", sans-serif;
     font-weight: 350;
     height: 100vh;
@@ -26,11 +26,13 @@ a:hover {
     cursor: pointer;
 }
 
-
 #display {
     width: 100%;
     height: 100%;
+    display: flex;
+    flex-direction: row;
 }
+
 #mode_container {
     height: 100%;
 }
@@ -130,7 +132,7 @@ a:hover {
     -moz-transform: rotateX(-90deg);
 }
 
-/* Custom Colors 
+/* Custom Colors
 
 2d: #ed3237;
 3d: #00afef;
@@ -149,4 +151,3 @@ a:hover {
 #btn_4d div:nth-child(2) {
     color: #815aa4;
 }
-

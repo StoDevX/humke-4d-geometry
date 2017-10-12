@@ -38,7 +38,7 @@ var Mode2D = (function (scope) {
 		var leftCanvas = document.getElementById("left-view").getElementsByTagName("canvas")[0];
 		var rightCanvas = document.getElementById("right-view").getElementsByTagName("canvas")[0];
 
-		var viewWidth = (window.innerWidth-50)/2;
+		var viewWidth = (window.innerWidth)/2;
 
 		// Init gui
 		gui.init("2D",this.callbacks,this);
@@ -434,7 +434,7 @@ Mode2D.prototype.cleanup = function(){
 
 Mode2D.prototype.handleEvent = function(event) {
 	if(event.type == 'resize') {
-		var viewWidth = (window.innerWidth-50)/2;
+		var viewWidth = (window.innerWidth)/2;
 
 		this.leftRenderer.setSize(viewWidth, window.innerHeight);
 	  this.leftCamera.aspect = viewWidth / window.innerHeight;

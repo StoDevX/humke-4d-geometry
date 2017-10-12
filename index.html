@@ -76,14 +76,13 @@
 	<div id="header">
 		<center>
 			<p><span id="world_title"></span> - <span id="back_to_menu_btn">Back to Menu</span></p>
-
 		</center>
 	</div>
 	<div id="display">
-		<div id="left-view" style="display: inline-block;">
+		<div id="left-view">
 			<canvas></canvas>
 		</div>
-		<div id="right-view" style="display: inline-block;">
+		<div id="right-view">
 			<canvas></canvas>
 		</div>
 	</div>
@@ -120,6 +119,7 @@
 			document.querySelector("#world_title").innerHTML = text_map[clicked_name] + " World"
 			// Init the mode (the mode inits the gui with its own options)
 			mode_objects[current_mode].init(document.querySelector("#display"),gui);
+			// Add window resize event listener
 			window.addEventListener('resize',mode_objects[current_mode]);
 		}
 	}
