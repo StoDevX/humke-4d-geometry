@@ -203,32 +203,14 @@ var Mode3D = (function (scope) {
 
 
 	Mode3D.prototype.initCartesian = function(){
-		this.polygonizeCartesian();
-		if(this.triangleArray == null) return; //Failed to parse
-		var triangleArray = this.triangleArray;
+		var projectingColor = this.gui.colors.projections;
+		var equation = this.gui.params.equation;
+		var resolution = this.gui.params.resolution;
 
-		// TODO: Render triangles
-	}
-	Mode3D.prototype.polygonizeCartesian = function(){
-		var params = this.gui.params
-
-		var equation_string = params.equation;
-		let sides = equation_string.split('=');
-		let LHS = sides[0];
-		let RHS = sides[1];
-		let LHSfunc = Parser.parse(LHS).toJSFunction(['x','y','z']);
-		let RHSfunc = Parser.parse(RHS).toJSFunction(['x','y','z']);
-		var eq = function(x,y,z) { return LHSfunc(x,y,z) - RHSfunc(x,y,z); };
-
-		//Parses the equation, and polygonizes it
-		try {
-			var triangleArray = [];
-			triangleArray = Polygonize.generate(eq, [[-10, 10], [-10, 10], [-10, 10]], params.resolution);
-			this.triangleArray = triangleArray;
-
-
-		} catch(err){
-			console.log("Error rendering equation",err);
+		var mesh = this.projector.PolygonizeCartesian3D(equation,resolution,projectingColor);
+		if(mesh){
+			this.leftMesh = mesh;
+			this.leftView.add(this.leftMesh);
 		}
 	}
 

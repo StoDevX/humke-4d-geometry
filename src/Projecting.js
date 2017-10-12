@@ -6,6 +6,54 @@ var Projecting = (function (scope) {
 	function Projecting(){
 
 	}
+	Projecting.prototype.PolygonizeCartesian3D = function(equationString,resolution,color){
+		/*
+			Takes in an equation string, polygonizes it into an array of trianges, and draws those trianges
+			returns a mesh
+		 */
+		let sides = equationString.split('=');
+		let LHS = sides[0];
+		let RHS = sides[1];
+		let LHSfunc = Parser.parse(LHS).toJSFunction(['x','y','z']);
+		let RHSfunc = Parser.parse(RHS).toJSFunction(['x','y','z']);
+		var eq = function(x,y,z) { return LHSfunc(x,y,z) - RHSfunc(x,y,z); };
+
+		//Parses the equation, and polygonizes it
+		try {
+			var triangleArray = [];
+			triangleArray = Polygonize.generate(eq, [[-10, 10], [-10, 10], [-10, 10]], resolution);
+
+			var material = new THREE.MeshPhongMaterial( {color: color, flatShading:true , side:THREE.DoubleSide} );
+			//var container = new THREE.Object3D();
+			var geometry = new THREE.Geometry();
+
+			for(var i=0;i<triangleArray.length;i+=3){
+				var point1 = {x:triangleArray[i][0],  y:triangleArray[i][1],  z:triangleArray[i][2]};
+				var point2 = {x:triangleArray[i+1][0],y:triangleArray[i+1][1],z:triangleArray[i+1][2]};
+				var point3 = {x:triangleArray[i+2][0],y:triangleArray[i+2][1],z:triangleArray[i+2][2]};
+
+				var v1 = new THREE.Vector3(point1.x,point1.y,point1.z);
+				var v2 = new THREE.Vector3(point2.x,point2.y,point2.z);
+				var v3 = new THREE.Vector3(point3.x,point3.y,point3.z);
+
+				// var geometry = new THREE.Geometry();
+				geometry.vertices.push(v1);
+				geometry.vertices.push(v2);
+				geometry.vertices.push(v3);
+				geometry.faces.push(new THREE.Face3(i,i+1,i+2));
+				// geometry.faces.push(new THREE.Face3(0, 1, 2));
+				// var mesh = new THREE.Mesh( geometry, material );
+				// container.add(mesh);
+			}
+
+			return new THREE.Mesh( geometry, material );
+			// return container;
+
+		} catch(err){
+			console.log("Error rendering equation",err);
+		}
+	}
+
 	Projecting.prototype.ConvexHullMesh2D = function(vectorArray,color){
 		/*
 			Takes in an array of points in 2D space, and returns a mesh object
