@@ -410,15 +410,13 @@ Mode2D.prototype.cleanup = function(){
 
 	this.util.CleanUpScene(this.leftView);
 
+	this.intersectionLine = null;
 	this.leftView = null;
 	this.leftRenderer.dispose();
 	this.leftRenderer = null;
 	this.leftCamera = null;
 	this.leftControls = null;
 	this.leftMesh = null;
-
-	this.leftView.remove(this.intersectionLine);
-	this.intersectionLine = null;
 
 	this.util.CleanUpScene(this.rightView);
 
