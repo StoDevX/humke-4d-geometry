@@ -10,8 +10,8 @@ var GUI = (function (scope) {
 	GUI.prototype.init = function(mode,callbacks,mode_obj){
 		// Colors to use throughout
 		this.colors = {
-			'projections':'#e59a1c', // For the line/place of intersection
-			'slices':'#3090FF' // For the actual shape/data
+			'slices':'#e59a1c', // For the line/place of intersection
+			'projections':'#3090FF' // For the actual shape/data
 		}
 
 		// These are all the possible parameters to keep track of
