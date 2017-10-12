@@ -17,6 +17,8 @@ var Mode3D = (function (scope) {
 		this.rightControls = null;
 
 		this.leftMesh = null;
+
+		this.labels = [];
 	}
 
 	// Creates the scene and everything
@@ -52,11 +54,11 @@ var Mode3D = (function (scope) {
 		axis = GridHelper.CreateAxis("Z");
 		this.leftView.add(axis);
 
-		var leftXLabel = GridHelper.CreateLabel("X",12,0,0);
+		var leftXLabel = GridHelper.CreateLabel("X",12,0,0); this.labels.push(leftXLabel);
 		this.leftView.add(leftXLabel);
-		var leftYLabel = GridHelper.CreateLabel("Y",0,12,0);
+		var leftYLabel = GridHelper.CreateLabel("Y",0,12,0); this.labels.push(leftYLabel);
 		this.leftView.add(leftYLabel);
-		var leftZLabel = GridHelper.CreateLabel("Z",0,0,12);
+		var leftZLabel = GridHelper.CreateLabel("Z",0,0,12); this.labels.push(leftZLabel);
 		this.leftView.add(leftZLabel);
 
 		this.rightView = new THREE.Scene();
@@ -392,6 +394,7 @@ var Mode3D = (function (scope) {
 		this.leftControls = null;
 		this.leftMesh = null;
 		this.intersectionPlane = null;
+		this.labels = null;
 
 		this.util.CleanUpScene(this.rightView);
 
@@ -412,6 +415,9 @@ var Mode3D = (function (scope) {
 	}
 
 	Mode3D.prototype.animate = function(){
+		for(var i=0;i<this.labels.length;i++)
+			this.labels[i].quaternion.copy(this.leftCamera.quaternion);
+
 		this.animId = requestAnimationFrame( this.animate.bind(this) );
 		this.leftRenderer.render( this.leftView, this.leftCamera );
 		this.rightRenderer.render( this.rightView, this.rightCamera );
