@@ -20,7 +20,7 @@ var Mode4D = (function (scope) {
 		var leftCanvas = document.getElementById("left-view").getElementsByTagName("canvas")[0];
 		var rightCanvas = document.getElementById("right-view").getElementsByTagName("canvas")[0];
 
-		var viewWidth = (window.innerWidth)/2;
+		var viewWidth = (window.innerWidth-50)/2;
 
 		// Init gui
 	    gui.init("4D",this.callbacks,this);
@@ -185,7 +185,7 @@ var Mode4D = (function (scope) {
 
 	Mode4D.prototype.handleEvent = function(event) {
 		if(event.type == 'resize') {
-			var viewWidth = (window.innerWidth)/2;
+			var viewWidth = (window.innerWidth-50)/2;
 
 			this.leftRenderer.setSize(viewWidth, window.innerHeight);
 		  this.leftCamera.aspect = viewWidth / window.innerHeight;
