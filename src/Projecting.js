@@ -76,7 +76,7 @@ var Projecting = (function (scope) {
 
 		return mesh;
 	}
-	Projecting.prototype.ConvexHullMesh3D = function(vectorArray){
+	Projecting.prototype.ConvexHullMesh3D = function(vectorArray,color){
 		/*
 			Takes in an array of points in 3D space, and returns a mesh object
 			covering their convex hull, ready to be added to a scene
@@ -86,7 +86,7 @@ var Projecting = (function (scope) {
 					Threejs Mesh
 		*/
 		var geometry = new THREE.ConvexGeometry( vectorArray );
-		var material = new THREE.MeshPhongMaterial( {color: 0x00ff00, flatShading:true} );
+		var material = new THREE.MeshPhongMaterial( {color: color, flatShading:true} );
 		var mesh = new THREE.Mesh( geometry, material );
 
 		return mesh;

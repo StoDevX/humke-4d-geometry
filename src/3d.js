@@ -307,7 +307,9 @@ var Mode3D = (function (scope) {
 			points.push(newPoint);
 		}
 
-		this.leftMesh = this.projector.ConvexHullMesh3D(points);
+		var projectingColor = this.gui.colors.projections;
+
+		this.leftMesh = this.projector.ConvexHullMesh3D(points,projectingColor);
 		this.leftView.add( this.leftMesh );
 	}
 
