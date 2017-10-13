@@ -243,45 +243,14 @@ var Mode2D = (function (scope) {
 	}
 
 	// >>>>>>>>>> Cartesian mode functions
-	Mode2D.prototype.ConstructGLSLFunction = function(equationString){
-		/*
-			Takes an equation as a string (for ex: "x^2 + y^2 = 10")
-			and return GLSL syntax as a string, for example:
-			"return pow(x,2.0) + pow(y,2.0) - 10.0;"
-		 */
-		 var operator = "=";
-		 var sides = equationString.split("=");
-		 if(sides.length == 1) {
-		 	sides = equationString.split(">");
-		 	operator = ">";
-		 }
-		 if(sides.length == 1) {
-		 	sides = equationString.split("<");
-		 	operator = "<";
-		 }
 
-		 var LHS = sides[0];
-		 var RHS = sides[1];
-
-		 var LHSglsl = GLSLParser.parse(LHS).toString(true);
-		 var RHSglsl = GLSLParser.parse(RHS).toString(true);
-
-		 var fullGLSL = "return " + LHSglsl + " - (" + RHSglsl + ");";
-		 return [fullGLSL,operator];
-	}
 
 	Mode2D.prototype.initCartesian = function(view){
 		var params = this.gui.params
 
 		var equation = this.gui.params.equation;
-		// var sides = equation.split("=");
-		// var LHS = sides[0];
-		// var RHS = sides[1];
-		// var LHSfunc = Parser.parse(LHS).toJSFunction(['x','y']);
-		// var RHSfunc = Parser.parse(RHS).toJSFunction(['x','y']);
-
-		//var equationFunc = function(x,y){ return LHSfunc(x,y) - RHSfunc(x,y);}
-		var output = this.ConstructGLSLFunction(equation);
+		
+		var output = this.util.ConstructGLSLFunction(equation);
 		var glslFuncString = output[0];
 		var operator = output[1];
 

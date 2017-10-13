@@ -69,6 +69,54 @@ var Slicing = (function (scope) {
 		return mesh;
 	}
 
+	Slicing.prototype.CartesianSlice3D = function(glslFuncString,uniforms,color){
+		/* 
+			Takes in a glsl function and an operator (>,< or =) and renders that 
+		*/
+
+  		vertexShader = `
+			varying vec4 vertexPosition;
+			void main() {
+				vertexPosition = modelMatrix * vec4(position,1.0);
+				gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); 
+			}
+  		`;
+
+        var fragmentShader =`
+        varying vec4 vertexPosition;
+        uniform float axisValue;
+      
+        float eq(float x,float y,float axisValue){
+        	${glslFuncString}
+        }
+
+
+        void main(){
+        	vec4 color = vec4(${color.r/255},${color.g/255},${color.b/255},1.0);
+        	vec2 p = vec2(vertexPosition.x,vertexPosition.y);
+
+        	float val = eq(p.x,p.y,axisValue);
+        	if(val > 0.0) discard;
+     
+        	gl_FragColor = color;
+ 			
+        	
+        }
+        `;
+
+        var geometry = new THREE.PlaneBufferGeometry(20, 20);
+        var material = new THREE.ShaderMaterial({
+            fragmentShader: fragmentShader,
+            vertexShader: vertexShader, 
+            uniforms: uniforms
+        });
+       
+
+        var mesh = new THREE.Mesh(geometry, material);
+
+        return mesh;
+	}
+
 	Slicing.prototype.CalculateIntersectionPoints = function(p1,p2,p3,axis,axis_value) {
 		/*
 		Given a triangle (as 3 points) and a line (an axis), return the two points of intersection 

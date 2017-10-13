@@ -219,11 +219,15 @@ var Mode3D = (function (scope) {
 
 	Mode3D.prototype.callbacks = {
 		'axis': function(self,val) {
+			self.cleanupLeftMesh();
+			self.initCartesian();
+
 			self.intersectionPlane.flip(val);
 
 			self.CalculateIntersection();
 		},
 		'axis_value': function(self,val){
+			self.uniforms.axisValue.value = val;
 			self.intersectionPlane.updatePosition(val);
 
 			self.CalculateIntersection();
@@ -303,7 +307,37 @@ var Mode3D = (function (scope) {
 			this.leftView.add(this.leftMesh);
 		}
 
-		// Now to slice it, 
+		// Now to slice it, we just render a 2D cartesian and plug in the value for the remaining variable 
+		var newEquation = equation;
+		var axis = this.gui.params.axis.toLowerCase();
+		var axisValue = this.gui.params.axis_value;
+		var re = new RegExp(axis,'g');
+		newEquation = newEquation.replace(re,"(axisValue)");
+
+		if(axis == "z"){
+			// Nothing needs to be subsituted 
+		}
+		if(axis == "x"){
+			// That means we have "y" and "z" remaining
+			// let's replace "z" with "x"
+			newEquation = newEquation.replace(/z/g,"x");
+
+		}
+		if(axis == "y"){
+			// We have "x" and "z" left 
+			newEquation = newEquation.replace(/z/g,"y");
+		}
+
+		var output = this.util.ConstructGLSLFunction(newEquation);
+		var glslFuncString = output[0];
+
+		this.uniforms = {
+			axisValue: { type: "f", value: axisValue }
+		};
+		this.rightMesh = this.slicer.CartesianSlice3D(glslFuncString,this.uniforms,this.util.HexToRgb(this.gui.colors.slices));
+		this.rightMesh.position.z = 0.1;
+		this.rightView.add(this.rightMesh);
+
 	}
 
 	Mode3D.prototype.tesselateParametric = function(a_range,b_range,c_value){
@@ -411,6 +445,10 @@ var Mode3D = (function (scope) {
 		if(this.leftMesh){
 			this.leftView.remove(this.leftMesh);
 			this.leftMesh = null;
+		}
+		if(this.rightMesh){
+			this.rightView.remove(this.rightMesh);
+			this.rightMesh = null;
 		}
 	}
 

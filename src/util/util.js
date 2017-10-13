@@ -5,6 +5,33 @@ var Util = (function (scope) {
 	function Util(){
 
 	}
+	Util.prototype.ConstructGLSLFunction = function(equationString){
+		/*
+			Takes an equation as a string (for ex: "x^2 + y^2 = 10")
+			and return GLSL syntax as a string, for example:
+			"return pow(x,2.0) + pow(y,2.0) - 10.0;"
+		 */
+		 var operator = "=";
+		 var sides = equationString.split("=");
+		 if(sides.length == 1) {
+		 	sides = equationString.split(">");
+		 	operator = ">";
+		 }
+		 if(sides.length == 1) {
+		 	sides = equationString.split("<");
+		 	operator = "<";
+		 }
+
+		 var LHS = sides[0];
+		 var RHS = sides[1];
+
+		 var LHSglsl = GLSLParser.parse(LHS).toString(true);
+		 var RHSglsl = GLSLParser.parse(RHS).toString(true);
+
+		 var fullGLSL = "return " + LHSglsl + " - (" + RHSglsl + ");";
+		 return [fullGLSL,operator];
+	}
+	
 	Util.prototype.HexToRgb = function(hex) {
 		// Source: https://stackoverflow.com/a/5624139/1278023
 	    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
