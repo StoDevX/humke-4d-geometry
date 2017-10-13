@@ -68,6 +68,9 @@ var Grid = (function (scope) {
 
     var mesh = new THREE.Mesh(new THREE.PlaneGeometry(W,H),material);
     mesh.position.set(x,y,z);
+    mesh.ctx = ctx;
+    mesh.canvas = canvas;
+
     return mesh;
 
     

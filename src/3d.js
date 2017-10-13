@@ -17,6 +17,7 @@ var Mode3D = (function (scope) {
 		this.rightControls = null;
 
 		this.leftMesh = null;
+		this.rightMesh = null;
 
 		this.labels = [];
 	}
@@ -81,8 +82,10 @@ var Mode3D = (function (scope) {
 		this.rightView.add(axis);
 
 		var rightXLabel = GridHelper.CreateLabel("X",12,0,0);
+		this.rightXLabel = rightXLabel;
 		this.rightView.add(rightXLabel);
-		var rightYLabel = GridHelper.CreateLabel("Y",0,12,0);
+		var rightYLabel = GridHelper.CreateLabel("Z",0,12,0);
+		this.rightYLabel = rightYLabel;
 		this.rightView.add(rightYLabel);
 		// Add lights to the scene
 		var lightSky = new THREE.HemisphereLight( 0xffffbb, 0x080820, .7 );
@@ -142,19 +145,47 @@ var Mode3D = (function (scope) {
 			this.position.z = 0;
 
 			if(newAxis == "Y"){
-				
+				let label = this.rightXLabel;
+				label.ctx.clearRect(0,0,label.canvas.width,label.canvas.height);
+				label.ctx.fillText( "X", label.canvas.width/2, label.canvas.height/2);
+
+				label = this.rightYLabel;
+				label.ctx.clearRect(0,0,label.canvas.width,label.canvas.height);
+				label.ctx.fillText( "Z", label.canvas.width/2, label.canvas.height/2);
 			}
 			if(newAxis == "X"){
 				this.rotation.z = Math.PI/2;
+
+				let label = this.rightXLabel;
+				label.ctx.clearRect(0,0,label.canvas.width,label.canvas.height);
+				label.ctx.fillText( "Y", label.canvas.width/2, label.canvas.height/2);
+
+				label = this.rightYLabel;
+				label.ctx.clearRect(0,0,label.canvas.width,label.canvas.height);
+				label.ctx.fillText( "Z", label.canvas.width/2, label.canvas.height/2);
 			}
 			if(newAxis == "Z"){
 				this.rotation.x = Math.PI/2;
+
+				let label = this.rightXLabel;
+				label.ctx.clearRect(0,0,label.canvas.width,label.canvas.height);
+				label.ctx.fillText( "X", label.canvas.width/2, label.canvas.height/2);
+
+				label = this.rightYLabel;
+				label.ctx.clearRect(0,0,label.canvas.width,label.canvas.height);
+				label.ctx.fillText( "Y", label.canvas.width/2, label.canvas.height/2);
 			}
 
+			this.rightXLabel.material.map.needsUpdate = true;
+			this.rightYLabel.material.map.needsUpdate = true;
 			this.axis = newAxis;
+
+
 		}
 
 		mesh.axis = "Y";
+		mesh.rightYLabel = this.rightYLabel;
+		mesh.rightXLabel = this.rightXLabel;
 
 		return mesh;
 	}
@@ -271,6 +302,8 @@ var Mode3D = (function (scope) {
 			this.leftMesh = mesh;
 			this.leftView.add(this.leftMesh);
 		}
+
+		// Now to slice it, 
 	}
 
 	Mode3D.prototype.tesselateParametric = function(a_range,b_range,c_value){
@@ -395,6 +428,8 @@ var Mode3D = (function (scope) {
 		this.leftMesh = null;
 		this.intersectionPlane = null;
 		this.labels = null;
+		this.rightXLabel = null;
+		this.rightYLabel = null;
 
 		this.util.CleanUpScene(this.rightView);
 
