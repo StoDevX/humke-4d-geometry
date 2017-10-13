@@ -469,7 +469,7 @@ var Mode3D = (function (scope) {
 		this.leftControls = null;
 		this.leftMesh = null;
 		this.intersectionPlane = null;
-		this.labels = null;
+		this.labels = [];
 		this.rightXLabel = null;
 		this.rightYLabel = null;
 
