@@ -219,8 +219,12 @@ var Mode3D = (function (scope) {
 
 	Mode3D.prototype.callbacks = {
 		'axis': function(self,val) {
-			self.cleanupLeftMesh();
-			self.initCartesian();
+
+			if(self.current_mode == "cartesian"){
+				self.cleanupLeftMesh();
+				self.initCartesian();
+			}
+			
 
 			self.intersectionPlane.flip(val);
 
