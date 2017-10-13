@@ -247,7 +247,6 @@ var Mode2D = (function (scope) {
 
 	Mode2D.prototype.initCartesian = function(view){
 		var params = this.gui.params
-
 		var equation = this.gui.params.equation;
 		
 		var output = this.util.ConstructGLSLFunction(equation);
@@ -258,7 +257,6 @@ var Mode2D = (function (scope) {
 		var projectingColor = this.util.HexToRgb(this.gui.colors.projections);
 		var slicingColor = this.util.HexToRgb(this.gui.colors.slices);
 
-		//this.leftMesh = this.projector.CartesianMesh2D(equationFunc);
 		var defaultUniforms = {
 			axis: { type: "f", value: 0 } ,
 			axisValue: { type: "v2", value: new THREE.Vector2( 0, 0 ) },
@@ -281,7 +279,6 @@ var Mode2D = (function (scope) {
 		this.rightMesh = this.projector.CartesianShaderMesh2D(glslFuncString,operator,this.uniforms,slicingColor);
 		this.rightMesh.position.z = 0.1;
 		this.rightView.add(this.rightMesh);
-
 	}
 
 	// >>>>>>>>>>> Parametric mode functions
