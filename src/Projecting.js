@@ -92,23 +92,23 @@ var Projecting = (function (scope) {
 		return mesh;
 	}
 	Projecting.prototype.CartesianShaderMesh2D = function(glslFuncString,operator,uniforms,color){
-		/* 
-			Takes in a glsl function and an operator (>,< or =) and renders that 
+		/*
+			Takes in a glsl function and an operator (>,< or =) and renders that
 		*/
 
   		vertexShader = `
 			varying vec4 vertexPosition;
 			void main() {
 				vertexPosition = modelMatrix * vec4(position,1.0);
-				gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); 
+				gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
 			}
   		`;
 
         var fragmentShader =`
         varying vec4 vertexPosition;
         uniform vec2 axisValue;
-        uniform float axis; // 0 is x, 1 is y  
-        uniform float slice; 
+        uniform float axis; // 0 is x, 1 is y
+        uniform float slice;
         uniform float renderWholeShape;
         float eq(float x,float y){
         	${glslFuncString}
@@ -132,7 +132,7 @@ var Projecting = (function (scope) {
         	}
 
         	float val = eq(p.x,p.y);
-        	
+
         	float d = 0.01;
         	float delta = (abs(distFromEq(p.x,p.y,0.0,d))
         				 +abs(distFromEq(p.x,p.y,d,0.0))
@@ -140,16 +140,16 @@ var Projecting = (function (scope) {
         				 +abs(distFromEq(p.x,p.y,0.0,-1.0*d))) /4.0 ;
 
         	float thickness = delta * 13.0;
-        	${ 
-        		(operator == "<") ? 
-        			'if(val > 0.0) discard;' 
+        	${
+        		(operator == "<") ?
+        			'if(val > 0.0) discard;'
         		: (operator == ">") ?
         			'if(val < 0.0) discard;'
         		: 	'if(val > thickness || val < -thickness) discard;'
         	}
         	gl_FragColor = color;
  			if(slice == 0.0) return;
- 			// Slicing code 
+ 			// Slicing code
  			gl_FragColor.a = 1.0;
  			float sliceThickness = 0.1;
         	if(axis == 0.0){
@@ -172,14 +172,14 @@ var Projecting = (function (scope) {
         			}
         		}
         	}
-        	
+
         }
         `;
 
         var geometry = new THREE.PlaneBufferGeometry(20, 20);
         var material = new THREE.ShaderMaterial({
             fragmentShader: fragmentShader,
-            vertexShader: vertexShader, 
+            vertexShader: vertexShader,
             uniforms: uniforms
         });
         if(uniforms.slice.value) material.transparent = true;
@@ -188,7 +188,46 @@ var Projecting = (function (scope) {
         return mesh;
 	}
 
+	Projecting.prototype.CreateParametricFunction = function(xFunc,yFunc,zFunc,aRange,bRange){
+
+		var xFunction = Parser.parse(xFunc).toJSFunction(['a','b']);
+		var yFunction = Parser.parse(yFunc).toJSFunction(['a','b']);
+		var zFunction = Parser.parse(zFunc).toJSFunction(['a','b']);
+
+		var re = new RegExp(/\s*<\s*[abc]\s*<\s*/);
+
+		var aRangeParts = aRange.split(re);
+		var aMin = Parser.evaluate(aRangeParts[0]);
+		var aMax = Parser.evaluate(aRangeParts[1]);
+		var aRange = aMax-aMin;
+
+		bRangeParts = bRange.split(re);
+		var bMin = Parser.evaluate(bRangeParts[0]);
+		var bMax = Parser.evaluate(bRangeParts[1]);
+		var bRange = bMax-bMin;
+
+		function paramFunc ( a, b, optionalTarget ) {
+
+			var result = optionalTarget || new THREE.Vector3();
+
+			var newA = aRange * a + aMin;
+			var newB = bRange * b + bMin;
+
+			var x, y, z;
+
+			x = xFunction(newA,newB);
+			y = yFunction(newA,newB);
+			z = zFunction(newA,newB);
+
+			return result.set( x, y, z );
+		}
+
+		return paramFunc;
+
+	}
+
 	Projecting.prototype.ParametricMesh3D = function(paramFunc){
+
 		var geometry = new THREE.ParametricBufferGeometry( paramFunc, 25, 25 );
 		var material = new THREE.MeshPhongMaterial( {color: 0x00ff00, flatShading:false} );
 		var mesh = new THREE.Mesh( geometry, material );

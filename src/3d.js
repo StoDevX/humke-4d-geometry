@@ -344,97 +344,18 @@ var Mode3D = (function (scope) {
 
 	}
 
-	Mode3D.prototype.tesselateParametric = function(a_range,b_range,c_value){
-		var params = this.gui.params
-		// Returns a triangle array
-		var slices = 25;
-		var stacks = 25;
-		var vertices = [];
-
-		for(var i=0;i<=stacks;i++){
-			var v = i / stacks;
-			for(var j=0;j<=slices;j++){
-				var u = j / slices;
-				var a = u * (a_range[1] - a_range[0]) + a_range[0];
-				var b = v * (b_range[1] - b_range[0]) + b_range[0];
-				var x = Parser.evaluate(params.param_eq_x,{a:a,b:b,c:c_value});
-				var y = Parser.evaluate(params.param_eq_y,{a:a,b:b,c:c_value});
-				var z = Parser.evaluate(params.param_eq_z,{a:a,b:b,c:c_value});
-				vertices.push([x,y,z]);
-			}
-		}
-
-		// Create the triangles
-		var sliceCount = slices+1;
-
-		var indices  = [];
-		for ( i = 0; i < stacks; i ++ ) {
-			for ( j = 0; j < slices; j ++ ) {
-				var a = i * sliceCount + j;
-				var b = i * sliceCount + j + 1;
-				var c = ( i + 1 ) * sliceCount + j + 1;
-				var d = ( i + 1 ) * sliceCount + j;
-
-				// faces one and two
-
-				indices.push( [a, b, d] );
-				indices.push( [b, c, d] );
-
-			}
-		}
-
-
-
-		for(var i=0;i<indices.length;i++){
-			var v1 = vertices[indices[i][0]];
-			var v2 = vertices[indices[i][1]];
-			var v3 = vertices[indices[i][2]];
-			this.triangleArray.push(v1);
-			this.triangleArray.push(v2);
-			this.triangleArray.push(v3);
-		}
-
-		return [vertices,indices];
-	}
-
 	Mode3D.prototype.initParametric = function(){
 
-		var xFunction = Parser.parse(this.gui.params.param_eq_x).toJSFunction(['a','b']);
-		var yFunction = Parser.parse(this.gui.params.param_eq_y).toJSFunction(['a','b']);
-		var zFunction = Parser.parse(this.gui.params.param_eq_z).toJSFunction(['a','b']);
+		var xFunction = this.gui.params.param_eq_x;
+		var yFunction = this.gui.params.param_eq_y;
+		var zFunction = this.gui.params.param_eq_z;
 
-		var re = new RegExp(/\s*<\s*[abc]\s*<\s*/);
+		var aParamRange = this.gui.params.param_a;
+		var bParamRange = this.gui.params.param_b;
 
-		var aRangeString = this.gui.params.param_a;
-		aRangeString = aRangeString.split(re);
-		var aMin = Parser.evaluate(aRangeString[0]);
-		var aMax = Parser.evaluate(aRangeString[1]);
-		var aRange = aMax-aMin;
+		var parametricFunction = this.projector.CreateParametricFunction(xFunction,yFunction,zFunction,aParamRange,bParamRange);
 
-		var bRangeString = this.gui.params.param_b;
-		bRangeString = bRangeString.split(re);
-		var bMin = Parser.evaluate(bRangeString[0]);
-		var bMax = Parser.evaluate(bRangeString[1]);
-		var bRange = bMax-bMin;
-
-		function paramFunc ( a0, b0, optionalTarget ) {
-
-			var result = optionalTarget || new THREE.Vector3();
-
-			// volumetric mobius strip
-			var a = aRange * a0 + aMin;
-			var b = bRange * b0 + bMin;
-
-			var x, y, z;
-
-			x = xFunction(a,b);
-			y = yFunction(a,b);
-			z = zFunction(a,b);
-
-			return result.set( x, y, z );
-		}
-
-		this.leftMesh = this.projector.ParametricMesh3D(paramFunc);
+		this.leftMesh = this.projector.ParametricMesh3D(parametricFunction);
 		this.leftView.add( this.leftMesh );
 
 	}
