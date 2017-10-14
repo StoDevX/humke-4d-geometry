@@ -63,11 +63,11 @@ var GUI = (function (scope) {
 			'equation':'x^2+y^2+z^2 = 10', // Sphere
 			'resolution':20,
 			'points':'(5,0,5),(5,0,-5),(-5,0,-5),(-5,0,5),(5,5,5),(5,5,-5),(-5,5,-5),(-5,5,5)', // Cube
-			'param_eq_x':'(4 + 0.5 * (3 + 5 * cos(b)) ) * sin(a)',
-			'param_eq_y':'(4 + 0.5 * (3 + 5 * cos(b)) ) * cos(a)',
-			'param_eq_z':'4 + c * sin(b)',
+			'param_eq_x':'cos(a)*(7+cos(b))',
+			'param_eq_y':'sin(a)*(7+cos(b))',
+			'param_eq_z':'sin(b)',
 			'param_a':'0 < a < 2 * PI',
-			'param_b':'0 < b < PI',
+			'param_b':'0 < b < 2 * PI',
 			'param_c':'0 < c < 5'
 			//'param_eq_x':'b * cos(a) - c * sin(a)', // Spiral tube
 			//'param_eq_y':'b * sin(a) + c * cos(a)',

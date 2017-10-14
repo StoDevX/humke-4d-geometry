@@ -224,7 +224,7 @@ var Mode3D = (function (scope) {
 				self.cleanupLeftMesh();
 				self.initCartesian();
 			}
-			
+
 
 			self.intersectionPlane.flip(val);
 
@@ -311,7 +311,7 @@ var Mode3D = (function (scope) {
 			this.leftView.add(this.leftMesh);
 		}
 
-		// Now to slice it, we just render a 2D cartesian and plug in the value for the remaining variable 
+		// Now to slice it, we just render a 2D cartesian and plug in the value for the remaining variable
 		var newEquation = equation;
 		var axis = this.gui.params.axis.toLowerCase();
 		var axisValue = this.gui.params.axis_value;
@@ -319,7 +319,7 @@ var Mode3D = (function (scope) {
 		newEquation = newEquation.replace(re,"(axisValue)");
 
 		if(axis == "z"){
-			// Nothing needs to be subsituted 
+			// Nothing needs to be subsituted
 		}
 		if(axis == "x"){
 			// That means we have "y" and "z" remaining
@@ -328,7 +328,7 @@ var Mode3D = (function (scope) {
 
 		}
 		if(axis == "y"){
-			// We have "x" and "z" left 
+			// We have "x" and "z" left
 			newEquation = newEquation.replace(/z/g,"y");
 		}
 
@@ -398,29 +398,41 @@ var Mode3D = (function (scope) {
 	}
 
 	Mode3D.prototype.initParametric = function(){
-		function paramFunc ( u, t, optionalTarget ) {
 
-		var result = optionalTarget || new THREE.Vector3();
+		var xFunction = Parser.parse(this.gui.params.param_eq_x).toJSFunction(['a','b']);
+		var yFunction = Parser.parse(this.gui.params.param_eq_y).toJSFunction(['a','b']);
+		var zFunction = Parser.parse(this.gui.params.param_eq_z).toJSFunction(['a','b']);
 
-		// volumetric mobius strip
+		var re = new RegExp(/\s*<\s*[abc]\s*<\s*/);
 
-		u *= Math.PI;
-		t *= 2 * Math.PI;
+		var aRangeString = this.gui.params.param_a;
+		aRangeString = aRangeString.split(re);
+		var aMin = Parser.evaluate(aRangeString[0]);
+		var aMax = Parser.evaluate(aRangeString[1]);
+		var aRange = aMax-aMin;
 
-		u = u * 2;
-		var phi = u / 2;
-		var major = 2.25, a = 0.125, b = 0.65;
+		var bRangeString = this.gui.params.param_b;
+		bRangeString = bRangeString.split(re);
+		var bMin = Parser.evaluate(bRangeString[0]);
+		var bMax = Parser.evaluate(bRangeString[1]);
+		var bRange = bMax-bMin;
 
-		var x, y, z;
+		function paramFunc ( a0, b0, optionalTarget ) {
 
-		x = a * Math.cos( t ) * Math.cos( phi ) - b * Math.sin( t ) * Math.sin( phi );
-		z = a * Math.cos( t ) * Math.sin( phi ) + b * Math.sin( t ) * Math.cos( phi );
-		y = ( major + x ) * Math.sin( u );
-		x = ( major + x ) * Math.cos( u );
+			var result = optionalTarget || new THREE.Vector3();
 
-		return result.set( x, y, z );
+			// volumetric mobius strip
+			var a = aRange * a0 + aMin;
+			var b = bRange * b0 + bMin;
 
-}
+			var x, y, z;
+
+			x = xFunction(a,b);
+			y = yFunction(a,b);
+			z = zFunction(a,b);
+
+			return result.set( x, y, z );
+		}
 
 		this.leftMesh = this.projector.ParametricMesh3D(paramFunc);
 		this.leftView.add( this.leftMesh );
