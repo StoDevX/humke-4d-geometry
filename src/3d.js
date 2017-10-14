@@ -355,7 +355,7 @@ var Mode3D = (function (scope) {
 
 		var parametricFunction = this.projector.CreateParametricFunction(xFunction,yFunction,zFunction,aParamRange,bParamRange);
 
-		this.leftMesh = this.projector.ParametricMesh3D(parametricFunction);
+		this.leftMesh = this.projector.ParametricMesh3D(parametricFunction,this.gui.colors.projections);
 		this.leftView.add( this.leftMesh );
 
 	}

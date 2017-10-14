@@ -226,10 +226,10 @@ var Projecting = (function (scope) {
 
 	}
 
-	Projecting.prototype.ParametricMesh3D = function(paramFunc){
+	Projecting.prototype.ParametricMesh3D = function(paramFunc,color){
 
 		var geometry = new THREE.ParametricBufferGeometry( paramFunc, 25, 25 );
-		var material = new THREE.MeshPhongMaterial( {color: 0x00ff00, flatShading:true, side:THREE.DoubleSide } );
+		var material = new THREE.MeshPhongMaterial( {color: color, flatShading:true, side:THREE.DoubleSide } );
 		var mesh = new THREE.Mesh( geometry, material );
 		return mesh;
 	}
