@@ -190,8 +190,23 @@ var Mode3D = (function (scope) {
 		return mesh;
 	}
 
-	Mode3D.prototype.CalculateIntersection = function(){
-		// TODO: Compute and render intersection
+	Mode3D.prototype.ComputeSlicesCPU = function(){
+		
+		
+		// re-Compute intersection on the CPU
+		var axis = this.gui.params.axis;
+		var axisValue = this.gui.params.axis_value;
+		var color = this.gui.colors.slices;
+
+		if(this.current_mode == "convex-hull"){
+			if(this.rightMesh){
+				this.rightView.remove(this.rightMesh);	
+			}
+			
+			this.rightMesh = this.slicer.SliceConvex3D(this.leftMesh,axis,axisValue,color);
+			this.rightView.add( this.rightMesh );
+			this.rightMesh.position.z = 0.1;
+		}
 	}
 
 	// define a function to be called when each param is updated
@@ -228,13 +243,13 @@ var Mode3D = (function (scope) {
 
 			self.intersectionPlane.flip(val);
 
-			self.CalculateIntersection();
+			self.ComputeSlicesCPU();
 		},
 		'axis_value': function(self,val){
 			self.uniforms.axisValue.value = val;
 			self.intersectionPlane.updatePosition(val);
 
-			self.CalculateIntersection();
+			self.ComputeSlicesCPU();
 		},
 		'render_shape': function(self,val){
 			// Toggle opacity
@@ -252,7 +267,7 @@ var Mode3D = (function (scope) {
 		},
 		'fill': function(self,val){
 
-			self.CalculateIntersection();
+			self.ComputeSlicesCPU();
 		},
 		'source': function(self,val){
 			self.setMode();
@@ -262,7 +277,7 @@ var Mode3D = (function (scope) {
 			updateRenderShape(self,val,1);
 			updateRenderSlices(self,val,0);
 
-			self.CalculateIntersection();
+			self.ComputeSlicesCPU();
 
 		},
 		'resolution': function(self,val){
@@ -374,6 +389,8 @@ var Mode3D = (function (scope) {
 
 		this.leftMesh = this.projector.ConvexHullMesh3D(points,projectingColor);
 		this.leftView.add( this.leftMesh );
+
+		this.ComputeSlicesCPU();
 	}
 
 	//  >>>>>>>>>>> Destroy the shared leftMesh mesh.

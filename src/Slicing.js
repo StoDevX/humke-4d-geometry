@@ -117,6 +117,61 @@ var Slicing = (function (scope) {
         return mesh;
 	}
 
+	Slicing.prototype.SliceConvex3D = function(mesh,axis,axisValue,color){
+		// Go through all the faces of the mesh
+		var triangleArray = [];
+		var faces = mesh.geometry.faces;
+		var verts = mesh.geometry.vertices; 
+
+		for(var i=0;i<faces.length;i++){
+			var f = faces[i];
+			var v1 = verts[f.a];
+			var v2 = verts[f.b];
+			var v3 = verts[f.c];
+			
+			triangleArray.push([v1,v2,v3]);
+		}
+
+		var container = new THREE.Object3D();
+		var vectorArray = [];
+
+		for(var i=0;i<triangleArray.length;i++){
+			var p1 = triangleArray[i][0];
+			var p2 = triangleArray[i][1];
+			var p3 = triangleArray[i][2];
+
+			var pToArr = function(p){
+				return [p.x,p.y,p.z];
+			}
+
+			var points = this.CalculateIntersectionPoints(pToArr(p1),pToArr(p2),pToArr(p3),axis,axisValue);
+			if(points.length == 0) continue; // This happens if there's no intersection 
+			// Intersect the points and get two points
+			var Z = Math.random() * 0.01; 
+			var v1 = new THREE.Vector3(points[0],points[1],Z);
+			var v2 = new THREE.Vector3(points[2],points[3],Z);
+			// Draw a line between those two points 
+			// var geometry = new THREE.Geometry();
+			// geometry.vertices.push( v1 );
+			// geometry.vertices.push( v2 );
+			// var line = new MeshLine();
+			// line.setGeometry( geometry );
+			// var material = new MeshLineMaterial({color:new THREE.Color(color),lineWidth:0.1});
+			// var mesh = new THREE.Mesh( line.geometry, material );
+			// container.add(mesh);
+			vectorArray.push(v1);
+			vectorArray.push(v2);
+		}
+
+		var geometry = new THREE.ConvexGeometry( vectorArray );
+		var material = new THREE.MeshBasicMaterial( {color: color} );
+		var mesh = new THREE.Mesh( geometry, material );
+		return mesh;
+
+		// Return this whole mesh 
+		// return container;
+	}
+
 	Slicing.prototype.CalculateIntersectionPoints = function(p1,p2,p3,axis,axis_value) {
 		/*
 		Given a triangle (as 3 points) and a line (an axis), return the two points of intersection 
@@ -156,6 +211,9 @@ var Slicing = (function (scope) {
 
 		if (p3[axis_conv[axis]] > axis_value) above.push(p3);
 		else below.push(p3);
+
+		// If completely above or completely below, then no intersection 
+		if(below.length == 3 || above.length == 3) return [];
 
 		if (below.length > 1) {
 
