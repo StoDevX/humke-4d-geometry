@@ -117,9 +117,60 @@ var Slicing = (function (scope) {
         return mesh;
 	}
 
-	Slicing.prototype.SliceConvex3D = function(mesh,axis,axisValue,color){
+	Slicing.prototype.CreateSliceShader3D = function(uniforms,color){
+		vertexShader = `
+			varying vec4 vertexPosition;
+			void main() {
+				vertexPosition = modelMatrix * vec4(position,1.0);
+				gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); 
+			}
+  		`;
+
+  		var fragmentShader =`
+        varying vec4 vertexPosition;
+        uniform float axisValue;
+        
+        void main(){
+        	vec4 color = vec4(${color.r/255},${color.g/255},${color.b/255},1.0);
+        	vec3 p = vertexPosition.xyz;
+        	float threshold = 0.1;
+        	// Offset shape 
+        	p.z -= axisValue; 
+
+        	if(p.z > threshold || p.z < -threshold) discard;
+
+        	gl_FragColor = color;
+        }
+        `;
+
+        var material = new THREE.ShaderMaterial({
+            fragmentShader: fragmentShader,
+            vertexShader: vertexShader, 
+            uniforms: uniforms,
+            side:THREE.DoubleSide
+        });
+
+        return material;
+	}
+
+	Slicing.prototype.SliceConvex3D = function(mesh,axis,axisValue,color,outlineOnly){
 		// Go through all the faces of the mesh
 		var triangleArray = [];
+		var container = new THREE.Object3D();
+
+		if(mesh.geometry.faces == null){
+			// var vertArray = mesh.geometry.attributes.position.array;
+			// var indices = mesh.geometry.index.array;
+			// var maxNum = 0;
+			// console.log("vertArray.length: ",vertArray.length);
+			// console.log("indices.length: ",indices.length);
+			// for(var i=0;i<indices.length;i++){
+			// 	if(indices[i] > maxNum) maxNum = indices[i];
+			// }
+			// console.log("Max index: ",maxNum);
+			return container;
+		}
+
 		var faces = mesh.geometry.faces;
 		var verts = mesh.geometry.vertices; 
 
@@ -132,7 +183,7 @@ var Slicing = (function (scope) {
 			triangleArray.push([v1,v2,v3]);
 		}
 
-		var container = new THREE.Object3D();
+		
 		var vectorArray = [];
 
 		for(var i=0;i<triangleArray.length;i++){
@@ -151,25 +202,32 @@ var Slicing = (function (scope) {
 			var v1 = new THREE.Vector3(points[0],points[1],Z);
 			var v2 = new THREE.Vector3(points[2],points[3],Z);
 			// Draw a line between those two points 
-			// var geometry = new THREE.Geometry();
-			// geometry.vertices.push( v1 );
-			// geometry.vertices.push( v2 );
-			// var line = new MeshLine();
-			// line.setGeometry( geometry );
-			// var material = new MeshLineMaterial({color:new THREE.Color(color),lineWidth:0.1});
-			// var mesh = new THREE.Mesh( line.geometry, material );
-			// container.add(mesh);
-			vectorArray.push(v1);
-			vectorArray.push(v2);
+			if(outlineOnly){
+				var geometry = new THREE.Geometry();
+				geometry.vertices.push( v1 );
+				geometry.vertices.push( v2 );
+				var line = new MeshLine();
+				line.setGeometry( geometry );
+				var material = new MeshLineMaterial({color:new THREE.Color(color),lineWidth:0.1});
+				var mesh = new THREE.Mesh( line.geometry, material );
+				container.add(mesh);	
+			} else {
+				vectorArray.push(v1);
+				vectorArray.push(v2);	
+			}
+			
+			
 		}
 
-		var geometry = new THREE.ConvexGeometry( vectorArray );
-		var material = new THREE.MeshBasicMaterial( {color: color} );
-		var mesh = new THREE.Mesh( geometry, material );
-		return mesh;
-
-		// Return this whole mesh 
-		// return container;
+		if(outlineOnly){
+			return container;
+		} else {
+			var geometry = new THREE.ConvexGeometry( vectorArray );
+			var material = new THREE.MeshBasicMaterial( {color: color} );
+			var mesh = new THREE.Mesh( geometry, material );
+			return mesh;	
+		}
+		
 	}
 
 	Slicing.prototype.CalculateIntersectionPoints = function(p1,p2,p3,axis,axis_value) {

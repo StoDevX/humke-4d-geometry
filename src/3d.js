@@ -70,7 +70,7 @@ var Mode3D = (function (scope) {
 		this.rightRenderer.setSize( viewWidth, window.innerHeight );
 
 		this.rightControls = new THREE.OrbitControls( this.rightCamera, this.rightRenderer.domElement );
-		this.rightControls.enableRotate = false;
+		this.rightControls.enableRotate = true;
 		this.rightControls.enableKeys  = false;
 
 		grid = GridHelper.CreateGrid("XY");
@@ -94,6 +94,9 @@ var Mode3D = (function (scope) {
 		this.leftView.add( lightGround );
 		lightGround.position.y = -5;
 		lightGround.position.x = 2;
+
+		this.rightView.add(lightSky.clone());
+		this.rightView.add(lightGround.clone());
 
 		this.util = new Util();
 		this.projector = new Projecting();
@@ -202,7 +205,7 @@ var Mode3D = (function (scope) {
 			if(this.rightMesh){
 				this.rightView.remove(this.rightMesh);	
 			}
-			
+
 			this.rightMesh = this.slicer.SliceConvex3D(this.leftMesh,axis,axisValue,color);
 			this.rightView.add( this.rightMesh );
 			this.rightMesh.position.z = 0.1;
@@ -372,6 +375,19 @@ var Mode3D = (function (scope) {
 
 		this.leftMesh = this.projector.ParametricMesh3D(parametricFunction,this.gui.colors.projections);
 		this.leftView.add( this.leftMesh );
+
+		//this.ComputeSlicesCPU();
+
+		this.rightMesh = this.projector.ParametricMesh3D(parametricFunction,this.gui.colors.slices);
+		this.rightView.add( this.rightMesh );
+
+		var axisValue = this.gui.params.axis_value;
+		this.uniforms = {
+			axisValue: { type: "f", value: axisValue }
+		};
+		var ShaderMaterial = this.slicer.CreateSliceShader3D(this.uniforms,this.util.HexToRgb(this.gui.colors.slices));
+
+		this.rightMesh.material = ShaderMaterial;
 
 	}
 

@@ -218,7 +218,7 @@ var Projecting = (function (scope) {
 			x = xFunction(newA,newB);
 			y = yFunction(newA,newB);
 			z = zFunction(newA,newB);
-
+			
 			return result.set( x, y, z );
 		}
 
