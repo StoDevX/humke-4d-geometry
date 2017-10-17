@@ -303,10 +303,10 @@ var Mode2D = (function (scope) {
 		xFunction = GLSLParser.parse(xFunction).toString(true);
 		yFunction = GLSLParser.parse(yFunction).toString(true);
 		var paramFuncString = `
-			float aMin = ${a_range[0].toFixed(2).toString()};
-			float aMax = ${a_range[1].toFixed(2).toString()};
-			float bMin = ${a_range[0].toFixed(2).toString()};
-			float bMax = ${b_range[1].toFixed(2).toString()};
+			float aMin = ${a_range[0].toFixed(7).toString()};
+			float aMax = ${a_range[1].toFixed(7).toString()};
+			float bMin = ${a_range[0].toFixed(7).toString()};
+			float bMax = ${b_range[1].toFixed(7).toString()};
 
 			float eq_x(float a, float b) {
 				return ${xFunction};

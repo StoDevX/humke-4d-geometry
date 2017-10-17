@@ -206,22 +206,13 @@ var Projecting = (function (scope) {
                 vec2 p = vec2(vertexPosition.x,vertexPosition.y);
                 vec4 color = vec4(0.0, 1.0, 1.0, 1.0);
 
-                // float aMin = 0.0;
-                // float aMax = 2.0;
-                // float bMin = 0.0;
-                // float bMax = 6.2831852;
+                float xMin = eq_x(aMin, bMin);
+                float yMin = eq_y(aMin, bMin);
+                float xMax = eq_x(aMax, bMax);
+                float yMax = eq_y(aMax, bMax);
 
-                float a = aMin;
-                float b = bMin;
-                float step = 0.01;
-                while (a < aMax) {
-                    while (b < bMax) {
-                        if(eq_x(a,b) == p.x && eq_y(a,b) == p.y){
-                            color.r = 0.0;
-                        }
-                        a += step;
-                        b += step;
-                    }
+                if (p.x <= xMax && p.x >= xMin && p.y <= yMax && p.y >= xMin) {
+                    color.r = 0.0;
                 }
 
                 gl_FragColor = color;
