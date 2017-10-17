@@ -194,6 +194,7 @@ var Projecting = (function (scope) {
             void main() {
                 vertexPosition = modelMatrix * vec4(position,1.0);
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+                gl_Position.y += sin(gl_Position.x);
             }
         `;
 
@@ -204,29 +205,44 @@ var Projecting = (function (scope) {
 
             void main() {
                 vec2 p = vec2(vertexPosition.x,vertexPosition.y);
-                vec4 color = vec4(0.0, 1.0, 1.0, 1.0);
-
-                float xMin = eq_x(aMin, bMin);
-                float yMin = eq_y(aMin, bMin);
-                float xMax = eq_x(aMax, bMax);
-                float yMax = eq_y(aMax, bMax);
-
-                if (p.x <= xMax && p.x >= xMin && p.y <= yMax && p.y >= xMin) {
-                    color.r = 0.0;
-                }
+                vec4 color = vec4(1.0, 1.0, 1.0, 1.0);
+                gl_FragColor = vec4(0.0);
+                return;
 
                 gl_FragColor = color;
             }
         `;
 
-        var geometry = new THREE.PlaneBufferGeometry(20, 20);
+
+        // var modifier = new THREE.BufferSubdivisionModifier(1);
+        var geometry = new THREE.PlaneBufferGeometry(10, 10,100,100);
+        // var geometry = new THREE.PlaneGeometry(20, 20);
+        // console.log("geometry:", geometry)
+        // geometry = modifier.modify(geometry);
+
         var material = new THREE.ShaderMaterial({
             vertexShader: vertexShader,
             fragmentShader: fragmentShader,
             uniforms: uniforms
         });
+
+        color = 0xff0000;
+
+        //material = new THREE.MeshBasicMaterial( {color: color, flatShading:true} );
         
         var mesh = new THREE.Mesh(geometry, material);
+
+        // mesh.add( new THREE.LineSegments(
+
+        //         new THREE.Geometry(),
+
+        //         new THREE.LineBasicMaterial( {
+        //             color: 0xffffff,
+        //             transparent: false,
+        //             opacity: 1.0
+        //         } )
+
+        //     ) );
 
         return mesh;
     }

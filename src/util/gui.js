@@ -52,10 +52,10 @@ var GUI = (function (scope) {
 		this.defaults['2D'] = {
 			'equation':'x^2+y^2 = 10', // Circle
 			'points':'(5,5),(5,-5),(-5,-5),(-5,5)', // Square
-			'param_eq_x':'sin(a) * b * 5', // butterfly wings
-			'param_eq_y':'sin(a * 2) * b * 5',
-			'param_a':'0 < a < 2 * PI',
-			'param_b':'0 < b < 1',
+			'param_eq_x':'a * cos(b)', // butterfly wings
+			'param_eq_y':'a * sin(b)',
+			'param_a':'0 < a < 4',
+			'param_b':'0 < b < 2 * PI',
 			'axis':'Y'
 		}
 		// 3D defaults
