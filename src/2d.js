@@ -283,36 +283,47 @@ var Mode2D = (function (scope) {
 
 	// >>>>>>>>>>> Parametric mode functions
 	Mode2D.prototype.initParametric = function(view){
+		// get parameters a and b
 		var a_range = [0,1];
 		var b_range = [0,1];
-		var params = this.gui.params
-		// get range from string
-		var splitArrayA = params.param_a.split("<"); // should return 3 pieces. We want the first and last
+
+		var params = this.gui.params;
+		var splitArrayA = params.param_a.split("<");
 		a_range[0] = Parser.evaluate(splitArrayA[0]);
 		a_range[1] = Parser.evaluate(splitArrayA[2]);
 		var splitArrayB = params.param_b.split("<");
 		b_range[0] = Parser.evaluate(splitArrayB[0]);
 		b_range[1] = Parser.evaluate(splitArrayB[2]);
 
-		var draw_filled = true;
+		var aRange = a_range[1] - a_range[0];
+		var bRange = b_range[1] - b_range[0];
 
-		// If we don't find BOTH a and b as variables, then draw it as a line
-		var tokens = Parser.parse(params.param_eq_x).tokens;
-		var found_a = false;
-		var found_b = false;
-		for(var i=0;i<tokens.length;i++){
-			if(tokens[i].toString() == "a") found_a = true;
-			if(tokens[i].toString() == "b") found_b = true;
-		}
-		if(!found_a || !found_b) draw_filled = false;
-		tokens = Parser.parse(params.param_eq_y).tokens;
-		for(var i=0;i<tokens.length;i++){
-			if(tokens[i].toString() == "a") found_a = true;
-			if(tokens[i].toString() == "b") found_b = true;
-		}
-		if(!found_a || !found_b) draw_filled = false;
+		// get x function and y function
+		var xFunction = this.gui.params.param_eq_x;
+		var yFunction = this.gui.params.param_eq_y;
+		xFunction = Parser.parse(xFunction).toJSFunction(['a','b']);
+		yFunction = Parser.parse(yFunction).toJSFunction(['a','b']);
 
-		// TODO: Render parametric equation
+		// create parametric function
+		function paramF(a, b) {
+			var aCorrected = a * aRange + a_range[0];
+			var bCorrected = b * bRange + b_range[0];
+
+			var x = xFunction(aCorrected, bCorrected);
+			var y = yFunction(aCorrected, bCorrected);
+
+			var f = new THREE.Vector2(x, y);
+			return f;
+		}
+		var parametricFunction2D = paramF;
+		var paramFuncString = '';
+
+		// create left view
+		var uniforms = {
+		};
+		this.leftMesh = this.projector.ParametricMesh2D(paramFuncString, uniforms);
+		this.leftMesh.position.z = 0.1;
+		this.leftView.add(this.leftMesh);
 	}
 
 	//  >>>>>>>>>>> Convex Hull mode functions

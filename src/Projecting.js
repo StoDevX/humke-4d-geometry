@@ -188,6 +188,64 @@ var Projecting = (function (scope) {
         return mesh;
 	}
 
+    Projecting.prototype.ParametricMesh2D = function(funcString, uniforms) {
+        var vertexShader = `
+            varying vec4 vertexPosition;
+            void main() {
+                vertexPosition = modelMatrix * vec4(position,1.0);
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+            }
+        `;
+
+        var fragmentShader = `
+            varying vec4 vertexPosition;
+
+            float eqx(float a, float b) {
+                return a * cos(b);
+            }
+
+            float eqy(float a, float b) {
+                return a * sin(b);
+            }
+
+            void main() {
+                vec2 p = vec2(vertexPosition.x,vertexPosition.y);
+                vec4 color = vec4(0.0, 1.0, 1.0, 1.0);
+
+                float aMin = 0.0;
+                float aMax = 2.0;
+                float bMin = 0.0;
+                float bMax = 6.2831852;
+
+                float a = aMin;
+                float b = bMin;
+                float step = 0.01;
+                while (a < aMax) {
+                    while (b < bMax) {
+                        if(eqx(a,b) == p.x && eqy(a,b) == p.y){
+                            color.r = 0.0;
+                        }
+                        a += step;
+                        b += step;
+                    }
+                }
+
+                gl_FragColor = color;
+            }
+        `;
+
+        var geometry = new THREE.PlaneBufferGeometry(20, 20);
+        var material = new THREE.ShaderMaterial({
+            vertexShader: vertexShader,
+            fragmentShader: fragmentShader,
+            uniforms: uniforms
+        });
+        
+        var mesh = new THREE.Mesh(geometry, material);
+
+        return mesh;
+    }
+
 	Projecting.prototype.CreateParametricFunction = function(xFunc,yFunc,zFunc,aRange,bRange){
 
 		var xFunction = Parser.parse(xFunc).toJSFunction(['a','b']);
