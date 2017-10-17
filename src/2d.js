@@ -301,22 +301,19 @@ var Mode2D = (function (scope) {
 		// get x function and y function
 		var xFunction = this.gui.params.param_eq_x;
 		var yFunction = this.gui.params.param_eq_y;
-		xFunction = Parser.parse(xFunction).toJSFunction(['a','b']);
-		yFunction = Parser.parse(yFunction).toJSFunction(['a','b']);
 
-		// create parametric function
-		function paramF(a, b) {
-			var aCorrected = a * aRange + a_range[0];
-			var bCorrected = b * bRange + b_range[0];
+		// create parametric function string
+		xFunction = GLSLParser.parse(xFunction).toString(true);
+		yFunction = GLSLParser.parse(yFunction).toString(true);
+		var paramFuncString = `
+			float eq_x(float a, float b) {
+				return ${xFunction};
+			}
 
-			var x = xFunction(aCorrected, bCorrected);
-			var y = yFunction(aCorrected, bCorrected);
-
-			var f = new THREE.Vector2(x, y);
-			return f;
-		}
-		var parametricFunction2D = paramF;
-		var paramFuncString = '';
+			float eq_y(float a, float b) {
+				return ${yFunction};
+			}
+		`;
 
 		// create left view
 		var uniforms = {

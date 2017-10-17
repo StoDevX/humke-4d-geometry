@@ -200,13 +200,7 @@ var Projecting = (function (scope) {
         var fragmentShader = `
             varying vec4 vertexPosition;
 
-            float eqx(float a, float b) {
-                return a * cos(b);
-            }
-
-            float eqy(float a, float b) {
-                return a * sin(b);
-            }
+            ${funcString}
 
             void main() {
                 vec2 p = vec2(vertexPosition.x,vertexPosition.y);
@@ -222,7 +216,7 @@ var Projecting = (function (scope) {
                 float step = 0.01;
                 while (a < aMax) {
                     while (b < bMax) {
-                        if(eqx(a,b) == p.x && eqy(a,b) == p.y){
+                        if(eq_x(a,b) == p.x && eq_y(a,b) == p.y){
                             color.r = 0.0;
                         }
                         a += step;
