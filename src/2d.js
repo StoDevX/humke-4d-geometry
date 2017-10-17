@@ -295,9 +295,6 @@ var Mode2D = (function (scope) {
 		b_range[0] = Parser.evaluate(splitArrayB[0]);
 		b_range[1] = Parser.evaluate(splitArrayB[2]);
 
-		var aRange = a_range[1] - a_range[0];
-		var bRange = b_range[1] - b_range[0];
-
 		// get x function and y function
 		var xFunction = this.gui.params.param_eq_x;
 		var yFunction = this.gui.params.param_eq_y;
@@ -306,6 +303,11 @@ var Mode2D = (function (scope) {
 		xFunction = GLSLParser.parse(xFunction).toString(true);
 		yFunction = GLSLParser.parse(yFunction).toString(true);
 		var paramFuncString = `
+			float aMin = ${a_range[0].toFixed(2).toString()};
+			float aMax = ${a_range[1].toFixed(2).toString()};
+			float bMin = ${a_range[0].toFixed(2).toString()};
+			float bMax = ${b_range[1].toFixed(2).toString()};
+
 			float eq_x(float a, float b) {
 				return ${xFunction};
 			}
