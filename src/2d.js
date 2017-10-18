@@ -100,9 +100,9 @@ var Mode2D = (function (scope) {
 
 	// define a function to be called when each param is updated
 	function updateParametricCallback(self,val){
-		self.cleanupParametric();
+		self.cleanupLeftMesh();
 		self.initParametric(self.leftView);
-		self.initParametric(self.rightView);
+		//self.initParametric(self.rightView);
 	}
 
 	function updateRenderShape(self,val,opacity_val){
@@ -233,8 +233,9 @@ var Mode2D = (function (scope) {
 			this.initCartesian(this.leftView);
 		}
 		if(this.current_mode == "parametric") {
+			this.cleanupLeftMesh();
 			this.initParametric(this.leftView);
-			this.initParametric(this.rightView);
+			//this.initParametric(this.rightView);
 		}
 		if(this.current_mode == "convex-hull") {
 			this.initConvexHull(this.leftView);
@@ -303,11 +304,6 @@ var Mode2D = (function (scope) {
 		xFunction = GLSLParser.parse(xFunction).toString(true);
 		yFunction = GLSLParser.parse(yFunction).toString(true);
 		var paramFuncString = `
-			float aMin = ${a_range[0].toFixed(7).toString()};
-			float aMax = ${a_range[1].toFixed(7).toString()};
-			float bMin = ${a_range[0].toFixed(7).toString()};
-			float bMax = ${b_range[1].toFixed(7).toString()};
-
 			float eq_x(float a, float b) {
 				return ${xFunction};
 			}
@@ -319,8 +315,12 @@ var Mode2D = (function (scope) {
 
 		// create left view
 		var uniforms = {
+			renderWholeShape: {type:"f",value:0},
+			axisValue: { type: "v2", value: new THREE.Vector2(0,0) }
+
 		};
-		this.leftMesh = this.projector.ParametricMesh2D(paramFuncString, uniforms);
+		this.uniforms = uniforms;
+		this.leftMesh = this.projector.ParametricMesh2D(paramFuncString, uniforms,a_range,b_range);
 		this.leftMesh.position.z = 0.1;
 		this.leftView.add(this.leftMesh);
 	}

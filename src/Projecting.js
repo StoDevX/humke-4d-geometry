@@ -188,15 +188,28 @@ var Projecting = (function (scope) {
         return mesh;
 	}
 
-    Projecting.prototype.ParametricMesh2D = function(funcString, uniforms) {
+    Projecting.prototype.ParametricMesh2D = function(funcString, uniforms,a_range,b_range) {
         var vertexShader = `
             varying vec4 vertexPosition;
+            uniform vec2 axisValue;
+
+            ${funcString}
+
             void main() {
                 vertexPosition = modelMatrix * vec4(position,1.0);
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
-                gl_Position.y += sin(gl_Position.x);
+                
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+   
+                vec2 newPos = vec2(eq_x(vertexPosition.x,vertexPosition.y),eq_y(vertexPosition.x,vertexPosition.y));
+                float factor = axisValue.y * 0.1;
+
+                gl_Position.xy = (gl_Position.xy) * (1.0-factor) + (newPos) * factor;
+                // vec4 pos = vec4(position, 1.0);
+                //gl_Position.y += sin(gl_Position.x);
             }
         `;
+
+        console.log(vertexShader);
 
         var fragmentShader = `
             varying vec4 vertexPosition;
@@ -205,44 +218,27 @@ var Projecting = (function (scope) {
 
             void main() {
                 vec2 p = vec2(vertexPosition.x,vertexPosition.y);
-                vec4 color = vec4(1.0, 1.0, 1.0, 1.0);
-                gl_FragColor = vec4(0.0);
-                return;
-
+                vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
+                color.r = (cos(p.y) + 1.0)/2.0;
                 gl_FragColor = color;
+                return;
             }
         `;
 
+        var a_magnitude = a_range[1] - a_range[0];
+        var b_magnitude = b_range[1] - b_range[0];
+        var x_offset = (a_range[0] + a_range[1])/2;
+        var y_offset = (b_range[0] + b_range[1])/2;
+        console.log("A RANGE",a_range)
 
-        // var modifier = new THREE.BufferSubdivisionModifier(1);
-        var geometry = new THREE.PlaneBufferGeometry(10, 10,100,100);
-        // var geometry = new THREE.PlaneGeometry(20, 20);
-        // console.log("geometry:", geometry)
-        // geometry = modifier.modify(geometry);
-
+        var geometry = new THREE.PlaneBufferGeometry(a_magnitude, b_magnitude, 200, 200);
+        geometry.translate(x_offset,y_offset,0);
         var material = new THREE.ShaderMaterial({
             vertexShader: vertexShader,
             fragmentShader: fragmentShader,
             uniforms: uniforms
         });
-
-        color = 0xff0000;
-
-        //material = new THREE.MeshBasicMaterial( {color: color, flatShading:true} );
-        
         var mesh = new THREE.Mesh(geometry, material);
-
-        // mesh.add( new THREE.LineSegments(
-
-        //         new THREE.Geometry(),
-
-        //         new THREE.LineBasicMaterial( {
-        //             color: 0xffffff,
-        //             transparent: false,
-        //             opacity: 1.0
-        //         } )
-
-        //     ) );
 
         return mesh;
     }
