@@ -201,12 +201,14 @@ var Mode3D = (function (scope) {
 		var axisValue = this.gui.params.axis_value;
 		var color = this.gui.colors.slices;
 
-		if(this.current_mode == "convex-hull"){
+		if(this.current_mode == "convex-hull" || this.current_mode == "parametric"){
 			if(this.rightMesh){
 				this.rightView.remove(this.rightMesh);	
 			}
 
-			this.rightMesh = this.slicer.SliceConvex3D(this.leftMesh,axis,axisValue,color);
+			var outline = false;
+			if(this.current_mode == "parametric") outline = true;
+			this.rightMesh = this.slicer.SliceConvex3D(this.leftMesh,axis,axisValue,color,outline);
 			this.rightView.add( this.rightMesh );
 			this.rightMesh.position.z = 0.1;
 		}
@@ -376,18 +378,19 @@ var Mode3D = (function (scope) {
 		this.leftMesh = this.projector.ParametricMesh3D(parametricFunction,this.gui.colors.projections);
 		this.leftView.add( this.leftMesh );
 
-		//this.ComputeSlicesCPU();
+		this.ComputeSlicesCPU();
 
-		this.rightMesh = this.projector.ParametricMesh3D(parametricFunction,this.gui.colors.slices);
-		this.rightView.add( this.rightMesh );
+		// Slicing with Shader
+		// this.rightMesh = this.projector.ParametricMesh3D(parametricFunction,this.gui.colors.slices);
+		// this.rightView.add( this.rightMesh );
 
-		var axisValue = this.gui.params.axis_value;
-		this.uniforms = {
-			axisValue: { type: "f", value: axisValue }
-		};
-		var ShaderMaterial = this.slicer.CreateSliceShader3D(this.uniforms,this.util.HexToRgb(this.gui.colors.slices));
+		// var axisValue = this.gui.params.axis_value;
+		// this.uniforms = {
+		// 	axisValue: { type: "f", value: axisValue }
+		// };
+		// var ShaderMaterial = this.slicer.CreateSliceShader3D(this.uniforms,this.util.HexToRgb(this.gui.colors.slices));
 
-		this.rightMesh.material = ShaderMaterial;
+		// this.rightMesh.material = ShaderMaterial;
 
 	}
 
