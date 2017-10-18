@@ -57,16 +57,29 @@ var Slicing = (function (scope) {
         }
         `;
 
-		var geometry = mesh.geometry.clone();
-		var material = new THREE.ShaderMaterial({
+        var material = new THREE.ShaderMaterial({
             fragmentShader: fragmentShader,
             vertexShader: vertexShader, 
             uniforms: uniforms
         });
         material.transparent = true;
-		var mesh = new THREE.Mesh( geometry, material );
 
-		return mesh;
+        if(mesh.type == "Object3D"){
+        	var container = new THREE.Object3D();
+        	for(var i=0;i<mesh.children.length;i++){
+        		console.log(mesh.children[i]);
+        		var geometry = mesh.children[i].geometry.clone();
+        		var childMesh = new THREE.Line(geometry,material); ///////////////// THIS IS HARDCODED TO ONLY WORK WITH LINES!!!!
+        		container.add(childMesh);
+        	}
+        	return container;
+        } else {
+        	var geometry = mesh.geometry.clone();
+			var mesh = new THREE.Mesh( geometry, material );
+			return mesh;
+        }
+		
+
 	}
 
 	Slicing.prototype.CartesianSlice3D = function(glslFuncString,uniforms,color){

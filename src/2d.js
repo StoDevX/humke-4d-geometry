@@ -120,10 +120,16 @@ var Mode2D = (function (scope) {
 			opacity_val = val ? 1 : 0;
 		}
 		// TODO: Toggle slices visibility
+		// Hijacking this to fill in for parametric
+		if(self.current_mode == "parametric"){
+			self.cleanupLeftMesh();
+			self.initParametric(self.leftView);
+		}
 	}
 
 	Mode2D.prototype.callbacks = {
 		'axis': function(self,val){
+
 			if(val == "X"){
 				self.uniforms.axis.value = 0;
 				self.intersectionLine.rotation.z = Math.PI / 2;
@@ -170,14 +176,14 @@ var Mode2D = (function (scope) {
 			if(self.gui.params.axis == 'Y'){
 				self.uniforms.axisValue.value.y = val;
 				self.intersectionLine.position.y = val;
-				if(self.current_mode == "convex-hull"){
+				if(self.current_mode == "convex-hull" || self.current_mode == "parametric"){
 					self.rightMesh.position.y = -val;
 				}
 			}
 			if(self.gui.params.axis == 'X'){
 				self.uniforms.axisValue.value.x = val;
 				self.intersectionLine.position.x = val;
-				if(self.current_mode == "convex-hull"){
+				if(self.current_mode == "convex-hull" || self.current_mode == "parametric"){
 					self.rightMesh.position.x = -val;
 				}
 			}
@@ -304,9 +310,27 @@ var Mode2D = (function (scope) {
 		xFunction = Parser.parse(xFunction).toJSFunction(['a','b']);
 		yFunction = Parser.parse(yFunction).toJSFunction(['a','b']);
 		
-		this.leftMesh = this.projector.ParametricMesh2D(xFunction,yFunction,a_range,b_range,this.gui.colors.projections);
+		this.leftMesh = this.projector.ParametricMesh2D(xFunction,yFunction,a_range,b_range,this.gui.colors.projections,this.gui.params.render_slices);
 		this.leftMesh.position.z = 0.1;
 		this.leftView.add(this.leftMesh);
+
+		var slicingColor = this.util.HexToRgb(this.gui.colors.slices);
+		var axis = this.gui.params.axis;
+		var axisValue = new THREE.Vector2(this.gui.params.axis_value,this.gui.params.axis_value);
+		var renderWholeShape = Number(this.gui.params.render_shape);
+		this.uniforms = {
+			axis: { type: "f", value: axis == "Y" ? 1 : 0 } ,
+			axisValue: { type: "v2", value: axisValue},
+			slice: {type: "f", value: 1},
+			renderWholeShape: {type:"f", value:renderWholeShape }
+		};
+		this.rightMesh = this.slicer.Slice2DMesh(this.leftMesh,this.uniforms,slicingColor);
+		this.rightMesh.position.z = 0.2;
+		if(axis == "Y")
+			this.rightMesh.position.y = -axisValue.y;
+		if(axis == "X")
+			this.rightMesh.position.x = -axisValue.x;
+		this.rightView.add(this.rightMesh);
 	}
 
 	//  >>>>>>>>>>> Convex Hull mode functions

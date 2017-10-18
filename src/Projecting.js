@@ -188,7 +188,7 @@ var Projecting = (function (scope) {
         return mesh;
 	}
 
-    Projecting.prototype.ParametricMesh2D = function(xFunc,yFunc,aRange,bRange,color) {
+    Projecting.prototype.ParametricMesh2D = function(xFunc,yFunc,aRange,bRange,color,outline) {
     	/* Draws the top and bottom parts */
     	var geometry = new THREE.Geometry();
     	var container = new THREE.Object3D();
@@ -197,11 +197,16 @@ var Projecting = (function (scope) {
         var stepSize = (aRange[1] - aRange[0]) / MAX_STEPS;
         var b = bRange[1];
 
+        var flatPointArray = [];
+
         for(var a=aRange[0];a<=aRange[1];a+=stepSize){
         	var x = xFunc(a,b);
         	var y = yFunc(a,b); 
         	var z = Math.random() * 0.1;
         	geometry.vertices.push(new THREE.Vector3(x,y,z));
+
+        	flatPointArray.push(x);
+        	flatPointArray.push(y);
         }
 
         var material = new MeshLineMaterial({color:new THREE.Color(color),lineWidth:0.1});
@@ -210,18 +215,47 @@ var Projecting = (function (scope) {
 
         b = bRange[0];
 
+        var holesIndex = flatPointArray.length/2;
+
         var geometry2 = new THREE.Geometry();
         for(var a=aRange[0];a<aRange[1];a+=stepSize){
         	var x = xFunc(a,b);
         	var y = yFunc(a,b); 
         	var z = Math.random() * 0.1;
         	geometry2.vertices.push(new THREE.Vector3(x,y,z));
+
+        	flatPointArray.push(x);
+        	flatPointArray.push(y);
         }
         var mesh2 = new THREE.Line(geometry2,material);
         container.add(mesh2);
 
-		return container;
+        // Triangulate it 
+        var triangles = earcut(flatPointArray,[holesIndex]);
+        // Render the triangles 
+        var triangleGeom = new THREE.Geometry();
+        for(var i=0;i<triangles.length;i+=3){
+        	var i1 = triangles[i] * 2;
+        	var i2 = triangles[i+1] * 2;
+        	var i3 = triangles[i+2] * 2;
 
+        	var p1 = {x:flatPointArray[i1],y:flatPointArray[i1+1]};
+        	var p2 = {x:flatPointArray[i2],y:flatPointArray[i2+1]};
+        	var p3 = {x:flatPointArray[i3],y:flatPointArray[i3+1]};
+
+        	triangleGeom.vertices.push(new THREE.Vector3(p1.x,p1.y,0));
+        	triangleGeom.vertices.push(new THREE.Vector3(p2.x,p2.y,0));
+        	triangleGeom.vertices.push(new THREE.Vector3(p3.x,p3.y,0));
+
+        	triangleGeom.faces.push(new THREE.Face3( i,i+1,i+2 ));
+        }
+        triangleGeom.computeFaceNormals();
+        var mesh= new THREE.Mesh( triangleGeom, new THREE.MeshBasicMaterial( {color: color} ) );
+        if(outline)
+        	return container;
+      	else 
+      		return mesh;
+ 
     }
 
 	Projecting.prototype.CreateParametricFunction = function(xFunc,yFunc,zFunc,aRange,bRange){
