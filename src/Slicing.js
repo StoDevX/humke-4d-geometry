@@ -158,19 +158,6 @@ var Slicing = (function (scope) {
 		var triangleArray = [];
 		var container = new THREE.Object3D();
 
-		if(mesh.geometry.faces == null){
-			// var vertArray = mesh.geometry.attributes.position.array;
-			// var indices = mesh.geometry.index.array;
-			// var maxNum = 0;
-			// console.log("vertArray.length: ",vertArray.length);
-			// console.log("indices.length: ",indices.length);
-			// for(var i=0;i<indices.length;i++){
-			// 	if(indices[i] > maxNum) maxNum = indices[i];
-			// }
-			// console.log("Max index: ",maxNum);
-			return container;
-		}
-
 		var faces = mesh.geometry.faces;
 		var verts = mesh.geometry.vertices; 
 
@@ -185,6 +172,7 @@ var Slicing = (function (scope) {
 
 		
 		var vectorArray = [];
+		var geometry = new THREE.Geometry();
 
 		for(var i=0;i<triangleArray.length;i++){
 			var p1 = triangleArray[i][0];
@@ -203,14 +191,10 @@ var Slicing = (function (scope) {
 			var v2 = new THREE.Vector3(points[2],points[3],Z);
 			// Draw a line between those two points 
 			if(outlineOnly){
-				var geometry = new THREE.Geometry();
+				
 				geometry.vertices.push( v1 );
 				geometry.vertices.push( v2 );
-				var line = new MeshLine();
-				line.setGeometry( geometry );
-				var material = new MeshLineMaterial({color:new THREE.Color(color),lineWidth:0.1});
-				var mesh = new THREE.Mesh( line.geometry, material );
-				container.add(mesh);	
+				
 			} else {
 				vectorArray.push(v1);
 				vectorArray.push(v2);	
@@ -220,7 +204,9 @@ var Slicing = (function (scope) {
 		}
 
 		if(outlineOnly){
-			return container;
+			var material = new MeshLineMaterial({color:new THREE.Color(color),lineWidth:0.1});
+			var mesh = new THREE.LineSegments(geometry,material);
+			return mesh;
 		} else {
 			var geometry = new THREE.ConvexGeometry( vectorArray );
 			var material = new THREE.MeshBasicMaterial( {color: color} );
