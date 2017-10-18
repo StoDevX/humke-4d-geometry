@@ -188,59 +188,40 @@ var Projecting = (function (scope) {
         return mesh;
 	}
 
-    Projecting.prototype.ParametricMesh2D = function(funcString, uniforms,a_range,b_range) {
-        var vertexShader = `
-            varying vec4 vertexPosition;
-            uniform vec2 axisValue;
+    Projecting.prototype.ParametricMesh2D = function(xFunc,yFunc,aRange,bRange,color) {
+    	/* Draws the top and bottom parts */
+    	var geometry = new THREE.Geometry();
+    	var container = new THREE.Object3D();
+        // Iterate through the range and construct points 
+        var MAX_STEPS = 200;
+        var stepSize = (aRange[1] - aRange[0]) / MAX_STEPS;
+        var b = bRange[1];
 
-            ${funcString}
+        for(var a=aRange[0];a<=aRange[1];a+=stepSize){
+        	var x = xFunc(a,b);
+        	var y = yFunc(a,b); 
+        	var z = Math.random() * 0.1;
+        	geometry.vertices.push(new THREE.Vector3(x,y,z));
+        }
 
-            void main() {
-                vertexPosition = modelMatrix * vec4(position,1.0);
-                
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-   
-                vec2 newPos = vec2(eq_x(vertexPosition.x,vertexPosition.y),eq_y(vertexPosition.x,vertexPosition.y));
-                float factor = axisValue.y * 0.1;
+        var material = new MeshLineMaterial({color:new THREE.Color(color),lineWidth:0.1});
+		var mesh = new THREE.Line(geometry,material);
+		container.add(mesh);
 
-                gl_Position.xy = (gl_Position.xy) * (1.0-factor) + (newPos) * factor;
-                // vec4 pos = vec4(position, 1.0);
-                //gl_Position.y += sin(gl_Position.x);
-            }
-        `;
+        b = bRange[0];
 
-        console.log(vertexShader);
+        var geometry2 = new THREE.Geometry();
+        for(var a=aRange[0];a<aRange[1];a+=stepSize){
+        	var x = xFunc(a,b);
+        	var y = yFunc(a,b); 
+        	var z = Math.random() * 0.1;
+        	geometry2.vertices.push(new THREE.Vector3(x,y,z));
+        }
+        var mesh2 = new THREE.Line(geometry2,material);
+        container.add(mesh2);
 
-        var fragmentShader = `
-            varying vec4 vertexPosition;
+		return container;
 
-            ${funcString}
-
-            void main() {
-                vec2 p = vec2(vertexPosition.x,vertexPosition.y);
-                vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
-                color.r = (cos(p.y) + 1.0)/2.0;
-                gl_FragColor = color;
-                return;
-            }
-        `;
-
-        var a_magnitude = a_range[1] - a_range[0];
-        var b_magnitude = b_range[1] - b_range[0];
-        var x_offset = (a_range[0] + a_range[1])/2;
-        var y_offset = (b_range[0] + b_range[1])/2;
-        console.log("A RANGE",a_range)
-
-        var geometry = new THREE.PlaneBufferGeometry(a_magnitude, b_magnitude, 200, 200);
-        geometry.translate(x_offset,y_offset,0);
-        var material = new THREE.ShaderMaterial({
-            vertexShader: vertexShader,
-            fragmentShader: fragmentShader,
-            uniforms: uniforms
-        });
-        var mesh = new THREE.Mesh(geometry, material);
-
-        return mesh;
     }
 
 	Projecting.prototype.CreateParametricFunction = function(xFunc,yFunc,zFunc,aRange,bRange){

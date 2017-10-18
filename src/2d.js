@@ -301,26 +301,10 @@ var Mode2D = (function (scope) {
 		var yFunction = this.gui.params.param_eq_y;
 
 		// create parametric function string
-		xFunction = GLSLParser.parse(xFunction).toString(true);
-		yFunction = GLSLParser.parse(yFunction).toString(true);
-		var paramFuncString = `
-			float eq_x(float a, float b) {
-				return ${xFunction};
-			}
-
-			float eq_y(float a, float b) {
-				return ${yFunction};
-			}
-		`;
-
-		// create left view
-		var uniforms = {
-			renderWholeShape: {type:"f",value:0},
-			axisValue: { type: "v2", value: new THREE.Vector2(0,0) }
-
-		};
-		this.uniforms = uniforms;
-		this.leftMesh = this.projector.ParametricMesh2D(paramFuncString, uniforms,a_range,b_range);
+		xFunction = Parser.parse(xFunction).toJSFunction(['a','b']);
+		yFunction = Parser.parse(yFunction).toJSFunction(['a','b']);
+		
+		this.leftMesh = this.projector.ParametricMesh2D(xFunction,yFunction,a_range,b_range,this.gui.colors.projections);
 		this.leftMesh.position.z = 0.1;
 		this.leftView.add(this.leftMesh);
 	}
