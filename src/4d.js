@@ -12,6 +12,9 @@ var Mode4D = (function (scope) {
 		this.rightCamera = null;
 		this.rightRenderer = null;
 		this.rightControls = null;
+
+		this.leftMesh = null;
+		this.rightMesh = null;
 	}
 
 	// Creates the scene and everything
@@ -86,6 +89,19 @@ var Mode4D = (function (scope) {
 		this.rightView.add(rightYLabel);
 		var rightZLabel = GridHelper.CreateLabel("Z",0,0,12);
 		this.rightView.add(rightZLabel);
+		// Add lights to the scene
+		var lightSky = new THREE.HemisphereLight( 0xffffbb, 0x080820, .7 );
+		this.leftView.add( lightSky );
+		var lightGround = new THREE.HemisphereLight( 0xffffbb, 0x080820, .4 );
+		this.leftView.add( lightGround );
+		lightGround.position.y = -5;
+		lightGround.position.x = 2;
+
+		this.rightView.add(lightSky.clone());
+		this.rightView.add(lightGround.clone());
+
+		this.util = new Util();
+		this.projector = new Projecting();
 
 		this.animate();
 
@@ -102,29 +118,35 @@ var Mode4D = (function (scope) {
 		//Switch the mode based on the gui value
 		if(this.current_mode != null){
 			//Clean up previous
-			if(this.current_mode == "cartesian") this.cleanupCartesian_Section();
+			this.cleanupLeftMesh();
 		}
 		this.current_mode = params.source;
 		//Init new
-		if(this.current_mode == "cartesian") this.initCartesian_Section();
+		if(this.current_mode == "cartesian") this.initCartesian();
 	}
 
 	Mode4D.prototype.callbacks = {
+		'axis':function(self,val) {
+			if(self.current_mode == "cartesian") {
+				self.cleanupLeftmesh();
+				self.initCartesian();
+			}
+		},
 		'source': function(self,val){
 			self.setMode();
 			self.gui.params.render_shape = true; //Reset this back to true
 		},
 		'resolution': function(self,val){
-			self.cleanupCartesian_Section();
-			self.initCartesian_Section();
+			self.cleanupLeftMesh();
+			self.initCartesian();
 		},
 		'equation': function(self,val){
-			self.cleanupCartesian_Section();
-			self.initCartesian_Section();
+			self.cleanupLeftMesh();
+			self.initCartesian();
 		},
 		'axis_value': function(self,val){
-			self.cleanupCartesian_Section();
-			self.initCartesian_Section();
+			self.cleanupLeftMesh();
+			self.initCartesian();
 		},
 	};
 
@@ -151,13 +173,14 @@ var Mode4D = (function (scope) {
 
 	}
 
-	Mode4D.prototype.initCartesian_Section = function(){
+	Mode4D.prototype.initCartesian = function(){
 		/* To draw a section of a 4d cartesian:
 			- Grab the equation
 			- Replace the axis variable with the axis value
 			- Draw that 3D shape
 		*/
 		var equation = this.gui.params.equation
+		var resolution = this.gui.params.resolution;
 		var axis_variable = this.gui.params.axis.toLowerCase()
 		equation = equation.replace(new RegExp(axis_variable,'g'), "(" + this.gui.params.axis_value + ")")
 		var variables = ["x","y","z","w"];
@@ -166,18 +189,52 @@ var Mode4D = (function (scope) {
 				variables.splice(i,1);
 		}
 
-		var triangleArray = this.polygonizeCartesian(equation,this.gui.params.resolution,variables);
+		var mesh = this.projector.PolygonizeCartesian3D(equation,resolution,variables);
+		if(mesh){
+			this.rightMesh = mesh;
+			this.rightView.add(this.rightMesh);
+		}
 
 		// TODO: Rendering cartesian
 
 	}
-	Mode4D.prototype.cleanupCartesian_Section = function(){
-		// TODO: Cleanup cartesian
+
+	Mode4D.prototype.cleanupLeftMesh = function(){
+		console.log("CLEANING UP");
+		if(this.leftMesh){
+			this.leftView.remove(this.leftMesh);
+			this.leftMesh = null;
+		}
+		if(this.rightMesh){
+			this.rightView.remove(this.rightMesh);
+			this.rightMesh = null;
+		}
 	}
 
 	//Destroys everything created
 	Mode4D.prototype.cleanup = function(){
-		// TODO: Propr cleanup with removal of animationFrame and all
+		cancelAnimationFrame(this.animId); // stop the animation loop
+
+		this.util.CleanUpScene(this.leftView);
+
+		this.leftView = null;
+		this.leftRenderer.dispose();
+		this.leftRenderer = null;
+		this.leftCamera = null;
+		this.leftControls = null;
+		this.leftMesh = null;
+		this.intersectionPlane = null;
+		this.labels = [];
+		this.rightXLabel = null;
+		this.rightYLabel = null;
+
+		this.util.CleanUpScene(this.rightView);
+
+		this.rightView = null;
+		this.rightRenderer.dispose();
+		this.rightRenderer = null;
+		this.rightCamera = null;
+		this.rightControls = null;
 
 		// Destroy gui
 		this.gui.cleanup();
