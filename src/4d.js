@@ -129,6 +129,7 @@ var Mode4D = (function (scope) {
 		this.current_mode = params.source;
 		//Init new
 		if(this.current_mode == "cartesian") this.initCartesian();
+		if(this.current_mode == "convex-hull") this.initConvexHull();
 	}
 
 	Mode4D.prototype.callbacks = {
@@ -153,6 +154,10 @@ var Mode4D = (function (scope) {
 		'axis_value': function(self,val){
 			self.cleanupLeftMesh();
 			self.initCartesian();
+		},
+		'points': function(self,val){
+			self.cleanupLeftMesh()
+			self.initConvexHull()
 		},
 	};
 
@@ -203,9 +208,23 @@ var Mode4D = (function (scope) {
 			this.rightView.add(this.rightMesh);
 		}
 
-		
+	}
+
+	Mode4D.prototype.initConvexHull = function(){
+		var pointsRaw = this.util.ParseConvexPoints(this.gui.params.points);
+		// Convert the points into Vector3 objects:
+		var points = [];
+		for(var i=0;i<pointsRaw.length;i++){
+			var rawPoint = pointsRaw[i];
+			var newPoint = new THREE.Vector4(rawPoint.x,rawPoint.y,rawPoint.z,rawPoint.w);
+			points.push(newPoint);
+		}
+
+		this.leftMesh = this.projector.MakeTesseract();
+		this.leftView.add(this.leftMesh);
 
 	}
+
 
 	Mode4D.prototype.cleanupLeftMesh = function(){
 		console.log("CLEANING UP");

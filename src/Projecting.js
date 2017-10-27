@@ -6,6 +6,47 @@ var Projecting = (function (scope) {
 	function Projecting(){
 
 	}
+	Projecting.prototype.MakeTesseract = function(){
+		
+		var size = 5;
+		var vectorArray = [];
+		var geometry = new THREE.Geometry();
+		// Generate the tesseract points 
+		for(var x=-size;x<=size;x+=size*2){
+			for(var y=-size;y<=size;y+=size*2){
+				for(var z=-size;z<=size;z+=size*2){
+					vectorArray.push(new THREE.Vector3(x,y,z));
+
+					for(var w=-size;w<=size;w+=size*2){
+						
+					}
+				}
+			}
+		}
+
+		// Create the lines 
+		for(var i=0;i<vectorArray.length;i++){
+			var p = vectorArray[i];
+			for(var j=0;j<vectorArray.length;j++){
+				if(i == j) continue;
+				var p2 = vectorArray[j];
+				// For two points to be connected, they must share exactly 2 coordinates 
+				if(p.x == p2.x && p.y == p2.y ||
+				   p.x == p2.x && p.z == p2.z ||
+				   p.y == p2.y && p.z == p2.z){
+				   	geometry.vertices.push(p);
+					geometry.vertices.push(p2);
+				}
+			}
+		}
+		
+
+		var material = new MeshLineMaterial({color:new THREE.Color(0xff0000),lineWidth:0.1});
+		var mesh = new THREE.LineSegments(geometry,material);
+		return mesh;
+
+	}
+
 	Projecting.prototype.PolygonizeCartesian3D = function(equationString,resolution,color,variables){
 		/*
 			Takes in an equation string, polygonizes it into an array of trianges, and draws those trianges
