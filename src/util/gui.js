@@ -36,7 +36,13 @@ var GUI = (function (scope) {
 			'axis_value':0.1,
 			'axis':'Y',
 			'samples':200,
-			'thickness':'medium'
+			'thickness':'medium',
+			
+			// Builtin Examples
+			'Filled in Circle': function() {}, // cartesian examples
+			'Parabola': function() {},
+			'Butterfly': function() {}, // parametric examples
+			'Square': function() {}, // convex hall examples
 		};
 		this.gui = null;
 		this.mode = "";
@@ -44,19 +50,41 @@ var GUI = (function (scope) {
 
 		// 2D defaults
 		this.defaults = {}
-		// Alternative parametric: (a: [0,2pi],b:[0.5,1])
-		//b * (1-cos(a))*sin(a) * 5
-		//b * (1-cos(a))*cos(a) * 5
 		// Alternative square:
 		// (0,5),(5,0),(0,-5),(-5,0)
 		this.defaults['2D'] = {
-			'equation':'x^2+y^2 = 10', // Circle
+			'equation':'x^2+y^2 = 9', // Circle
 			'points':'(5,5),(5,-5),(-5,-5),(-5,5)', // Square
 			'param_eq_x':'b * cos(a)', // Circle
 			'param_eq_y':'b * sin(a)',
 			'param_a':'0 < a < 2 * PI',
 			'param_b':'0 < b < 4',
-			'axis':'Y'
+			'axis':'Y',
+
+			// builtin examples
+			'Filled in Circle': function() {
+				params.equation = 'x^2 + y^2 < 9';
+				if (callbacks['equation']) callbacks['equation'](mode_obj,params.equation);
+			},
+			'Parabola': function() {
+				params.equation = 'y = x^2';
+				if (callbacks['equation']) callbacks['equation'](mode_obj,params.equation);
+			},
+			'Butterfly': function() {
+				params.param_eq_x = 'b * (1-cos(a))*sin(a) * 5';
+				params.param_eq_y = 'b * (1-cos(a))*cos(a) * 5';
+				param_a = '0 < a < 2 * PI';
+				param_b = '0.5 < b < 1';
+
+				if(callbacks['param_eq_x']) callbacks['param_eq_x'](mode_obj,params.param_eq_x);
+				if(callbacks['param_eq_y']) callbacks['param_eq_y'](mode_obj,params.param_eq_y);
+				if(callbacks['param_a']) callbacks['param_a'](mode_obj,param_a);
+				if(callbacks['param_b']) callbacks['param_b'](mode_obj,param_b);
+			},
+			'Square': function() {
+				params.points = '(0,5),(5,0),(0,-5),(-5,0)';
+				if(callbacks['points']) callbacks['points'](mode_obj,params.points);
+			}
 		}
 		// 3D defaults
 		this.defaults['3D'] = {
@@ -104,14 +132,17 @@ var GUI = (function (scope) {
 		// Create the two folders
 		var shapeProperties = this.gui.addFolder('Shape Properties');
 	    var viewingControls = this.gui.addFolder('Viewing Controls');
-	    this.shapeProperties = shapeProperties; this.viewingControls = viewingControls;
+	    var builtinExamples = this.gui.addFolder('Builtin Examples');
+	    this.shapeProperties = shapeProperties;
+	    this.viewingControls = viewingControls;
+	    this.builtinExamples = builtinExamples;
 	    var current_scope = this;
 	    var params = this.params;
 
 	    // Load defaults
 	    for(var key in params){
 	    	if(this.defaults[mode][key]){
-	    		params[key] = this.defaults[mode][key]
+	    		params[key] = this.defaults[mode][key];
 	    	}
 	    }
 
@@ -183,29 +214,43 @@ var GUI = (function (scope) {
 	// Functions for creating the controls for the 3 different inputs (cartesian, parametric and convex hull)
 	GUI.prototype.initCartesianSource = function(){
 		var arr = [];
+		var builtin_arr = [];
 		var callbacks = this.callbacks;
 		var mode_obj = this.mode_obj;
 
 		var eq = this.shapeProperties.add(this.params, 'equation').name('Equation').onChange(function(val){
 			if(callbacks['equation']) callbacks['equation'](mode_obj,val);
 		});
-		arr.push(eq)
+		arr.push(eq);
 		var res = this.shapeProperties.add(this.params, 'resolution', 20, 200).name('Resolution').step(1).onChange(function(val){
 			if(callbacks['resolution']) callbacks['resolution'](mode_obj,val);
 		});
-		arr.push(res)
+		arr.push(res);
+
+	    // Now for Builtin Examples
+	    var filled_in_circle = this.builtinExamples.add(this.params, 'Filled in Circle');
+	    var parabola = this.builtinExamples.add(this.params, 'Parabola');
+	    builtin_arr.push(filled_in_circle); builtin_arr.push(parabola);
 
 		this.cartesianSourceItems = arr;
-	}
+		this.builtin_arr_cartesian = builtin_arr;
+	};
+
 	GUI.prototype.destroyCartesianSource = function(){
 		if(!this.cartesianSourceItems) return;
 		for(var i=0;i<this.cartesianSourceItems.length;i++){
-			this.shapeProperties.remove(this.cartesianSourceItems[i])
+			this.shapeProperties.remove(this.cartesianSourceItems[i]);
+		}
+		for (var i = 0; i < this.builtin_arr_cartesian.length; i++) {
+			this.builtinExamples.remove(this.builtin_arr_cartesian[i]);
 		}
 		this.cartesianSourceItems = [];
-	}
+		this.builtin_arr_cartesian = [];
+	};
+
 	GUI.prototype.initParamSource = function(){
 		var arr = [];
+		var builtin_arr = [];
 		var names = ["param_eq_x","param_eq_y","param_a","param_b","param_eq_z","param_c","param_eq_w","param_d"]
 		var callbacks = this.callbacks;
 		var mode_obj = this.mode_obj;
@@ -251,35 +296,55 @@ var GUI = (function (scope) {
 		// 	})
 		// }
 
+		// Now for Builtin Examples
+	    var butterfly = this.builtinExamples.add(this.params, 'Butterfly');
+		builtin_arr.push(butterfly);
+
 		this.paramSourceItems = arr;
-	}
+		this.builtin_arr_param = builtin_arr;
+	};
+
 	GUI.prototype.destroyParamSource = function(){
 		if(!this.paramSourceItems) return;
 		for(var i=0;i<this.paramSourceItems.length;i++){
 			this.shapeProperties.remove(this.paramSourceItems[i])
 		}
+		for (var i = 0; i < this.builtin_arr_param.length; i++) {
+			this.builtinExamples.remove(this.builtin_arr_param[i]);
+		}
 		this.paramSourceItems = [];
-	}
+		this.builtin_arr_param = [];
+	};
+
 	GUI.prototype.initConvexSource = function(){
 		var arr = [];
+		var builtin_arr = [];
 		var callbacks = this.callbacks;
 		var mode_obj = this.mode_obj;
 
 		var points = this.shapeProperties.add(this.params, 'points').onChange(function(val){
 			if(callbacks['points']) callbacks['points'](mode_obj,val);
 		});
+		arr.push(points);
 
-		arr.push(points)
+		var square = this.builtinExamples.add(this.params, 'Square');
+		builtin_arr.push(square);
+
 		this.convexSourceItems = arr;
-	}
+		this.builtin_arr_convex = builtin_arr;
+	};
+
 	GUI.prototype.destroyConvexSource = function(){
 		if(!this.convexSourceItems) return;
 		for(var i=0;i<this.convexSourceItems.length;i++){
 			this.shapeProperties.remove(this.convexSourceItems[i])
 		}
+		for (var i = 0; i < this.builtin_arr_convex.length; i++) {
+			this.builtinExamples.remove(this.builtin_arr_convex[i]);
+		}
 		this.convexSourceItems = [];
-	}
-
+		this.builtin_arr_convex = [];
+	};
 
 	GUI.prototype.cleanup = function(){
 		//Destroys everything created
@@ -288,7 +353,10 @@ var GUI = (function (scope) {
 		this.convexSourceItems = null;
 		this.paramSourceItems = null;
 		this.cartesianSourceItems = null;
-	}
+		this.builtin_arr_cartesian = null;
+		this.builtin_arr_param = null;
+		this.builtin_arr_convex = null;
+	};
 
 
 	scope.GUI = GUI;
