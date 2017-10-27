@@ -7,6 +7,7 @@ var Mode4D = (function (scope) {
 		this.leftCamera = null;
 		this.leftRenderer = null;
 		this.leftControls = null;
+		this.labels = [];
 
 		this.rightView = null;
 		this.rightCamera = null;
@@ -54,13 +55,13 @@ var Mode4D = (function (scope) {
 		axis = GridHelper.CreateAxis("W");
 		this.leftView.add(axis);
 
-		var leftXLabel = GridHelper.CreateLabel("X",12,0,0);
+		var leftXLabel = GridHelper.CreateLabel("X",12,0,0); this.addLabel(leftXLabel,this.leftCamera);
 		this.leftView.add(leftXLabel);
-		var leftYLabel = GridHelper.CreateLabel("Y",0,12,0);
+		var leftYLabel = GridHelper.CreateLabel("Y",0,12,0); this.addLabel(leftYLabel,this.leftCamera);
 		this.leftView.add(leftYLabel);
-		var leftZLabel = GridHelper.CreateLabel("Z",0,0,12);
+		var leftZLabel = GridHelper.CreateLabel("Z",0,0,12); this.addLabel(leftZLabel,this.leftCamera);
 		this.leftView.add(leftZLabel);
-		var leftWLabel = GridHelper.CreateLabel("W",5,10,-5);
+		var leftWLabel = GridHelper.CreateLabel("W",5,10,-5); this.addLabel(leftWLabel,this.leftCamera);
 		this.leftView.add(leftWLabel);
 
 		this.rightView = new THREE.Scene();
@@ -83,11 +84,11 @@ var Mode4D = (function (scope) {
 		axis = GridHelper.CreateAxis("Z");
 		this.rightView.add(axis);
 
-		var rightXLabel = GridHelper.CreateLabel("X",12,0,0);
+		var rightXLabel = GridHelper.CreateLabel("X",12,0,0); this.addLabel(rightXLabel,this.rightCamera);
 		this.rightView.add(rightXLabel);
-		var rightYLabel = GridHelper.CreateLabel("Y",0,12,0);
+		var rightYLabel = GridHelper.CreateLabel("Y",0,12,0); this.addLabel(rightYLabel,this.rightCamera);
 		this.rightView.add(rightYLabel);
-		var rightZLabel = GridHelper.CreateLabel("Z",0,0,12);
+		var rightZLabel = GridHelper.CreateLabel("Z",0,0,12); this.addLabel(rightZLabel,this.rightCamera);
 		this.rightView.add(rightZLabel);
 		// Add lights to the scene
 		var lightSky = new THREE.HemisphereLight( 0xffffbb, 0x080820, .7 );
@@ -111,6 +112,11 @@ var Mode4D = (function (scope) {
 		this.util = new Util();
 		this.projector = new Projecting();
 		this.slicer = new Slicing();
+	}
+
+	Mode4D.prototype.addLabel = function(label,camera){
+		//Add the label and its camera to the label array 
+		this.labels.push({l:label,c:camera});
 	}
 
 	Mode4D.prototype.setMode = function(){
@@ -247,6 +253,9 @@ var Mode4D = (function (scope) {
 	}
 
 	Mode4D.prototype.animate = function(){
+		for(var i=0;i<this.labels.length;i++)
+			this.labels[i].l.quaternion.copy(this.labels[i].c.quaternion);
+
 		requestAnimationFrame( this.animate.bind(this) );
 		this.leftRenderer.render( this.leftView, this.leftCamera );
 		this.rightRenderer.render( this.rightView, this.rightCamera );
