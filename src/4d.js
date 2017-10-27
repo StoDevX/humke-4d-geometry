@@ -195,13 +195,15 @@ var Mode4D = (function (scope) {
 				variables.splice(i,1);
 		}
 
-		var mesh = this.projector.PolygonizeCartesian3D(equation,resolution,variables);
+		var projectingColor = this.gui.colors.projections;
+
+		var mesh = this.projector.PolygonizeCartesian3D(equation,resolution,projectingColor,variables);
 		if(mesh){
 			this.rightMesh = mesh;
 			this.rightView.add(this.rightMesh);
 		}
 
-		// TODO: Rendering cartesian
+		
 
 	}
 

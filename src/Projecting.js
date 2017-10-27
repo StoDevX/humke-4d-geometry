@@ -6,16 +6,18 @@ var Projecting = (function (scope) {
 	function Projecting(){
 
 	}
-	Projecting.prototype.PolygonizeCartesian3D = function(equationString,resolution,color){
+	Projecting.prototype.PolygonizeCartesian3D = function(equationString,resolution,color,variables){
 		/*
 			Takes in an equation string, polygonizes it into an array of trianges, and draws those trianges
 			returns a mesh
 		 */
+		 if(variables == undefined)
+		 	variables = ['x','y','z'];
 		let sides = equationString.split('=');
 		let LHS = sides[0];
 		let RHS = sides[1];
-		let LHSfunc = Parser.parse(LHS).toJSFunction(['x','y','z']);
-		let RHSfunc = Parser.parse(RHS).toJSFunction(['x','y','z']);
+		let LHSfunc = Parser.parse(LHS).toJSFunction(variables);
+		let RHSfunc = Parser.parse(RHS).toJSFunction(variables);
 		var eq = function(x,y,z) { return LHSfunc(x,y,z) - RHSfunc(x,y,z); };
 
 		//Parses the equation, and polygonizes it
