@@ -8,17 +8,19 @@ var Projecting = (function (scope) {
 	}
 	Projecting.prototype.MakeTesseract = function(){
 		
-		var size = 5;
+		var start = -5;
+		var end = 5;
+	
 		var vectorArray = [];
 		var fullVectorArray = [];
 		var geometry = new THREE.Geometry();
 		var Lw = 6;
 
 		// Generate the tesseract points 
-		for(var x=-size;x<=size;x+=size*2){
-			for(var y=-size;y<=size;y+=size*2){
-				for(var z=-size;z<=size;z+=size*2){
-					for(var w=3;w<=5;w+=2){
+		for(var x=start;x<=end;x+=(end-start)){
+			for(var y=start;y<=end;y+=(end-start)){
+				for(var z=start;z<=end;z+=(end-start)){
+					for(var w=start;w<=end;w+=(end-start)){
 						var f = 1/(Lw - w);
 						var X = x * f; 
 						var Y = y * f; 
@@ -57,6 +59,12 @@ var Projecting = (function (scope) {
 		var material = new MeshLineMaterial({color:new THREE.Color(0xff0000),lineWidth:0.1});
 		var mesh = new THREE.LineSegments(geometry,material);
 		mesh.fullVectorArray = newFullVectorArray;
+		mesh.angle1 = 0;
+		mesh.angle2 = 0;
+		mesh.angle3 = 0;
+		mesh.angleSpeed1 =0;
+		mesh.angleSpeed2 =0;
+		mesh.angleSpeed3 =0;
 		return mesh;
 
 	}

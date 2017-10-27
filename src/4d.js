@@ -8,6 +8,8 @@ var Mode4D = (function (scope) {
 		this.leftRenderer = null;
 		this.leftControls = null;
 		this.labels = [];
+		this.keysDown = {};
+		this.keyMap = {'A':65,'D':68,'S':83,'W':87,'Q':81,'E':69}
 
 		this.rightView = null;
 		this.rightCamera = null;
@@ -112,6 +114,42 @@ var Mode4D = (function (scope) {
 		this.util = new Util();
 		this.projector = new Projecting();
 		this.slicer = new Slicing();
+
+		// Key down 
+		document.addEventListener("keydown", onDocumentKeyDown, false);
+		document.addEventListener("keyup", onDocumentKeyUp, false);
+		var self = this;
+		function onDocumentKeyDown(event) {
+		    var keyCode = event.which;
+		    self.keysDown[keyCode] = true;
+
+		    if (keyCode == 87) {
+		        // W
+		    } else if (keyCode == 83) {
+		        // S
+		    } else if (keyCode == 65) {
+		        // A
+		    } else if (keyCode == 68) {
+		        // D
+		    } else if (keyCode == 32) {
+		        // Enter
+		    }
+		};
+		function onDocumentKeyUp(event) {
+		    var keyCode = event.which;
+		    delete self.keysDown[keyCode];
+		    if (keyCode == 87) {
+		        // W
+		    } else if (keyCode == 83) {
+		        // S
+		    } else if (keyCode == 65) {
+		        // A
+		    } else if (keyCode == 68) {
+		        // D
+		    } else if (keyCode == 32) {
+		        // Enter
+		    }
+		};
 	}
 
 	Mode4D.prototype.addLabel = function(label,camera){
@@ -277,15 +315,50 @@ var Mode4D = (function (scope) {
 		}
 	}
 
+	
+
 	Mode4D.prototype.animate = function(){
 		if(this.current_mode == "convex-hull" && this.leftMesh){
 			var mesh = this.leftMesh;
 			mesh.geometry.verticesNeedUpdate = true; 
 
+			if(this.keysDown[this.keyMap['A']]){
+				mesh.angleSpeed1++; 
+			}
+			if(this.keysDown[this.keyMap['D']]){
+				mesh.angleSpeed1 --;
+			}
+			mesh.angleSpeed1 *= 0.8;
+			mesh.angle1 += mesh.angleSpeed1 * 0.01;
+			mesh.cos1 = Math.cos(mesh.angle1);
+			mesh.sin1 = Math.sin(mesh.angle1);
+
+			if(this.keysDown[this.keyMap['W']]){
+				mesh.angleSpeed2++; 
+			}
+			if(this.keysDown[this.keyMap['S']]){
+				mesh.angleSpeed2 --;
+			}
+			mesh.angleSpeed2 *= 0.8;
+			mesh.angle2 += mesh.angleSpeed2 * 0.01;
+			mesh.cos2 = Math.cos(mesh.angle2);
+			mesh.sin2 = Math.sin(mesh.angle2);
+
+			if(this.keysDown[this.keyMap['Q']]){
+				mesh.angleSpeed3++; 
+			}
+			if(this.keysDown[this.keyMap['E']]){
+				mesh.angleSpeed3 --;
+			}
+			mesh.angleSpeed3 *= 0.8;
+			mesh.angle3 += mesh.angleSpeed3 * 0.01;
+			mesh.cos3 = Math.cos(mesh.angle3);
+			mesh.sin3 = Math.sin(mesh.angle3);
+
 			// Rotate geometry in 4D 
 			for(var i=0;i<mesh.fullVectorArray.length;i++){
 				var p = mesh.fullVectorArray[i];
-				var Lw = 6;
+				var Lw = 10	;
 				var f = 1 / (Lw - p.w);
 
 				// Save original locations 
@@ -296,15 +369,57 @@ var Mode4D = (function (scope) {
 					p.ow = p.w;
 				}
 
+				// Rotate in 4D 
+				/* 
+					You can rotate along: 
+					XY
+					XZ
+					YZ
+					----
+					XW 
+					YW 
+					ZW
+				*/
+				// The top 3 are just the normal ones xyz ones. So I'm only going to do the last 3
+				if(mesh.cos1 == undefined){
+					mesh.cos1 = Math.cos(mesh.angle1);
+					mesh.sin1 = Math.sin(mesh.angle1);
+				}
+				p.x = p.ox;
+				p.y = p.oy; 
+				p.z = p.oz; 
+				p.w = p.ow;
+
+				// Rotate around angle1
+				p.x = p.x * mesh.cos1;
+				p.y = p.y; 
+				p.z = p.z - p.w * mesh.sin1;
+				p.w = p.x * mesh.sin1 + p.w * mesh.cos1;
+
+				// Rotate around angle2
+				p.x = p.x;
+				p.y = p.y * mesh.cos2; 
+				p.z = p.z - p.w * mesh.sin1;
+				p.w = p.y * mesh.sin2 + p.w * mesh.cos2;
+
+				// Rotate around angle3 
+				p.x = p.x;
+				p.y = p.y; 
+				p.z = p.z * mesh.cos3 - p.w * mesh.sin3;
+				p.w = p.z * mesh.sin3 + p.w * mesh.cos3;
+
+
 				// Move in 4D 
 				if(this.gui.params.axis == "X")
-					p.x = p.ox + Number(this.gui.params.axis_value);
+					p.x = p.x + Number(this.gui.params.axis_value);
 				if(this.gui.params.axis == "Y")
-					p.y = p.oy + Number(this.gui.params.axis_value);
+					p.y = p.y + Number(this.gui.params.axis_value);
 				if(this.gui.params.axis == "Z")
-					p.z = p.oz + Number(this.gui.params.axis_value);
+					p.z = p.z + Number(this.gui.params.axis_value);
 				if(this.gui.params.axis == "W")
-					p.w = p.ow + Number(this.gui.params.axis_value);
+					p.w = p.w + Number(this.gui.params.axis_value);
+				
+
 
 				// Project into 3D
 				var X = p.x * f;  
