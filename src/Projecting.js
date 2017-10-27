@@ -10,32 +10,45 @@ var Projecting = (function (scope) {
 		
 		var size = 5;
 		var vectorArray = [];
+		var fullVectorArray = [];
 		var geometry = new THREE.Geometry();
+		var Lw = 6;
+
 		// Generate the tesseract points 
 		for(var x=-size;x<=size;x+=size*2){
 			for(var y=-size;y<=size;y+=size*2){
 				for(var z=-size;z<=size;z+=size*2){
-					vectorArray.push(new THREE.Vector3(x,y,z));
-
-					for(var w=-size;w<=size;w+=size*2){
-						
+					for(var w=3;w<=5;w+=2){
+						var f = 1/(Lw - w);
+						var X = x * f; 
+						var Y = y * f; 
+						var Z = z * f;
+						vectorArray.push(new THREE.Vector3(X,Y,Z));
+						fullVectorArray.push(new THREE.Vector4(x,y,z,w));
 					}
 				}
 			}
 		}
 
+		var newFullVectorArray = [];
+
 		// Create the lines 
-		for(var i=0;i<vectorArray.length;i++){
-			var p = vectorArray[i];
-			for(var j=0;j<vectorArray.length;j++){
+		for(var i=0;i<fullVectorArray.length;i++){
+			var p = fullVectorArray[i];
+			for(var j=0;j<fullVectorArray.length;j++){
 				if(i == j) continue;
-				var p2 = vectorArray[j];
-				// For two points to be connected, they must share exactly 2 coordinates 
-				if(p.x == p2.x && p.y == p2.y ||
-				   p.x == p2.x && p.z == p2.z ||
-				   p.y == p2.y && p.z == p2.z){
-				   	geometry.vertices.push(p);
-					geometry.vertices.push(p2);
+				var p2 = fullVectorArray[j];
+				// For two points to be connected, they must share exactly 3 coordinates 
+				// xyz, xyw, xzw, yzw 
+				if(p.x == p2.x && p.y == p2.y && p.z == p2.z ||
+				   p.x == p2.x && p.y == p2.y && p.w == p2.w ||
+				   p.y == p2.y && p.z == p2.z && p.w == p2.w ||
+				   p.x == p2.x && p.z == p2.z && p.w == p2.w ){
+		
+					newFullVectorArray.push(p);
+					newFullVectorArray.push(p2);
+				   	geometry.vertices.push(vectorArray[i]);
+					geometry.vertices.push(vectorArray[j]);
 				}
 			}
 		}
@@ -43,6 +56,7 @@ var Projecting = (function (scope) {
 
 		var material = new MeshLineMaterial({color:new THREE.Color(0xff0000),lineWidth:0.1});
 		var mesh = new THREE.LineSegments(geometry,material);
+		mesh.fullVectorArray = newFullVectorArray;
 		return mesh;
 
 	}
