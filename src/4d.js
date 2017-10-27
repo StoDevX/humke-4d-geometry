@@ -44,16 +44,16 @@ var Mode4D = (function (scope) {
 		var GridHelper = new Grid();
 
 		var grid = GridHelper.CreateGrid("XZ");
-		this.leftView.add(grid);
+		//this.leftView.add(grid);
 
 		var axis = GridHelper.CreateAxis("X");
-		this.leftView.add(axis);
+		//this.leftView.add(axis);
 		axis = GridHelper.CreateAxis("Y");
-		this.leftView.add(axis);
+		//this.leftView.add(axis);
 		axis = GridHelper.CreateAxis("Z");
-		this.leftView.add(axis);
+		//this.leftView.add(axis);
 		axis = GridHelper.CreateAxis("W");
-		this.leftView.add(axis);
+		//this.leftView.add(axis);
 
 		var leftXLabel = GridHelper.CreateLabel("X",12,0,0); this.addLabel(leftXLabel,this.leftCamera);
 		this.leftView.add(leftXLabel);
@@ -152,8 +152,10 @@ var Mode4D = (function (scope) {
 			self.initCartesian();
 		},
 		'axis_value': function(self,val){
-			self.cleanupLeftMesh();
-			self.initCartesian();
+			if(self.current_mode == "cartesian"){
+				self.cleanupLeftMesh();
+				self.initCartesian();
+			}
 		},
 		'points': function(self,val){
 			self.cleanupLeftMesh()
@@ -223,6 +225,8 @@ var Mode4D = (function (scope) {
 		this.leftMesh = this.projector.MakeTesseract();
 		this.leftView.add(this.leftMesh);
 
+
+
 	}
 
 
@@ -274,6 +278,45 @@ var Mode4D = (function (scope) {
 	}
 
 	Mode4D.prototype.animate = function(){
+		if(this.current_mode == "convex-hull" && this.leftMesh){
+			var mesh = this.leftMesh;
+			mesh.geometry.verticesNeedUpdate = true; 
+
+			// Rotate geometry in 4D 
+			for(var i=0;i<mesh.fullVectorArray.length;i++){
+				var p = mesh.fullVectorArray[i];
+				var Lw = 6;
+				var f = 1 / (Lw - p.w);
+
+				// Save original locations 
+				if(p.ox == undefined){
+					p.ox = p.x; 
+					p.oy = p.y; 
+					p.oz = p.z; 
+					p.ow = p.w;
+				}
+
+				// Move in 4D 
+				if(this.gui.params.axis == "X")
+					p.x = p.ox + Number(this.gui.params.axis_value);
+				if(this.gui.params.axis == "Y")
+					p.y = p.oy + Number(this.gui.params.axis_value);
+				if(this.gui.params.axis == "Z")
+					p.z = p.oz + Number(this.gui.params.axis_value);
+				if(this.gui.params.axis == "W")
+					p.w = p.ow + Number(this.gui.params.axis_value);
+
+				// Project into 3D
+				var X = p.x * f;  
+				var Y = p.y * f; 
+				var Z = p.z * f;
+
+				mesh.geometry.vertices[i].x = X; 
+				mesh.geometry.vertices[i].y = Y;
+				mesh.geometry.vertices[i].z = Z;
+			}
+		}
+
 		for(var i=0;i<this.labels.length;i++)
 			this.labels[i].l.quaternion.copy(this.labels[i].c.quaternion);
 
