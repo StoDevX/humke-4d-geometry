@@ -1,136 +1,149 @@
 body {
-    font-family: "Avenir Next", "HelveticaNeue-Light", "Helvetica Neue Light",
-                 "Helvetica Neue", Helvetica, Arial, "Lucida Grande",
-                 "SF UI Display", sans-serif;
-    font-weight: 350;
-    height: 100vh;
+	font-family: "Avenir Next", "HelveticaNeue-Light", "Helvetica Neue Light",
+				 "Helvetica Neue", Helvetica, Arial, "Lucida Grande",
+				 "SF UI Display", sans-serif;
+	font-weight: 350;
+	height: 100vh;
 
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+div, span, header, hgroup, 
+section, article, footer, 
+h1, h2, h3, h4, h5, h6, ul, ol, p{
+	border: 0 solid black;
+	margin: 0;
+	padding: 0;
 }
 
 h1 {
-  font-size: 36px;
-  font-weight: 400;
+	font-size: 36px;
+	font-weight: 400;
+}
+
+h2 {
+	font-size: 24px;
+	font-weight: 400;
 }
 
 a {
-    color: #c58f56;
-    font-weight: 500;
-    text-decoration: underline;
+	color: #c58f56;
+	font-weight: 500;
+	text-decoration: underline;
 }
 
 a:hover {
-    text-decoration: none;
-    cursor: pointer;
+	text-decoration: none;
+	cursor: pointer;
 }
 
 #display {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
 }
 
 #mode_container {
-    height: 100%;
+	height: 100%;
 }
 
 #mode_buttons {
-    margin-top: 50px;
+	margin-top: 50px;
 }
 
 #back_to_menu_btn:hover {
-    cursor: pointer;
-    text-decoration: underline;
+	cursor: pointer;
+	text-decoration: underline;
 }
 
 .button_base {
-    margin: 0;
-    border: 0;
-    font-size: 18px;
-    width: 150px;
-    height: 50px;
-    text-align: center;
-    box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    -webkit-user-select: none;
-    cursor: default;
-    display: inline-block;
+	margin: 0;
+	border: 0;
+	font-size: 18px;
+	width: 150px;
+	height: 50px;
+	text-align: center;
+	box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-user-select: none;
+	cursor: default;
+	display: inline-block;
 }
 
 .button_base:hover {
-    cursor: pointer;
+	cursor: pointer;
 }
 
 /* 3d roll effect from: https://codepen.io/bartekd/pen/qFsDf; */
 .b_3d_roll {
-    perspective: 500px;
-    -webkit-perspective: 500px;
-    -moz-perspective: 500px;
+	perspective: 500px;
+	-webkit-perspective: 500px;
+	-moz-perspective: 500px;
 }
 
 .b_3d_roll div {
-    position: absolute;
-    text-align: center;
-    width: 100%;
-    height: 50px;
-    padding: 10px;
-    pointer-events: none;
-    box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
+	position: absolute;
+	text-align: center;
+	width: 100%;
+	height: 50px;
+	padding: 10px;
+	pointer-events: none;
+	box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
 }
 
 .b_3d_roll div:nth-child(1) {
-    color: #000000;
-    background-color: rgb(70,70,70);
-    transform: rotateX(90deg);
-    -webkit-transform: rotateX(90deg);
-    -moz-transform: rotateX(90deg);
-    transition: all 0.2s ease;
-    -webkit-transition: all 0.2s ease;
-    -moz-transition: all 0.2s ease;
-    transform-origin: 50% 50% -25px;
-    -webkit-transform-origin: 50% 50% -25px;
-    -moz-transform-origin: 50% 50% -25px;
+	color: #000000;
+	background-color: rgb(70,70,70);
+	transform: rotateX(90deg);
+	-webkit-transform: rotateX(90deg);
+	-moz-transform: rotateX(90deg);
+	transition: all 0.2s ease;
+	-webkit-transition: all 0.2s ease;
+	-moz-transition: all 0.2s ease;
+	transform-origin: 50% 50% -25px;
+	-webkit-transform-origin: 50% 50% -25px;
+	-moz-transform-origin: 50% 50% -25px;
 }
 
 .b_3d_roll div:nth-child(2) {
-    color: #000000;
-    background-color: #ffffff;
-    transform: rotateX(0deg);
-    -webkit-transform: rotateX(0deg);
-    -moz-transform: rotateX(0deg);
-    transition: all 0.2s ease;
-    -webkit-transition: all 0.2s ease;
-    -moz-transition: all 0.2s ease;
-    transform-origin: 50% 50% -25px;
-    -webkit-transform-origin: 50% 50% -25px;
-    -moz-transform-origin: 50% 50% -25px;
+	color: #000000;
+	background-color: #ffffff;
+	transform: rotateX(0deg);
+	-webkit-transform: rotateX(0deg);
+	-moz-transform: rotateX(0deg);
+	transition: all 0.2s ease;
+	-webkit-transition: all 0.2s ease;
+	-moz-transition: all 0.2s ease;
+	transform-origin: 50% 50% -25px;
+	-webkit-transform-origin: 50% 50% -25px;
+	-moz-transform-origin: 50% 50% -25px;
 }
 
 .b_3d_roll:hover div:nth-child(1) {
-    color: #ffffff;
-    transition: all 0.2s ease;
-    -webkit-transition: all 0.2s ease;
-    -moz-transition: all 0.2s ease;
-    transform: rotateX(0deg);
-    -webkit-transform: rotateX(0deg);
-    -moz-transform: rotateX(0deg);
+	color: #ffffff;
+	transition: all 0.2s ease;
+	-webkit-transition: all 0.2s ease;
+	-moz-transition: all 0.2s ease;
+	transform: rotateX(0deg);
+	-webkit-transform: rotateX(0deg);
+	-moz-transform: rotateX(0deg);
 }
 
 .b_3d_roll:hover div:nth-child(2) {
-    background-color: #000000;
-    transition: all 0.2s ease;
-    -webkit-transition: all 0.2s ease;
-    -moz-transition: all 0.2s ease;
-    transform: rotateX(-90deg);
-    -webkit-transform: rotateX(-90deg);
-    -moz-transform: rotateX(-90deg);
+	background-color: #000000;
+	transition: all 0.2s ease;
+	-webkit-transition: all 0.2s ease;
+	-moz-transition: all 0.2s ease;
+	transform: rotateX(-90deg);
+	-webkit-transform: rotateX(-90deg);
+	-moz-transform: rotateX(-90deg);
 }
 
 /* Custom Colors
@@ -140,15 +153,126 @@ a:hover {
 4d: #815aa4;
 
 */
-
 #btn_2d div:nth-child(2) {
-    color: #ed3237;
+	color: #ed3237;
 }
 
 #btn_3d div:nth-child(2) {
-    color: #00afef;
+	color: #00afef;
 }
 
 #btn_4d div:nth-child(2) {
-    color: #815aa4;
+	color: #815aa4;
+}
+
+/*
+css for about modal
+*/
+
+#about {
+	display: none;
+	position: fixed;
+	z-index: 1;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	background-color: rgba(0,0,0,0.7);
+
+	justify-content: center;
+	align-items: center;
+
+	animation-name: fade_in;
+	animation-duration: 0.4s;
+}
+
+@keyframes fade_in {
+	from {opacity: 0} 
+	to {opacity: 1}
+}
+
+@keyframes fade_out {
+	from {opacity: 1} 
+	to {opacity: 0}
+}
+
+#modal_content {
+	position: relative;
+
+	background-color: #fefefe;
+	padding: 20px;
+	border: 1px solid black;
+	border-radius: 10px;
+	width: 80%;
+	max-width: 720px;
+
+	animation-name: slide_in_from_top;
+	animation-duration: 0.4s;
+}
+
+@keyframes slide_in_from_top {
+	from {transform: translateY(-100px); opacity: 0}
+	to {transform: translateY(0); opacity: 1}
+}
+
+@keyframes slide_out {
+	from {transform: translateY(0); opacity: 1}
+	to {transform: translateY(-100px); opacity: 0}
+}
+
+#modal_content h1 {
+	margin-bottom: 15px;
+	padding-bottom: 4px;
+	border-bottom: 1px solid #dddddd;
+}
+
+#modal_content h2 {
+	margin-top: 15px;
+	margin-bottom: 10px;
+}
+
+#modal_content p {
+	line-height: 2;
+}
+
+#modal_content li {
+	line-height: 2;
+	margin-left: 18px;
+}
+
+#close_btn {
+	position: absolute;
+	top: -11px;
+	right: -11px;
+
+	width: 25px;
+	height: 25px;
+	background: #c58f56;
+	border: 0px solid #000000;
+	border-radius: 25px;
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+
+	color: #ffffff;
+	font-weight: 500;
+	font-size: 24px;
+}
+
+#close_btn:hover {
+	cursor: pointer;
+}
+
+#open_about {
+	color: #c58f56;
+	font-weight: 500;
+	text-decoration: underline;
+}
+
+#open_about:hover {
+	text-decoration: none;
+	cursor: pointer;
 }

@@ -27,10 +27,10 @@ var Mode4D = (function (scope) {
 		var viewWidth = (window.innerWidth-50)/2;
 
 		// Init gui
-	    gui.init("4D",this.callbacks,this);
-	    this.gui = gui;
+		gui.init("4D",this.callbacks,this);
+		this.gui = gui;
 
-	    // Set up left view
+		// Set up left view
 		this.leftView = new THREE.Scene();
 		this.leftCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
 		this.leftCamera.position.set(5,10,20);

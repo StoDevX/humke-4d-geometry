@@ -3,9 +3,7 @@
 
 var GUI = (function (scope) {
 	//Constructor
-	function GUI(){
-
-	}
+	function GUI(){}
 
 	GUI.prototype.init = function(mode,callbacks,mode_obj){
 		// Colors to use throughout
@@ -145,84 +143,77 @@ var GUI = (function (scope) {
 		this.callbacks = callbacks;
 		// Create the two folders
 		var shapeProperties = this.gui.addFolder('Shape Properties');
-	    var viewingControls = this.gui.addFolder('Viewing Controls');
-	    var builtinExamples = this.gui.addFolder('Builtin Examples');
-	    this.shapeProperties = shapeProperties;
-	    this.viewingControls = viewingControls;
-	    this.builtinExamples = builtinExamples;
-	    var current_scope = this;
-	    var params = this.params;
+		var viewingControls = this.gui.addFolder('Viewing Controls');
+		var builtinExamples = this.gui.addFolder('Builtin Examples');
+		this.shapeProperties = shapeProperties;
+		this.viewingControls = viewingControls;
+		this.builtinExamples = builtinExamples;
+		var current_scope = this;
+		var params = this.params;
 
-	    // Load defaults
-	    for(var key in params){
-	    	if(this.defaults[mode][key]){
-	    		params[key] = this.defaults[mode][key];
-	    	}
-	    }
+		// Load defaults
+		for(var key in params){
+			if(this.defaults[mode][key]){
+				params[key] = this.defaults[mode][key];
+			}
+		}
 
-	    shapeProperties.add(params, 'source',['cartesian','parametric','convex-hull']).onChange(function(val){
-	    	if(val == 'cartesian' && current_scope.last_source != 'cartesian'){
-	    		current_scope.destroyConvexSource();
-	    		current_scope.destroyParamSource();
-	    		current_scope.initCartesianSource();
-	    	}
-	    	if(val == 'parametric' && current_scope.last_source != 'parametric'){
-	    		current_scope.destroyConvexSource();
-	    		current_scope.destroyCartesianSource();
-	    		current_scope.initParamSource();
-	    	}
-	    	if(val == 'convex-hull' && current_scope.last_source != 'convex-hull'){
-	    		current_scope.destroyCartesianSource();
-	    		current_scope.destroyParamSource();
-	    		current_scope.initConvexSource();
-	    	}
-	    	current_scope.last_source = val
+		shapeProperties.add(params, 'source',['cartesian','parametric','convex-hull']).onChange(function(val){
+			if(val == 'cartesian' && current_scope.last_source != 'cartesian'){
+				current_scope.destroyConvexSource();
+				current_scope.destroyParamSource();
+				current_scope.initCartesianSource();
+			}
+			if(val == 'parametric' && current_scope.last_source != 'parametric'){
+				current_scope.destroyConvexSource();
+				current_scope.destroyCartesianSource();
+				current_scope.initParamSource();
+			}
+			if(val == 'convex-hull' && current_scope.last_source != 'convex-hull'){
+				current_scope.destroyCartesianSource();
+				current_scope.destroyParamSource();
+				current_scope.initConvexSource();
+			}
+			current_scope.last_source = val
 
-	    	if(callbacks['source']) callbacks['source'](mode_obj,val);
-	    });
+			if(callbacks['source']) callbacks['source'](mode_obj,val);
+		});
 
-	    shapeProperties.add(params, 'render_shape').name("Render Shape").listen().onChange(function(val){
-	    	if(callbacks['render_shape']) callbacks['render_shape'](mode_obj,val);
-	    });
+		shapeProperties.add(params, 'render_shape').name("Render Shape").listen().onChange(function(val){
+			if(callbacks['render_shape']) callbacks['render_shape'](mode_obj,val);
+		});
 
 			shapeProperties.add(params, 'render_slices').name("Render Slices").listen().onChange(function(val){
-	    	if(callbacks['render_slices']) callbacks['render_slices'](mode_obj,val);
-	    });
+			if(callbacks['render_slices']) callbacks['render_slices'](mode_obj,val);
+		});
 
-	    // Init cartesian by default
-	    this.initCartesianSource();
+		// Init cartesian by default
+		this.initCartesianSource();
 
-	    // Now the viewing controls
-	    var axis_value_control = this.viewingControls.add(params, 'axis_value').min(-10).max(10).step(0.01).listen();
-	    axis_value_control.onChange(function(val){
-	    	if(callbacks['axis_value']) callbacks['axis_value'](mode_obj,val);
-	    })
-	    var axes_list = ['X','Y'];
-	    if(mode == "3D" || mode == "4D") axes_list.push("Z");
-	    if(mode == "4D") axes_list.push("W");
-	    this.viewingControls.add(params, 'axis', axes_list ).onChange(function(val){
-	    	axis_value_control.name(val + " = ")
-	    	params.axis_value = 0;
-	    	if(callbacks['axis']) callbacks['axis'](mode_obj,val);
-	    });
-	    // Set axis name
-	    axis_value_control.name(params.axis + " = ")
+		// Now the viewing controls
+		var axis_value_control = this.viewingControls.add(params, 'axis_value').min(-10).max(10).step(0.01).listen();
+		axis_value_control.onChange(function(val){
+			if(callbacks['axis_value']) callbacks['axis_value'](mode_obj,val);
+		})
+		var axes_list = ['X','Y'];
+		if(mode == "3D" || mode == "4D") axes_list.push("Z");
+		if(mode == "4D") axes_list.push("W");
+		this.viewingControls.add(params, 'axis', axes_list ).onChange(function(val){
+			axis_value_control.name(val + " = ")
+			params.axis_value = 0;
+			if(callbacks['axis']) callbacks['axis'](mode_obj,val);
+		});
+		// Set axis name
+		axis_value_control.name(params.axis + " = ")
 
-	    /*
-	    this.viewingControls.add(params, 'samples', 200, 10000).name('Samples');
-	    this.viewingControls.add(params, 'thickness', ['thin','medium','thick']).name('Thickness').onChange(function(val){
-	    	if(callbacks['thickness']) callbacks['thickness'](mode_obj,val);
-	    });
-	    */
-
-	    // Turn all sliders orange after the first one (the first one is the resolution one)
-	    var sliders = document.querySelectorAll(".slider-fg")
-	    for(var i=1;i<sliders.length;i++){ //notice i=1
-	    	var slider = sliders[i]
-	    	slider.style.background = this.colors.slices
-		    slider.parentNode.parentNode.querySelector(".dg .cr.number input[type='text']").style.color = this.colors.slices
-	    	slider.parentNode.parentNode.parentNode.parentNode.style['border-left'] = "3px solid " + this.colors.slices
-	    }
+		// Turn all sliders orange after the first one (the first one is the resolution one)
+		var sliders = document.querySelectorAll(".slider-fg")
+		for(var i=1;i<sliders.length;i++){ //notice i=1
+			var slider = sliders[i]
+			slider.style.background = this.colors.slices
+			slider.parentNode.parentNode.querySelector(".dg .cr.number input[type='text']").style.color = this.colors.slices
+			slider.parentNode.parentNode.parentNode.parentNode.style['border-left'] = "3px solid " + this.colors.slices
+		}
 	}
 
 	// Functions for creating the controls for the 3 different inputs (cartesian, parametric and convex hull)
@@ -241,7 +232,7 @@ var GUI = (function (scope) {
 		});
 		arr.push(res);
 
-	    // Now for Builtin Examples
+		// Now for Builtin Examples
 		if (this.mode == '2D') {
 			var filled_in_circle = this.builtinExamples.add(this.params, 'Filled in Circle');
 			var parabola = this.builtinExamples.add(this.params, 'Parabola');
@@ -306,7 +297,7 @@ var GUI = (function (scope) {
 
 		// Now for Builtin Examples
 		if (this.mode == '2D') {
-		    var heart = this.builtinExamples.add(this.params, 'Heart');
+			var heart = this.builtinExamples.add(this.params, 'Heart');
 			builtin_arr.push(heart);
 		} else if (this.mode == '3D') {
 			var spiral = this.builtinExamples.add(this.params, 'Spiral Tube');
@@ -371,7 +362,6 @@ var GUI = (function (scope) {
 		this.builtin_arr_param = null;
 		this.builtin_arr_convex = null;
 	};
-
 
 	scope.GUI = GUI;
 	return GUI;
