@@ -17,7 +17,7 @@ tesseract = [[0,0,0,0]
 
 function CreateInitialSimplex() {
   // Create an initial simplex of d+1 points and return its facets
-  return [[0,1,2,3],[3,2,1,4],[4,1,0,3],[3,0,4,2],[2,4,1,3]];
+  return [[1,2,3,4],[4,3,2,0],[0,1,3,4],[4,2,1,0],[0,1,2,3]];
 }
 
 function vecSubtract(A, B) {
@@ -132,24 +132,25 @@ function GetRidgesOfFacet(facet) {
 // Following the threejs winding of a tetrahedron.
 
   return [[facet[0], facet[1], facet[2]],
-          [facet[3], facet[0], facet[2]],
+          [facet[0], facet[2], facet[3]],
           [facet[3], facet[2], facet[1]],
           [facet[3], facet[1], facet[0]]];
 }
 
-function ShareRidge(facet_ridges, other_facet_ridges) {
+function GetSharedRidges(facet_ridges, other_facet_ridges) {
+  var shared_ridges = [];
   for (var fri = 0; fri < facet_ridges.length; fri++) {
     for (var ofri = 0; ofri < other_facet_ridges.length; ofri++) {
-      var shared_edges = 0;
+      var shared_points = 0;
       for (var frii = 0; frii < facet_ridges[fri].length; frii++) {
         for (var ofrii = 0; ofrii < other_facet_ridges[ofri].length; ofrii++) {
-          if (facet_ridges[fri][frii] == other_facet_ridges[ofri][ofrii]) shared_edges++;
+          if (facet_ridges[fri][frii] == other_facet_ridges[ofri][ofrii]) shared_points++;
         }
       }
-      if (shared_edges >= 3) return true;
+      if (shared_points >= 3)  shared_ridges.push(facet_ridges[fri]);
     }
   }
-  return false;
+  return shared_ridges;
 }
 
 function GetNeighborsOfFacet(facet_i, hull) {
@@ -159,7 +160,7 @@ function GetNeighborsOfFacet(facet_i, hull) {
     if (i == facet_i)
       continue;
     var other_facet_ridges = GetRidgesOfFacet(hull.facets[i]);
-    if (ShareRidge(facet_ridges, other_facet_ridges))
+    if (GetSharedRidges(facet_ridges, other_facet_ridges) != [])
       neighbors.push(i);
   }
   return neighbors;
@@ -174,10 +175,15 @@ function GetHorizonRidges(visible_set, point_i, hull) {
     // then the shared ridge ridge with that neighbor is part of the horizon.
     for (var neighbors_i = 0; neighbors_i < neighbors.length; neighbors_i++) {
       if (!IsPointAboveFacet(neighbors[neighbors_i], point_i, hull)) {
-        
+        var facet_ridges = GetRidgesOfFacet(visible_set[visible_set_i]);
+        var other_facet_ridges = GetRidgesOfFacet(neighbors[neighbors_i]);
+        var shared_ridges = GetSharedRidges(facet_ridges, other_facet_ridges);
+        horizon.concat(shared_ridges);
       }
     }
   }
+
+  return horizon;
 }
 
 function ConvexHull4D(points) {
@@ -204,6 +210,7 @@ function ConvexHull4D(points) {
       }
 
       var horizon_ridges = GetHorizonRidges(visible_set, furthest_point_i, hull);
+      hull = RemoveFacetsFromHull(visible_set, hull);
 
     }
   }
