@@ -112,7 +112,6 @@ var Mode2D = (function (scope) {
 
 		/// I'm hijacking this to toggle the visibility of the rest of the shape on the slices
 		self.uniforms.renderWholeShape.value = Number(val);
-
 	}
 
 	function updateRenderSlices(self,val,opacity_val){
@@ -250,8 +249,6 @@ var Mode2D = (function (scope) {
 	}
 
 	// >>>>>>>>>> Cartesian mode functions
-
-
 	Mode2D.prototype.initCartesian = function(view){
 		var params = this.gui.params
 		var equation = this.gui.params.equation;
@@ -388,45 +385,45 @@ var Mode2D = (function (scope) {
 		}
 	}
 
-//Destroys everything created
-Mode2D.prototype.cleanup = function(){
-	cancelAnimationFrame(this.animId); // stop the animation loop
+	//Destroys everything created
+	Mode2D.prototype.cleanup = function(){
+		cancelAnimationFrame(this.animId); // stop the animation loop
 
-	this.util.CleanUpScene(this.leftView);
+		this.util.CleanUpScene(this.leftView);
 
-	this.intersectionLine = null;
-	this.leftView = null;
-	this.leftRenderer.dispose();
-	this.leftRenderer = null;
-	this.leftCamera = null;
-	this.leftControls = null;
-	this.leftMesh = null;
+		this.intersectionLine = null;
+		this.leftView = null;
+		this.leftRenderer.dispose();
+		this.leftRenderer = null;
+		this.leftCamera = null;
+		this.leftControls = null;
+		this.leftMesh = null;
 
-	this.util.CleanUpScene(this.rightView);
+		this.util.CleanUpScene(this.rightView);
 
-	this.rightView = null;
-	this.rightRenderer.dispose();
-	this.rightRenderer = null;
-	this.rightCamera = null;
-	this.rightControls = null;
+		this.rightView = null;
+		this.rightRenderer.dispose();
+		this.rightRenderer = null;
+		this.rightCamera = null;
+		this.rightControls = null;
 
-	// Destroy gui
-	this.gui.cleanup();
-}
-
-Mode2D.prototype.handleEvent = function(event) {
-	if(event.type == 'resize') {
-		this.util.ResizeScenes(this);
+		// Destroy gui
+		this.gui.cleanup();
 	}
-}
 
-Mode2D.prototype.animate = function(){
+	Mode2D.prototype.handleEvent = function(event) {
+		if(event.type == 'resize') {
+			this.util.ResizeScenes(this);
+		}
+	}
 
-	this.animId = requestAnimationFrame( this.animate.bind(this) );
-	this.leftRenderer.render( this.leftView, this.leftCamera );
-	this.rightRenderer.render( this.rightView, this.rightCamera );
-}
+	Mode2D.prototype.animate = function(){
 
-scope.Mode2D = Mode2D;
-return Mode2D;
+		this.animId = requestAnimationFrame( this.animate.bind(this) );
+		this.leftRenderer.render( this.leftView, this.leftCamera );
+		this.rightRenderer.render( this.rightView, this.rightCamera );
+	}
+
+	scope.Mode2D = Mode2D;
+	return Mode2D;
 })(typeof exports === 'undefined' ? {} : exports);

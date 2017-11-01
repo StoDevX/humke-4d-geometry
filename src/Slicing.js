@@ -3,9 +3,7 @@ The slicing class contains pure functions for computing and rendering
 anything related to the right side of the screen (slices of higher dimensional objects)
 */
 var Slicing = (function (scope) {
-	function Slicing(){
-		
-	}
+	function Slicing(){}
 
 	Slicing.prototype.Slice2DMesh = function(mesh,uniforms,color){
 		/* Takes a mesh and returns a version of it with a shader material that slices */
@@ -15,119 +13,112 @@ var Slicing = (function (scope) {
 				vertexPosition = modelMatrix * vec4(position,1.0);
 				gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); 
 			}
-  		`;
+		`;
 
-  		var fragmentShader =`
-        varying vec4 vertexPosition;
-        uniform vec2 axisValue;
-        uniform float axis; // 0 is x, 1 is y  
-        uniform float slice; 
-        uniform float renderWholeShape;
-        
-        void main(){
-        	vec4 color = vec4(${color.r/255},${color.g/255},${color.b/255},1.0);
-        	vec2 p = vec2(vertexPosition.x,vertexPosition.y);
+		var fragmentShader =`
+			varying vec4 vertexPosition;
+			uniform vec2 axisValue;
+			uniform float axis; // 0 is x, 1 is y  
+			uniform float slice; 
+			uniform float renderWholeShape;
 
-        	gl_FragColor = color;
- 			if(slice == 0.0) return;
- 			// Slicing code 
- 			gl_FragColor.a = 1.0;
- 			float sliceThickness = 0.1;
-        	if(axis == 0.0){
-        		if(abs(p.x) > sliceThickness) {
-        			if(renderWholeShape == 1.0){
-        				gl_FragColor.a = 0.15;
-        			}
-        			else {
-        				discard;
-        			}
-        		}
-        	}
-        	if(axis == 1.0){
-        		if(abs(p.y) > sliceThickness) {
-        			if(renderWholeShape == 1.0){
-        				gl_FragColor.a = 0.15;
-        			}
-        			else {
-        				discard;
-        			}
-        		}
-        	}
-        	
-        }
-        `;
+			void main(){
+				vec4 color = vec4(${color.r/255},${color.g/255},${color.b/255},1.0);
+				vec2 p = vec2(vertexPosition.x,vertexPosition.y);
 
-        var material = new THREE.ShaderMaterial({
-            fragmentShader: fragmentShader,
-            vertexShader: vertexShader, 
-            uniforms: uniforms
-        });
-        material.transparent = true;
+				gl_FragColor = color;
+				if(slice == 0.0) return;
+				// Slicing code 
+				gl_FragColor.a = 1.0;
+				float sliceThickness = 0.1;
+				if(axis == 0.0){
+					if(abs(p.x) > sliceThickness) {
+						if(renderWholeShape == 1.0){
+							gl_FragColor.a = 0.15;
+						}
+						else {
+							discard;
+						}
+					}
+				}
+				if(axis == 1.0){
+					if(abs(p.y) > sliceThickness) {
+						if(renderWholeShape == 1.0){
+							gl_FragColor.a = 0.15;
+						}
+						else {
+							discard;
+						}
+					}
+				}
+			}
+		`;
 
-        if(mesh.type == "Object3D"){
-        	var container = new THREE.Object3D();
-        	for(var i=0;i<mesh.children.length;i++){
-        		console.log(mesh.children[i]);
-        		var geometry = mesh.children[i].geometry.clone();
-        		var childMesh = new THREE.Line(geometry,material); ///////////////// THIS IS HARDCODED TO ONLY WORK WITH LINES!!!!
-        		container.add(childMesh);
-        	}
-        	return container;
-        } else {
-        	var geometry = mesh.geometry.clone();
+		var material = new THREE.ShaderMaterial({
+			fragmentShader: fragmentShader,
+			vertexShader: vertexShader, 
+			uniforms: uniforms
+		});
+		material.transparent = true;
+
+		if(mesh.type == "Object3D"){
+			var container = new THREE.Object3D();
+			for(var i=0;i<mesh.children.length;i++){
+				console.log(mesh.children[i]);
+				var geometry = mesh.children[i].geometry.clone();
+				var childMesh = new THREE.Line(geometry,material); ///////////////// THIS IS HARDCODED TO ONLY WORK WITH LINES!!!!
+				container.add(childMesh);
+			}
+			return container;
+		} else {
+			var geometry = mesh.geometry.clone();
 			var mesh = new THREE.Mesh( geometry, material );
 			return mesh;
-        }
-		
-
+		}
 	}
 
 	Slicing.prototype.CartesianSlice3D = function(glslFuncString,uniforms,color){
 		/* 
 			Takes in a glsl function and an operator (>,< or =) and renders that 
 		*/
-
-  		vertexShader = `
+		vertexShader = `
 			varying vec4 vertexPosition;
 			void main() {
 				vertexPosition = modelMatrix * vec4(position,1.0);
 				gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); 
 			}
-  		`;
+		`;
 
-        var fragmentShader =`
-        varying vec4 vertexPosition;
-        uniform float axisValue;
-      
-        float eq(float x,float y,float axisValue){
-        	${glslFuncString}
-        }
+		var fragmentShader =`
+			varying vec4 vertexPosition;
+			uniform float axisValue;
+
+			float eq(float x,float y,float axisValue){
+				${glslFuncString}
+			}
 
 
-        void main(){
-        	vec4 color = vec4(${color.r/255},${color.g/255},${color.b/255},1.0);
-        	vec2 p = vec2(vertexPosition.x,vertexPosition.y);
+			void main(){
+				vec4 color = vec4(${color.r/255},${color.g/255},${color.b/255},1.0);
+				vec2 p = vec2(vertexPosition.x,vertexPosition.y);
 
-        	float val = eq(p.x,p.y,axisValue);
-        	if(val > 0.0) discard;
-     
-        	gl_FragColor = color;
- 			
-        	
-        }
-        `;
+				float val = eq(p.x,p.y,axisValue);
+				if(val > 0.0) discard;
 
-        var geometry = new THREE.PlaneBufferGeometry(20, 20);
-        var material = new THREE.ShaderMaterial({
-            fragmentShader: fragmentShader,
-            vertexShader: vertexShader, 
-            uniforms: uniforms
-        });
-       
+				gl_FragColor = color;
+			}
+		`;
 
-        var mesh = new THREE.Mesh(geometry, material);
+		var geometry = new THREE.PlaneBufferGeometry(20, 20);
+		var material = new THREE.ShaderMaterial({
+			fragmentShader: fragmentShader,
+			vertexShader: vertexShader, 
+			uniforms: uniforms
+		});
 
-        return mesh;
+		var mesh = new THREE.Mesh(geometry, material);
+
+		return mesh;
 	}
 
 	Slicing.prototype.CreateSliceShader3D = function(uniforms,color){
@@ -137,33 +128,33 @@ var Slicing = (function (scope) {
 				vertexPosition = modelMatrix * vec4(position,1.0);
 				gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); 
 			}
-  		`;
+		`;
 
-  		var fragmentShader =`
-        varying vec4 vertexPosition;
-        uniform float axisValue;
-        
-        void main(){
-        	vec4 color = vec4(${color.r/255},${color.g/255},${color.b/255},1.0);
-        	vec3 p = vertexPosition.xyz;
-        	float threshold = 0.1;
-        	// Offset shape 
-        	p.z -= axisValue; 
+		var fragmentShader =`
+			varying vec4 vertexPosition;
+			uniform float axisValue;
 
-        	if(p.z > threshold || p.z < -threshold) discard;
+			void main(){
+				vec4 color = vec4(${color.r/255},${color.g/255},${color.b/255},1.0);
+				vec3 p = vertexPosition.xyz;
+				float threshold = 0.1;
+				// Offset shape 
+				p.z -= axisValue; 
 
-        	gl_FragColor = color;
-        }
-        `;
+				if(p.z > threshold || p.z < -threshold) discard;
 
-        var material = new THREE.ShaderMaterial({
-            fragmentShader: fragmentShader,
-            vertexShader: vertexShader, 
-            uniforms: uniforms,
-            side:THREE.DoubleSide
-        });
+				gl_FragColor = color;
+			}
+		`;
 
-        return material;
+		var material = new THREE.ShaderMaterial({
+			fragmentShader: fragmentShader,
+			vertexShader: vertexShader, 
+			uniforms: uniforms,
+			side:THREE.DoubleSide
+		});
+
+		return material;
 	}
 
 	Slicing.prototype.SliceConvex3D = function(mesh,axis,axisValue,color,outlineOnly){
@@ -179,11 +170,9 @@ var Slicing = (function (scope) {
 			var v1 = verts[f.a];
 			var v2 = verts[f.b];
 			var v3 = verts[f.c];
-			
 			triangleArray.push([v1,v2,v3]);
 		}
 
-		
 		var vectorArray = [];
 		var geometry = new THREE.Geometry();
 
@@ -210,10 +199,8 @@ var Slicing = (function (scope) {
 				
 			} else {
 				vectorArray.push(v1);
-				vectorArray.push(v2);	
+				vectorArray.push(v2);
 			}
-			
-			
 		}
 
 		if(outlineOnly){
@@ -224,9 +211,8 @@ var Slicing = (function (scope) {
 			var geometry = new THREE.ConvexGeometry( vectorArray );
 			var material = new THREE.MeshBasicMaterial( {color: color} );
 			var mesh = new THREE.Mesh( geometry, material );
-			return mesh;	
+			return mesh;
 		}
-		
 	}
 
 	Slicing.prototype.CalculateIntersectionPoints = function(p1,p2,p3,axis,axis_value) {
@@ -273,53 +259,52 @@ var Slicing = (function (scope) {
 		if(below.length == 3 || above.length == 3) return [];
 
 		if (below.length > 1) {
+			var direction = [3];
+			direction[0] = below[0][axis_conv['X']] - above[0][axis_conv['X']];
+			direction[1] = below[0][axis_conv['Y']] - above[0][axis_conv['Y']];
+			direction[2] = below[0][axis_conv['Z']] - above[0][axis_conv['Z']];
 
-		  var direction = [3];
-		  direction[0] = below[0][axis_conv['X']] - above[0][axis_conv['X']];
-		  direction[1] = below[0][axis_conv['Y']] - above[0][axis_conv['Y']];
-		  direction[2] = below[0][axis_conv['Z']] - above[0][axis_conv['Z']];
+			var t = (below[0][chosen_axis] - axis_value)/(direction[chosen_axis]*-1);
 
-		  var t = (below[0][chosen_axis] - axis_value)/(direction[chosen_axis]*-1);
+			intersection_point[0] = below[0][other_axis_one] + t * direction[other_axis_one];
+			//intersection_point[1] = axis_value;
+			intersection_point[1] = below[0][other_axis_two] + t * direction[other_axis_two];
 
-		  intersection_point[0] = below[0][other_axis_one] + t * direction[other_axis_one];
-		  //intersection_point[1] = axis_value;
-		  intersection_point[1] = below[0][other_axis_two] + t * direction[other_axis_two];
+			direction[0] = below[1][axis_conv['X']] - above[0][axis_conv['X']];
+			direction[1] = below[1][axis_conv['Y']] - above[0][axis_conv['Y']];
+			direction[2] = below[1][axis_conv['Z']] - above[0][axis_conv['Z']];
 
-		  direction[0] = below[1][axis_conv['X']] - above[0][axis_conv['X']];
-		  direction[1] = below[1][axis_conv['Y']] - above[0][axis_conv['Y']];
-		  direction[2] = below[1][axis_conv['Z']] - above[0][axis_conv['Z']];
+			t = (below[1][chosen_axis] - axis_value)/(direction[chosen_axis]*-1);
 
-		  t = (below[1][chosen_axis] - axis_value)/(direction[chosen_axis]*-1);
+			intersection_point[2] = below[1][other_axis_one] + t * direction[other_axis_one];
+			//intersection_point[4] = axis_value;
+			intersection_point[3] = below[1][other_axis_two] + t * direction[other_axis_two];
 
-		  intersection_point[2] = below[1][other_axis_one] + t * direction[other_axis_one];
-		  //intersection_point[4] = axis_value;
-		  intersection_point[3] = below[1][other_axis_two] + t * direction[other_axis_two];
-
-		  return intersection_point;
+			return intersection_point;
 		}
 		else {
-		  var direction = [3];
-		  direction[0] = above[0][axis_conv['X']] - below[0][axis_conv['X']];
-		  direction[1] = above[0][axis_conv['Y']] - below[0][axis_conv['Y']];
-		  direction[2] = above[0][axis_conv['Z']] - below[0][axis_conv['Z']];
+			var direction = [3];
+			direction[0] = above[0][axis_conv['X']] - below[0][axis_conv['X']];
+			direction[1] = above[0][axis_conv['Y']] - below[0][axis_conv['Y']];
+			direction[2] = above[0][axis_conv['Z']] - below[0][axis_conv['Z']];
 
-		  var t = (above[0][chosen_axis] - axis_value)/(direction[chosen_axis]*-1);
+			var t = (above[0][chosen_axis] - axis_value)/(direction[chosen_axis]*-1);
 
-		  intersection_point[0] = above[0][other_axis_one] + t * direction[other_axis_one];
-		  //intersection_point[1] = axis_value;
-		  intersection_point[1] = above[0][other_axis_two] + t * direction[other_axis_two];
+			intersection_point[0] = above[0][other_axis_one] + t * direction[other_axis_one];
+			//intersection_point[1] = axis_value;
+			intersection_point[1] = above[0][other_axis_two] + t * direction[other_axis_two];
 
-		  direction[0] = above[1][axis_conv['X']] - below[0][axis_conv['X']];
-		  direction[1] = above[1][axis_conv['Y']] - below[0][axis_conv['Y']];
-		  direction[2] = above[1][axis_conv['Z']] - below[0][axis_conv['Z']];
+			direction[0] = above[1][axis_conv['X']] - below[0][axis_conv['X']];
+			direction[1] = above[1][axis_conv['Y']] - below[0][axis_conv['Y']];
+			direction[2] = above[1][axis_conv['Z']] - below[0][axis_conv['Z']];
 
-		  var t = (above[1][chosen_axis] - axis_value)/(direction[chosen_axis]*-1);
+			var t = (above[1][chosen_axis] - axis_value)/(direction[chosen_axis]*-1);
 
-		  intersection_point[2] = above[1][other_axis_one] + t * direction[other_axis_one];
-		  //intersection_point[4] = axis_value;
-		  intersection_point[3] = above[1][other_axis_two] + t * direction[other_axis_two];
+			intersection_point[2] = above[1][other_axis_one] + t * direction[other_axis_one];
+			//intersection_point[4] = axis_value;
+			intersection_point[3] = above[1][other_axis_two] + t * direction[other_axis_two];
 
-		  return intersection_point;
+			return intersection_point;
 		}
 	}
 	scope.Slicing = Slicing;
