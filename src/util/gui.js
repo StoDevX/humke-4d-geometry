@@ -3,9 +3,7 @@
 
 var GUI = (function (scope) {
 	//Constructor
-	function GUI(){
-
-	}
+	function GUI(){}
 
 	GUI.prototype.init = function(mode,callbacks,mode_obj){
 		// Colors to use throughout
@@ -37,21 +35,24 @@ var GUI = (function (scope) {
 			'axis':'Y',
 			'samples':200,
 			'thickness':'medium',
-			
-			// Builtin Examples
+
+			// Builtin Examples 2D
 			'Filled in Circle': function() {}, // cartesian examples
 			'Parabola': function() {},
-			'Butterfly': function() {}, // parametric examples
-			'Square': function() {}, // convex hall examples
+			'Heart': function() {}, // parametric examples
+			'Diamond': function() {}, // convex hall examples
+
+			// Builtin Examples 3D
+			'Spiral Tube': function() {},
+
+			// Builtin Examples 4D
 		};
 		this.gui = null;
 		this.mode = "";
 		this.last_source = this.params.source;
+		this.defaults = {}
 
 		// 2D defaults
-		this.defaults = {}
-		// Alternative square:
-		// (0,5),(5,0),(0,-5),(-5,0)
 		this.defaults['2D'] = {
 			'equation':'x^2+y^2 = 9', // Circle
 			'points':'(5,5),(5,-5),(-5,-5),(-5,5)', // Square
@@ -70,18 +71,18 @@ var GUI = (function (scope) {
 				params.equation = 'y = x^2';
 				if (callbacks['equation']) callbacks['equation'](mode_obj,params.equation);
 			},
-			'Butterfly': function() {
+			'Heart': function() {
 				params.param_eq_x = 'b * (1-cos(a))*sin(a) * 5';
 				params.param_eq_y = 'b * (1-cos(a))*cos(a) * 5';
-				param_a = '0 < a < 2 * PI';
-				param_b = '0.5 < b < 1';
+				params.param_a = '0 < a < 2 * PI';
+				params.param_b = '0 < b < 0.5';
 
 				if(callbacks['param_eq_x']) callbacks['param_eq_x'](mode_obj,params.param_eq_x);
 				if(callbacks['param_eq_y']) callbacks['param_eq_y'](mode_obj,params.param_eq_y);
-				if(callbacks['param_a']) callbacks['param_a'](mode_obj,param_a);
-				if(callbacks['param_b']) callbacks['param_b'](mode_obj,param_b);
+				if(callbacks['param_a']) callbacks['param_a'](mode_obj,params.param_a);
+				if(callbacks['param_b']) callbacks['param_b'](mode_obj,params.param_b);
 			},
-			'Square': function() {
+			'Diamond': function() {
 				params.points = '(0,5),(5,0),(0,-5),(-5,0)';
 				if(callbacks['points']) callbacks['points'](mode_obj,params.points);
 			}
@@ -96,13 +97,24 @@ var GUI = (function (scope) {
 			'param_eq_z':'sin(b)',
 			'param_a':'0 < a < 2 * PI',
 			'param_b':'0 < b < 2 * PI',
-			'param_c':'0 < c < 5'
-			//'param_eq_x':'b * cos(a) - c * sin(a)', // Spiral tube
-			//'param_eq_y':'b * sin(a) + c * cos(a)',
-			//'param_eq_z':'a/3',
-			//'param_a':'-4 * PI < a < 4 * PI',
-			//'param_b':'0 < b < 1',
-			//'param_c':'0 < c < 1'
+			'param_c':'0 < c < 5',
+
+			// builtin examples
+			'Spiral Tube': function () {
+				params.param_eq_x = 'b * cos(a) - c * sin(a)';
+				params.param_eq_y = 'b * sin(a) + c * cos(a)';
+				params.param_eq_z = 'a/3';
+				params.param_a = '-4 * PI < a < 4 * PI';
+				params.param_b = '0 < b < 1';
+				params.param_c = '0 < c < 1';
+
+				if(callbacks['param_eq_x']) callbacks['param_eq_x'](mode_obj,params.param_eq_x);
+				if(callbacks['param_eq_y']) callbacks['param_eq_y'](mode_obj,params.param_eq_y);
+				if(callbacks['param_eq_z']) callbacks['param_eq_z'](mode_obj,params.param_eq_z);
+				if(callbacks['param_a']) callbacks['param_a'](mode_obj,params.param_a);
+				if(callbacks['param_b']) callbacks['param_b'](mode_obj,params.param_b);
+				if(callbacks['param_c']) callbacks['param_c'](mode_obj,params.param_c);
+			}
 		}
 
 		// 3D defaults
@@ -131,84 +143,77 @@ var GUI = (function (scope) {
 		this.callbacks = callbacks;
 		// Create the two folders
 		var shapeProperties = this.gui.addFolder('Shape Properties');
-	    var viewingControls = this.gui.addFolder('Viewing Controls');
-	    var builtinExamples = this.gui.addFolder('Builtin Examples');
-	    this.shapeProperties = shapeProperties;
-	    this.viewingControls = viewingControls;
-	    this.builtinExamples = builtinExamples;
-	    var current_scope = this;
-	    var params = this.params;
+		var viewingControls = this.gui.addFolder('Viewing Controls');
+		var builtinExamples = this.gui.addFolder('Builtin Examples');
+		this.shapeProperties = shapeProperties;
+		this.viewingControls = viewingControls;
+		this.builtinExamples = builtinExamples;
+		var current_scope = this;
+		var params = this.params;
 
-	    // Load defaults
-	    for(var key in params){
-	    	if(this.defaults[mode][key]){
-	    		params[key] = this.defaults[mode][key];
-	    	}
-	    }
+		// Load defaults
+		for(var key in params){
+			if(this.defaults[mode][key]){
+				params[key] = this.defaults[mode][key];
+			}
+		}
 
-	    shapeProperties.add(params, 'source',['cartesian','parametric','convex-hull']).onChange(function(val){
-	    	if(val == 'cartesian' && current_scope.last_source != 'cartesian'){
-	    		current_scope.destroyConvexSource();
-	    		current_scope.destroyParamSource();
-	    		current_scope.initCartesianSource();
-	    	}
-	    	if(val == 'parametric' && current_scope.last_source != 'parametric'){
-	    		current_scope.destroyConvexSource();
-	    		current_scope.destroyCartesianSource();
-	    		current_scope.initParamSource();
-	    	}
-	    	if(val == 'convex-hull' && current_scope.last_source != 'convex-hull'){
-	    		current_scope.destroyCartesianSource();
-	    		current_scope.destroyParamSource();
-	    		current_scope.initConvexSource();
-	    	}
-	    	current_scope.last_source = val
+		shapeProperties.add(params, 'source',['cartesian','parametric','convex-hull']).onChange(function(val){
+			if(val == 'cartesian' && current_scope.last_source != 'cartesian'){
+				current_scope.destroyConvexSource();
+				current_scope.destroyParamSource();
+				current_scope.initCartesianSource();
+			}
+			if(val == 'parametric' && current_scope.last_source != 'parametric'){
+				current_scope.destroyConvexSource();
+				current_scope.destroyCartesianSource();
+				current_scope.initParamSource();
+			}
+			if(val == 'convex-hull' && current_scope.last_source != 'convex-hull'){
+				current_scope.destroyCartesianSource();
+				current_scope.destroyParamSource();
+				current_scope.initConvexSource();
+			}
+			current_scope.last_source = val
 
-	    	if(callbacks['source']) callbacks['source'](mode_obj,val);
-	    });
+			if(callbacks['source']) callbacks['source'](mode_obj,val);
+		});
 
-	    shapeProperties.add(params, 'render_shape').name("Render Shape").listen().onChange(function(val){
-	    	if(callbacks['render_shape']) callbacks['render_shape'](mode_obj,val);
-	    });
+		shapeProperties.add(params, 'render_shape').name("Render Shape").listen().onChange(function(val){
+			if(callbacks['render_shape']) callbacks['render_shape'](mode_obj,val);
+		});
 
 			shapeProperties.add(params, 'render_slices').name("Render Slices").listen().onChange(function(val){
-	    	if(callbacks['render_slices']) callbacks['render_slices'](mode_obj,val);
-	    });
+			if(callbacks['render_slices']) callbacks['render_slices'](mode_obj,val);
+		});
 
-	    // Init cartesian by default
-	    this.initCartesianSource();
+		// Init cartesian by default
+		this.initCartesianSource();
 
-	    // Now the viewing controls
-	    var axis_value_control = this.viewingControls.add(params, 'axis_value').min(-10).max(10).step(0.01).listen();
-	    axis_value_control.onChange(function(val){
-	    	if(callbacks['axis_value']) callbacks['axis_value'](mode_obj,val);
-	    })
-	    var axes_list = ['X','Y'];
-	    if(mode == "3D" || mode == "4D") axes_list.push("Z");
-	    if(mode == "4D") axes_list.push("W");
-	    this.viewingControls.add(params, 'axis', axes_list ).onChange(function(val){
-	    	axis_value_control.name(val + " = ")
-	    	params.axis_value = 0;
-	    	if(callbacks['axis']) callbacks['axis'](mode_obj,val);
-	    });
-	    // Set axis name
-	    axis_value_control.name(params.axis + " = ")
+		// Now the viewing controls
+		var axis_value_control = this.viewingControls.add(params, 'axis_value').min(-10).max(10).step(0.01).listen();
+		axis_value_control.onChange(function(val){
+			if(callbacks['axis_value']) callbacks['axis_value'](mode_obj,val);
+		})
+		var axes_list = ['X','Y'];
+		if(mode == "3D" || mode == "4D") axes_list.push("Z");
+		if(mode == "4D") axes_list.push("W");
+		this.viewingControls.add(params, 'axis', axes_list ).onChange(function(val){
+			axis_value_control.name(val + " = ")
+			params.axis_value = 0;
+			if(callbacks['axis']) callbacks['axis'](mode_obj,val);
+		});
+		// Set axis name
+		axis_value_control.name(params.axis + " = ")
 
-	    /*
-	    this.viewingControls.add(params, 'samples', 200, 10000).name('Samples');
-	    this.viewingControls.add(params, 'thickness', ['thin','medium','thick']).name('Thickness').onChange(function(val){
-	    	if(callbacks['thickness']) callbacks['thickness'](mode_obj,val);
-	    });
-	    */
-
-	    // Turn all sliders orange after the first one (the first one is the resolution one)
-	    var sliders = document.querySelectorAll(".slider-fg")
-	    for(var i=1;i<sliders.length;i++){ //notice i=1
-	    	var slider = sliders[i]
-	    	slider.style.background = this.colors.slices
-		    slider.parentNode.parentNode.querySelector(".dg .cr.number input[type='text']").style.color = this.colors.slices
-	    	slider.parentNode.parentNode.parentNode.parentNode.style['border-left'] = "3px solid " + this.colors.slices
-	    }
+		// Turn all sliders orange after the first one (the first one is the resolution one)
+		var sliders = document.querySelectorAll(".slider-fg")
+		for(var i=1;i<sliders.length;i++){ //notice i=1
+			var slider = sliders[i]
+			slider.style.background = this.colors.slices
+			slider.parentNode.parentNode.querySelector(".dg .cr.number input[type='text']").style.color = this.colors.slices
+			slider.parentNode.parentNode.parentNode.parentNode.style['border-left'] = "3px solid " + this.colors.slices
+		}
 	}
 
 	// Functions for creating the controls for the 3 different inputs (cartesian, parametric and convex hull)
@@ -227,10 +232,12 @@ var GUI = (function (scope) {
 		});
 		arr.push(res);
 
-	    // Now for Builtin Examples
-	    var filled_in_circle = this.builtinExamples.add(this.params, 'Filled in Circle');
-	    var parabola = this.builtinExamples.add(this.params, 'Parabola');
-	    builtin_arr.push(filled_in_circle); builtin_arr.push(parabola);
+		// Now for Builtin Examples
+		if (this.mode == '2D') {
+			var filled_in_circle = this.builtinExamples.add(this.params, 'Filled in Circle');
+			var parabola = this.builtinExamples.add(this.params, 'Parabola');
+			builtin_arr.push(filled_in_circle); builtin_arr.push(parabola);
+		}
 
 		this.cartesianSourceItems = arr;
 		this.builtin_arr_cartesian = builtin_arr;
@@ -288,17 +295,13 @@ var GUI = (function (scope) {
 			}));
 		}
 
-		// for(var i=0;i<arr.length;i++){
-		// 	// Use a closure to capture the value of the current names[i]
-		// 	var changeFunc = (function(name){ return function(val){ if(callbacks[name]) callbacks[name](mode_obj,val); } })(names[i]);
-		// 	arr[i].onChange(function(val){
-		// 		changeFunc(val)
-		// 	})
-		// }
-
 		// Now for Builtin Examples
-	    var butterfly = this.builtinExamples.add(this.params, 'Butterfly');
-		builtin_arr.push(butterfly);
+		if (this.mode == '2D') {
+			var heart = this.builtinExamples.add(this.params, 'Heart');
+			builtin_arr.push(heart);
+		} else if (this.mode == '3D') {
+			var spiral = this.builtinExamples.add(this.params, 'Spiral Tube');
+		}
 
 		this.paramSourceItems = arr;
 		this.builtin_arr_param = builtin_arr;
@@ -327,8 +330,10 @@ var GUI = (function (scope) {
 		});
 		arr.push(points);
 
-		var square = this.builtinExamples.add(this.params, 'Square');
-		builtin_arr.push(square);
+		if (this.mode == '2D') {
+			var diamond = this.builtinExamples.add(this.params, 'Diamond');
+			builtin_arr.push(diamond);
+		}
 
 		this.convexSourceItems = arr;
 		this.builtin_arr_convex = builtin_arr;
@@ -357,7 +362,6 @@ var GUI = (function (scope) {
 		this.builtin_arr_param = null;
 		this.builtin_arr_convex = null;
 	};
-
 
 	scope.GUI = GUI;
 	return GUI;

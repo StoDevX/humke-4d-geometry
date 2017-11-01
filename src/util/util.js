@@ -2,9 +2,8 @@
 This class is for misc. functions that don't fit anywhere else.
 */
 var Util = (function (scope) {
-	function Util(){
+	function Util(){}
 
-	}
 	Util.prototype.ConstructGLSLFunction = function(equationString){
 		/*
 			Takes an equation as a string (for ex: "x^2 + y^2 = 10")
@@ -14,12 +13,12 @@ var Util = (function (scope) {
 		 var operator = "=";
 		 var sides = equationString.split("=");
 		 if(sides.length == 1) {
-		 	sides = equationString.split(">");
-		 	operator = ">";
+			sides = equationString.split(">");
+			operator = ">";
 		 }
 		 if(sides.length == 1) {
-		 	sides = equationString.split("<");
-		 	operator = "<";
+			sides = equationString.split("<");
+			operator = "<";
 		 }
 
 		 var LHS = sides[0];
@@ -31,16 +30,17 @@ var Util = (function (scope) {
 		 var fullGLSL = "return " + LHSglsl + " - (" + RHSglsl + ");";
 		 return [fullGLSL,operator];
 	}
-	
+
 	Util.prototype.HexToRgb = function(hex) {
 		// Source: https://stackoverflow.com/a/5624139/1278023
-	    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-	    return result ? {
-	        r: parseInt(result[1], 16),
-	        g: parseInt(result[2], 16),
-	        b: parseInt(result[3], 16)
-	    } : null;
+		var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+		return result ? {
+			r: parseInt(result[1], 16),
+			g: parseInt(result[2], 16),
+			b: parseInt(result[3], 16)
+		} : null;
 	}
+
 	Util.prototype.Line = function(p1, p2,color,lineWidth){
 		/*
 			Creates a mesh line out of two points that look like {x:[num],y:[num],z:[num]}
@@ -59,6 +59,7 @@ var Util = (function (scope) {
 
 		return mesh;
 	}
+
 	Util.prototype.RenderPoints = function(pointsArray){
 		/*
 			Given an array of 3D points, return an object holding them, ready to be
@@ -75,12 +76,13 @@ var Util = (function (scope) {
 
 		return mesh;
 	}
+
 	Util.prototype.ParseConvexPoints = function(string){
 		/*
 			Takes in a string a points, and returns an array of points.
-			Turns "(1,1),(2,2),(3,3)" 			  -> [{x:1,y:1},{x:2,y:2},{x:3,y:3}]
-			and	  "(1,1,1),(2,2,2),(3,3,3)" 	  -> [{x:1,y:1,z:1},{x:2,y:2,z:2},{x:3,y:3,z:3}]
-			and	  "(1,1,1,1),(2,2,2,2),(3,3,3,3)" -> [{x:1,y:1,z:1,w:1},{x:2,y:2,z:2,w:2},{x:3,y:3,z:3,w:3}]
+			Turns "(1,1),(2,2),(3,3)"             -> [{x:1,y:1},{x:2,y:2},{x:3,y:3}]
+			and   "(1,1,1),(2,2,2),(3,3,3)"       -> [{x:1,y:1,z:1},{x:2,y:2,z:2},{x:3,y:3,z:3}]
+			and   "(1,1,1,1),(2,2,2,2),(3,3,3,3)" -> [{x:1,y:1,z:1,w:1},{x:2,y:2,z:2,w:2},{x:3,y:3,z:3,w:3}]
 				Input:
 					A string formatted as "(Number,Number)" | "(Number,Number,Number)" | "(Number,Number,Number,Number)"
 				Output:
@@ -90,7 +92,7 @@ var Util = (function (scope) {
 		// Remove whitespace
 		var points_str = string.replace(/\s+/g, '');
 		// Split based on the regex pattern. Should match all of the following:
-		//				 (1,2), (3,4),(4,3,32), (-3,4,67.5,3), (4,-4.6,5,332,3)
+		//               (1,2), (3,4),(4,3,32), (-3,4,67.5,3), (4,-4.6,5,332,3)
 		var points_split = points_str.match(/\((-*[.\d]+,)+-*[.\d]+\)/g);
 		var pointsArray = [];
 
@@ -124,6 +126,7 @@ var Util = (function (scope) {
 
 		return pointsArray;
 	}
+
 	Util.prototype.ResizeScenes = function(self) {
 		var viewWidth = (window.innerWidth-50)/2;
 
@@ -135,6 +138,7 @@ var Util = (function (scope) {
 		self.rightCamera.aspect = viewWidth / window.innerHeight;
 		self.rightCamera.updateProjectionMatrix();
 	}
+
 	Util.prototype.CleanUpScene = function(scene) {
 		/*
 			Given an three.js scene, remove all of the
@@ -156,7 +160,7 @@ var Util = (function (scope) {
 					console.log("unidentified object of type " + obj.type + " was not destroyed")
 					console.log(obj);
 				}
-		    scene.remove(obj);
+			scene.remove(obj);
 		}
 	}
 
