@@ -7,13 +7,13 @@ var Projecting = (function (scope) {
 
 	Projecting.prototype.MakeTesseract = function(){
 		
-		var start = -5;
-		var end = 5;
+		var start = -10;
+		var end = 10;
 	
 		var vectorArray = [];
 		var fullVectorArray = [];
 		var geometry = new THREE.Geometry();
-		var Lw = 6;
+		var Lw = 12;
 
 		// Generate the tesseract points 
 		for(var x=start;x<=end;x+=(end-start)){

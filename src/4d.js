@@ -8,6 +8,7 @@ var Mode4D = (function (scope) {
 		this.leftRenderer = null;
 		this.leftControls = null;
 		this.labels = [];
+		this.leftAxes = [];
 		this.keysDown = {};
 		this.keyMap = {'A':65,'D':68,'S':83,'W':87,'Q':81,'E':69}
 
@@ -49,13 +50,14 @@ var Mode4D = (function (scope) {
 		//this.leftView.add(grid);
 
 		var axis = GridHelper.CreateAxis("X");
-		//this.leftView.add(axis);
+		this.leftView.add(axis); this.leftAxes.push(axis);
 		axis = GridHelper.CreateAxis("Y");
-		//this.leftView.add(axis);
+		this.leftView.add(axis); this.leftAxes.push(axis);
 		axis = GridHelper.CreateAxis("Z");
-		//this.leftView.add(axis);
+		this.leftView.add(axis); this.leftAxes.push(axis);
 		axis = GridHelper.CreateAxis("W");
-		//this.leftView.add(axis);
+		this.leftView.add(axis);  this.leftAxes.push(axis);
+		
 
 		var leftXLabel = GridHelper.CreateLabel("X",12,0,0); this.addLabel(leftXLabel,this.leftCamera);
 		this.leftView.add(leftXLabel);
@@ -122,6 +124,14 @@ var Mode4D = (function (scope) {
 		function onDocumentKeyDown(event) {
 		    var keyCode = event.which;
 		    self.keysDown[keyCode] = true;
+
+		    if(keyCode == 66){
+		    	// Toggle axis visibility
+		    	for(var i=0;i<self.leftAxes.length;i++){
+		    		var axis = self.leftAxes[i];
+		    		axis.visible = !axis.visible;
+		    	}
+		    }
 
 		    if (keyCode == 87) {
 		        // W
@@ -304,6 +314,7 @@ var Mode4D = (function (scope) {
 		this.rightRenderer = null;
 		this.rightCamera = null;
 		this.rightControls = null;
+		this.leftAxes = [];
 
 		// Destroy gui
 		this.gui.cleanup();
@@ -358,7 +369,7 @@ var Mode4D = (function (scope) {
 			// Rotate geometry in 4D 
 			for(var i=0;i<mesh.fullVectorArray.length;i++){
 				var p = mesh.fullVectorArray[i];
-				var Lw = 10	;
+				var Lw = 18	;
 				var f = 1 / (Lw - p.w);
 
 				// Save original locations 
