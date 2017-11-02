@@ -369,7 +369,7 @@ var Mode4D = (function (scope) {
 			// Rotate geometry in 4D 
 			for(var i=0;i<mesh.fullVectorArray.length;i++){
 				var p = mesh.fullVectorArray[i];
-				var Lw = 18	;
+				var Lw = -18	;
 				var f = 1 / (Lw - p.w);
 
 				// Save original locations 
@@ -401,23 +401,40 @@ var Mode4D = (function (scope) {
 				p.z = p.oz; 
 				p.w = p.ow;
 
+				var newX = p.x; 
+				var newY = p.y; 
+				var newZ = p.z; 
+				var newW = p.w;
+
 				// Rotate around angle1
-				p.x = p.x * mesh.cos1;
-				p.y = p.y; 
-				p.z = p.z - p.w * mesh.sin1;
-				p.w = p.x * mesh.sin1 + p.w * mesh.cos1;
+				newX = p.x * mesh.cos1 - mesh.sin1 * p.w;
+				newY = p.y; 
+				newZ = p.z;
+				newW = p.x * mesh.sin1 + p.w * mesh.cos1;
+				p.x = newX; 
+				p.y = newY;
+				p.z = newZ;
+				p.w = newW;
 
 				// Rotate around angle2
-				p.x = p.x;
-				p.y = p.y * mesh.cos2; 
-				p.z = p.z - p.w * mesh.sin1;
-				p.w = p.y * mesh.sin2 + p.w * mesh.cos2;
+				newX = p.x;
+				newY = p.y * mesh.cos2 - p.w * mesh.sin2; 
+				newZ = p.z;
+				newW = p.y * mesh.sin2 + p.w * mesh.cos2;
+				p.x = newX; 
+				p.y = newY;
+				p.z = newZ;
+				p.w = newW;
 
 				// Rotate around angle3 
-				p.x = p.x;
-				p.y = p.y; 
-				p.z = p.z * mesh.cos3 - p.w * mesh.sin3;
-				p.w = p.z * mesh.sin3 + p.w * mesh.cos3;
+				newX = p.x;
+				newY = p.y; 
+				newZ = p.z * mesh.cos3 - p.w * mesh.sin3;  
+				newW = p.z * mesh.sin3 + p.w * mesh.cos3;
+				p.x = newX; 
+				p.y = newY;
+				p.z = newZ;
+				p.w = newW;
 
 
 				// Move in 4D 
