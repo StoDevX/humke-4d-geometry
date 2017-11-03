@@ -5,40 +5,29 @@ anything related to the left side of the screen (projection n dimensional object
 var Projecting = (function (scope) {
 	function Projecting(){}
 
-	Projecting.prototype.MakeTesseract = function(){
-		
-		var start = -10;
-		var end = 10;
-	
-		var vectorArray = [];
-		var fullVectorArray = [];
-		var geometry = new THREE.Geometry();
-		var Lw = 12;
+	Projecting.prototype.MakeTesseractGPU = function(){
+		var start = -5;
+		var end = 5;
 
+		var vectorArray = [];
 		// Generate the tesseract points 
 		for(var x=start;x<=end;x+=(end-start)){
 			for(var y=start;y<=end;y+=(end-start)){
 				for(var z=start;z<=end;z+=(end-start)){
 					for(var w=start;w<=end;w+=(end-start)){
-						var f = 1/(Lw - w);
-						var X = x * f; 
-						var Y = y * f; 
-						var Z = z * f;
-						vectorArray.push(new THREE.Vector3(X,Y,Z));
-						fullVectorArray.push(new THREE.Vector4(x,y,z,w));
+						vectorArray.push(new THREE.Vector4(x,y,z,w));
 					}
 				}
 			}
 		}
 
-		var newFullVectorArray = [];
-
-		// Create the lines 
-		for(var i=0;i<fullVectorArray.length;i++){
-			var p = fullVectorArray[i];
-			for(var j=0;j<fullVectorArray.length;j++){
+		// Generate the pairs of points that create the edges 
+		var edgesArray = [];
+		for(var i=0;i<vectorArray.length;i++){
+			var p = vectorArray[i];
+			for(var j=0;j<vectorArray.length;j++){
 				if(i == j) continue;
-				var p2 = fullVectorArray[j];
+				var p2 = vectorArray[j];
 				// For two points to be connected, they must share exactly 3 coordinates 
 				// xyz, xyw, xzw, yzw 
 				if(p.x == p2.x && p.y == p2.y && p.z == p2.z ||
@@ -46,23 +35,74 @@ var Projecting = (function (scope) {
 				   p.y == p2.y && p.z == p2.z && p.w == p2.w ||
 				   p.x == p2.x && p.z == p2.z && p.w == p2.w ){
 
-					newFullVectorArray.push(p);
-					newFullVectorArray.push(p2);
-					geometry.vertices.push(vectorArray[i]);
-					geometry.vertices.push(vectorArray[j]);
+					edgesArray.push(p);
+					edgesArray.push(p2);
 				}
 			}
 		}
 
-		var material = new MeshLineMaterial({color:new THREE.Color(0xff0000),lineWidth:0.1});
-		var mesh = new THREE.LineSegments(geometry,material);
-		mesh.fullVectorArray = newFullVectorArray;
-		mesh.angle1 = 0;
-		mesh.angle2 = 0;
-		mesh.angle3 = 0;
-		mesh.angleSpeed1 =0;
-		mesh.angleSpeed2 =0;
-		mesh.angleSpeed3 =0;
+		vertexShader = `
+			precision mediump float;
+			precision mediump int;
+
+			uniform mat4 modelViewMatrix; // optional
+			uniform mat4 projectionMatrix; // optional
+			uniform vec3 anglesW;
+
+			attribute vec4 position;
+			attribute vec4 color;
+
+			void main() {
+				// Apply any 4D rotations 
+				mat4 rXW;
+				rXW[0] = vec4(cos(anglesW.x),0.,0.,-sin(anglesW.x));
+				rXW[1] = vec4(0.,1.,0.,0.);
+				rXW[2] = vec4(0.,0.,1.,0.);
+				rXW[3] = vec4(sin(anglesW.x),0.,0.,cos(anglesW.x));
+
+				mat4 rYW;
+				rYW[0] = vec4(1.,0.,0.,0.);
+				rYW[1] = vec4(0.,cos(anglesW.y),0.,-sin(anglesW.y));
+				rYW[2] = vec4(0.,0.,1.,0.);
+				rYW[3] = vec4(0.,sin(anglesW.y),0.,cos(anglesW.y));
+
+				mat4 rZW;
+				rZW[0] = vec4(1.,0.,0.,0.);
+				rZW[1] = vec4(0.,1.,0.,0.);
+				rZW[2] = vec4(0.,0.,cos(anglesW.z),-sin(anglesW.z));
+				rZW[3] = vec4(0.,0.,sin(anglesW.z),cos(anglesW.z));
+
+				vec4 rotatedPos = rXW * rYW * rZW * position;
+
+				// Then project into 3D
+				float Lw = 1.0 / (-10.0 - rotatedPos.w); 
+				mat3 projection4DMatrix;
+				projection4DMatrix[0] = vec3(Lw,0.,0.);
+				projection4DMatrix[1] = vec3(0.,Lw,0.);
+				projection4DMatrix[2] = vec3(0.,0.,Lw);
+
+				vec3 newPos = projection4DMatrix * rotatedPos.xyz;
+
+				// Now do the regular 3D -> 2D projection 
+				gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos,1.0); 
+				
+				gl_PointSize = 8.0;
+			}
+		`;
+		var uniforms = {
+			anglesW:  { type: "v3", value: new THREE.Vector3(0,0,0) }
+		}
+		var shaderMaterial = new THREE.RawShaderMaterial({
+			vertexShader: vertexShader,
+			uniforms: uniforms
+		});
+
+		var geometry = new THREE.HyperBufferGeometry( edgesArray );
+		var material = new THREE.PointsMaterial( { color:0xff0000,size:10, sizeAttenuation:false } );
+		var mesh = new THREE.LineSegments( geometry, shaderMaterial );
+		mesh.uniforms = uniforms;
+		mesh.angleSpeed = new THREE.Vector3(0,0,0);
+
 		return mesh;
 	}
 

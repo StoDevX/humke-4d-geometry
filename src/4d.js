@@ -258,6 +258,8 @@ var Mode4D = (function (scope) {
 			this.rightView.add(this.rightMesh);
 		}
 
+		
+
 	}
 
 	Mode4D.prototype.initConvexHull = function(){
@@ -270,7 +272,8 @@ var Mode4D = (function (scope) {
 			points.push(newPoint);
 		}
 
-		this.leftMesh = this.projector.MakeTesseract();
+		var tesseractMesh = this.projector.MakeTesseractGPU();
+		this.leftMesh = tesseractMesh;
 		this.leftView.add(this.leftMesh);
 
 
@@ -329,135 +332,38 @@ var Mode4D = (function (scope) {
 	
 
 	Mode4D.prototype.animate = function(){
-		if(this.current_mode == "convex-hull" && this.leftMesh){
-			var mesh = this.leftMesh;
-			mesh.geometry.verticesNeedUpdate = true; 
-
+		if(this.current_mode == "convex-hull"){
+			// XW rotation
 			if(this.keysDown[this.keyMap['A']]){
-				mesh.angleSpeed1++; 
+				this.leftMesh.angleSpeed.x ++;
 			}
 			if(this.keysDown[this.keyMap['D']]){
-				mesh.angleSpeed1 --;
+				this.leftMesh.angleSpeed.x --;
 			}
-			mesh.angleSpeed1 *= 0.8;
-			mesh.angle1 += mesh.angleSpeed1 * 0.01;
-			mesh.cos1 = Math.cos(mesh.angle1);
-			mesh.sin1 = Math.sin(mesh.angle1);
-
+			// YW rotation
 			if(this.keysDown[this.keyMap['W']]){
-				mesh.angleSpeed2++; 
+				this.leftMesh.angleSpeed.y ++; 
 			}
 			if(this.keysDown[this.keyMap['S']]){
-				mesh.angleSpeed2 --;
+				this.leftMesh.angleSpeed.y --;
 			}
-			mesh.angleSpeed2 *= 0.8;
-			mesh.angle2 += mesh.angleSpeed2 * 0.01;
-			mesh.cos2 = Math.cos(mesh.angle2);
-			mesh.sin2 = Math.sin(mesh.angle2);
-
+			// ZW rotation 
 			if(this.keysDown[this.keyMap['Q']]){
-				mesh.angleSpeed3++; 
+				this.leftMesh.angleSpeed.z ++; 
 			}
 			if(this.keysDown[this.keyMap['E']]){
-				mesh.angleSpeed3 --;
+				this.leftMesh.angleSpeed.z --;
 			}
-			mesh.angleSpeed3 *= 0.8;
-			mesh.angle3 += mesh.angleSpeed3 * 0.01;
-			mesh.cos3 = Math.cos(mesh.angle3);
-			mesh.sin3 = Math.sin(mesh.angle3);
+			
+			var friction = 0.8;
+			this.leftMesh.angleSpeed.x *= friction;
+			this.leftMesh.angleSpeed.y *= friction;
+			this.leftMesh.angleSpeed.z *= friction;
 
-			// Rotate geometry in 4D 
-			for(var i=0;i<mesh.fullVectorArray.length;i++){
-				var p = mesh.fullVectorArray[i];
-				var Lw = -18	;
-				var f = 1 / (Lw - p.w);
-
-				// Save original locations 
-				if(p.ox == undefined){
-					p.ox = p.x; 
-					p.oy = p.y; 
-					p.oz = p.z; 
-					p.ow = p.w;
-				}
-
-				// Rotate in 4D 
-				/* 
-					You can rotate along: 
-					XY
-					XZ
-					YZ
-					----
-					XW 
-					YW 
-					ZW
-				*/
-				// The top 3 are just the normal ones xyz ones. So I'm only going to do the last 3
-				if(mesh.cos1 == undefined){
-					mesh.cos1 = Math.cos(mesh.angle1);
-					mesh.sin1 = Math.sin(mesh.angle1);
-				}
-				p.x = p.ox;
-				p.y = p.oy; 
-				p.z = p.oz; 
-				p.w = p.ow;
-
-				var newX = p.x; 
-				var newY = p.y; 
-				var newZ = p.z; 
-				var newW = p.w;
-
-				// Rotate around angle1
-				newX = p.x * mesh.cos1 - mesh.sin1 * p.w;
-				newY = p.y; 
-				newZ = p.z;
-				newW = p.x * mesh.sin1 + p.w * mesh.cos1;
-				p.x = newX; 
-				p.y = newY;
-				p.z = newZ;
-				p.w = newW;
-
-				// Rotate around angle2
-				newX = p.x;
-				newY = p.y * mesh.cos2 - p.w * mesh.sin2; 
-				newZ = p.z;
-				newW = p.y * mesh.sin2 + p.w * mesh.cos2;
-				p.x = newX; 
-				p.y = newY;
-				p.z = newZ;
-				p.w = newW;
-
-				// Rotate around angle3 
-				newX = p.x;
-				newY = p.y; 
-				newZ = p.z * mesh.cos3 - p.w * mesh.sin3;  
-				newW = p.z * mesh.sin3 + p.w * mesh.cos3;
-				p.x = newX; 
-				p.y = newY;
-				p.z = newZ;
-				p.w = newW;
-
-
-				// Move in 4D 
-				if(this.gui.params.axis == "X")
-					p.x = p.x + Number(this.gui.params.axis_value);
-				if(this.gui.params.axis == "Y")
-					p.y = p.y + Number(this.gui.params.axis_value);
-				if(this.gui.params.axis == "Z")
-					p.z = p.z + Number(this.gui.params.axis_value);
-				if(this.gui.params.axis == "W")
-					p.w = p.w + Number(this.gui.params.axis_value);
-				
-
-
-				// Project into 3D
-				var X = p.x * f;  
-				var Y = p.y * f; 
-				var Z = p.z * f;
-
-				mesh.geometry.vertices[i].x = X; 
-				mesh.geometry.vertices[i].y = Y;
-				mesh.geometry.vertices[i].z = Z;
-			}
+			var scaleFactor = 0.01;
+			this.leftMesh.uniforms.anglesW.value.x += this.leftMesh.angleSpeed.x * scaleFactor;
+			this.leftMesh.uniforms.anglesW.value.y += this.leftMesh.angleSpeed.y * scaleFactor;
+			this.leftMesh.uniforms.anglesW.value.z += this.leftMesh.angleSpeed.z * scaleFactor;
 		}
 
 		for(var i=0;i<this.labels.length;i++)
