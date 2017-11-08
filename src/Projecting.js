@@ -5,12 +5,40 @@ anything related to the left side of the screen (projection n dimensional object
 var Projecting = (function (scope) {
 	function Projecting(){}
 
+	Projecting.prototype.GetUndirectedEdgesOfTetrahedron = function(tetrahedron) {
+		return [tetrahedron[0],tetrahedron[1],
+						tetrahedron[1], tetrahedron[2],
+						tetrahedron[2], tetrahedron[0],
+						tetrahedron[2], tetrahedron[3],
+						tetrahedron[0], tetrahedron[3],
+						tetrahedron[1], tetrahedron[3]];
+	}
+
+	Projecting.prototype.FlattenFacets = function(facets, points) {
+		var edges_arr = [];
+		for (var facet_i = 0; facet_i < facets.length; facet_i++) {
+			var edges_of_facet = this.GetUndirectedEdgesOfTetrahedron(facets[facet_i]);
+			edges_arr = edges_arr.concat(edges_of_facet);
+		}
+
+		for (var i = 0; i < edges_arr.length; i++) {
+			edges_arr[i] = points[edges_arr[i]];
+		}
+
+		var flattened_edges_arr = [];
+		for (var i = 0; i < edges_arr.length; i++) {
+			flattened_edges_arr = flattened_edges_arr.concat(edges_arr[i]);
+		}
+
+		return flattened_edges_arr;
+	}
+
 	Projecting.prototype.MakeTesseractGPU = function(){
 		var start = -5;
 		var end = 5;
 
 		var vectorArray = [];
-		// Generate the tesseract points 
+		// Generate the tesseract points
 		for(var x=start;x<=end;x+=(end-start)){
 			for(var y=start;y<=end;y+=(end-start)){
 				for(var z=start;z<=end;z+=(end-start)){
@@ -21,15 +49,15 @@ var Projecting = (function (scope) {
 			}
 		}
 
-		// Generate the pairs of points that create the edges 
+	/*	// Generate the pairs of points that create the edges
 		var edgesArray = [];
 		for(var i=0;i<vectorArray.length;i++){
 			var p = vectorArray[i];
 			for(var j=0;j<vectorArray.length;j++){
 				if(i == j) continue;
 				var p2 = vectorArray[j];
-				// For two points to be connected, they must share exactly 3 coordinates 
-				// xyz, xyw, xzw, yzw 
+				// For two points to be connected, they must share exactly 3 coordinates
+				// xyz, xyw, xzw, yzw
 				if(p.x == p2.x && p.y == p2.y && p.z == p2.z ||
 				   p.x == p2.x && p.y == p2.y && p.w == p2.w ||
 				   p.y == p2.y && p.z == p2.z && p.w == p2.w ||
@@ -39,7 +67,32 @@ var Projecting = (function (scope) {
 					edgesArray.push(p2);
 				}
 			}
-		}
+		}*/
+
+var tesseract = [];
+console.log(vectorArray);
+for(var i=0;i<vectorArray.length;i++){
+	var p = vectorArray[i];
+	tesseract.push([p.x,p.y,p.z,p.w]);
+}
+
+// var tesseract = [
+//  [0,0,0,0]
+// ,[1,0,0,0]
+// ,[0,1,0,0]
+// ,[1,1,0,0]
+// ,[0,0,1,0]
+// ,[1,0,1,0]
+// ,[0,1,1,0]
+// ,[1,1,1,0]
+// ,[0,0,0,1]
+// ,[1,0,0,1]
+// ,[0,1,0,1]
+// ,[1,1,0,1]
+// ,[1,0,1,1]
+// ,[0,1,1,1]
+// ,[1,1,1,1]
+// ,[0,0,1,1]];
 
 		vertexShader = `
 			precision mediump float;
@@ -53,7 +106,7 @@ var Projecting = (function (scope) {
 			attribute vec4 color;
 
 			void main() {
-				// Apply any 4D rotations 
+				// Apply any 4D rotations
 				mat4 rXW;
 				rXW[0] = vec4(cos(anglesW.x),0.,0.,-sin(anglesW.x));
 				rXW[1] = vec4(0.,1.,0.,0.);
@@ -75,7 +128,7 @@ var Projecting = (function (scope) {
 				vec4 rotatedPos = rXW * rYW * rZW * position;
 
 				// Then project into 3D
-				float Lw = 1.0 / (-10.0 - rotatedPos.w); 
+				float Lw = 1.0 / (-10.0 - rotatedPos.w);
 				mat3 projection4DMatrix;
 				projection4DMatrix[0] = vec3(Lw,0.,0.);
 				projection4DMatrix[1] = vec3(0.,Lw,0.);
@@ -83,9 +136,9 @@ var Projecting = (function (scope) {
 
 				vec3 newPos = projection4DMatrix * rotatedPos.xyz;
 
-				// Now do the regular 3D -> 2D projection 
-				gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos,1.0); 
-				
+				// Now do the regular 3D -> 2D projection
+				gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos,1.0);
+
 				gl_PointSize = 8.0;
 			}
 		`;
@@ -97,13 +150,33 @@ var Projecting = (function (scope) {
 			uniforms: uniforms
 		});
 
-		var geometry = new THREE.HyperBufferGeometry( edgesArray );
-		var material = new THREE.PointsMaterial( { color:0xff0000,size:10, sizeAttenuation:false } );
-		var mesh = new THREE.LineSegments( geometry, shaderMaterial );
-		mesh.uniforms = uniforms;
-		mesh.angleSpeed = new THREE.Vector3(0,0,0);
+		var CHull4D = new ConvexHull4D();
+		var facets = CHull4D.ConvexHull4D(tesseract);
+		//console.log("facets",facets);
+		var edges_arr = this.FlattenFacets(facets, tesseract);
+		//console.log("edges_arr");
+		//console.log(edges_arr);
 
-		return mesh;
+		var new_points = [];
+		for(var i=0;i<edges_arr.length;i+=4){
+			var e = edges_arr;
+			var p = {x:e[i],y:e[i+1],z:e[i+2],w:e[i+3]}
+			new_points.push(p);
+		}
+
+		var geometry = new THREE.HyperBufferGeometry( new_points );
+		var mesh = new THREE.LineSegments( geometry, shaderMaterial );
+		var container = new THREE.Object3D();
+		container.uniforms = uniforms;
+		container.angleSpeed = new THREE.Vector3(0,0,0);
+
+		var geometry2 = new THREE.HyperBufferGeometry( vectorArray );
+		var mesh2 = new THREE.Points( geometry2, shaderMaterial );
+		container.add(mesh2);
+
+		container.add(mesh);
+
+		return container;
 	}
 
 	Projecting.prototype.PolygonizeCartesian3D = function(equationString,resolution,color,variables){
@@ -295,7 +368,7 @@ var Projecting = (function (scope) {
 		/* Draws the top and bottom parts */
 		var geometry = new THREE.Geometry();
 		var container = new THREE.Object3D();
-		// Iterate through the range and construct points 
+		// Iterate through the range and construct points
 		var MAX_STEPS = 200;
 		var stepSize = (aRange[1] - aRange[0]) / MAX_STEPS;
 		var b = bRange[1];
@@ -304,7 +377,7 @@ var Projecting = (function (scope) {
 
 		for(var a=aRange[0];a<=aRange[1];a+=stepSize){
 			var x = xFunc(a,b);
-			var y = yFunc(a,b); 
+			var y = yFunc(a,b);
 			var z = Math.random() * 0.1;
 			geometry.vertices.push(new THREE.Vector3(x,y,z));
 
@@ -323,7 +396,7 @@ var Projecting = (function (scope) {
 		var geometry2 = new THREE.Geometry();
 		for(var a=aRange[0];a<aRange[1];a+=stepSize){
 			var x = xFunc(a,b);
-			var y = yFunc(a,b); 
+			var y = yFunc(a,b);
 			var z = Math.random() * 0.1;
 			geometry2.vertices.push(new THREE.Vector3(x,y,z));
 
@@ -333,9 +406,9 @@ var Projecting = (function (scope) {
 		var mesh2 = new THREE.Line(geometry2,material);
 		container.add(mesh2);
 
-		// Triangulate it 
+		// Triangulate it
 		var triangles = earcut(flatPointArray,[holesIndex]);
-		// Render the triangles 
+		// Render the triangles
 		var triangleGeom = new THREE.Geometry();
 		for(var i=0;i<triangles.length;i+=3){
 			var i1 = triangles[i] * 2;
@@ -356,9 +429,9 @@ var Projecting = (function (scope) {
 		var mesh= new THREE.Mesh( triangleGeom, new THREE.MeshBasicMaterial( {color: color} ) );
 		if(outline)
 			return container;
-		else 
+		else
 			return mesh;
- 
+
 	}
 
 	Projecting.prototype.CreateParametricFunction = function(xFunc,yFunc,zFunc,aRange,bRange){
@@ -391,7 +464,7 @@ var Projecting = (function (scope) {
 			x = xFunction(newA,newB);
 			y = yFunction(newA,newB);
 			z = zFunction(newA,newB);
-			
+
 			return result.set( x, y, z );
 		}
 

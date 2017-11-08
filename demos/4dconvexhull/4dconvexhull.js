@@ -262,7 +262,7 @@ var ConvexHull4D = (function (scope) {
         hull = this.CreateFacetsFromPointAndRidges(hull, horizon_ridges, furthest_point_i);
         hull = this.UpdateOutsideSets(outside_points_of_visible_set, start_of_new_facets, hull);
 
-        osi = 0;
+        //osi = 0;
       }
     }
 
@@ -273,22 +273,22 @@ scope.ConvexHull4D = ConvexHull4D;
 return ConvexHull4D;
 })(typeof exports === 'undefined' ? {} : exports);
 
-var tesseract = [[0,0,0,0]
-,[1,0,0,0]
-,[0,1,0,0]
-,[1,1,0,0]
-,[0,0,1,0]
-,[1,0,1,0]
-,[0,1,1,0]
-,[1,1,1,0]
-,[0,0,0,1]
-,[1,0,0,1]
-,[0,1,0,1]
-,[1,1,0,1]
-,[1,0,1,1]
-,[0,1,1,1]
-,[1,1,1,1]
-,[0,0,1,1]];
-
-var CHull4D = new ConvexHull4D();
-var facets = CHull4D.ConvexHull4D(tesseract);
+// var tesseract = [[0,0,0,0]
+// ,[1,0,0,0]
+// ,[0,1,0,0]
+// ,[1,1,0,0]
+// ,[0,0,1,0]
+// ,[1,0,1,0]
+// ,[0,1,1,0]
+// ,[1,1,1,0]
+// ,[0,0,0,1]
+// ,[1,0,0,1]
+// ,[0,1,0,1]
+// ,[1,1,0,1]
+// ,[1,0,1,1]
+// ,[0,1,1,1]
+// ,[1,1,1,1]
+// ,[0,0,1,1]];
+//
+// var CHull4D = new ConvexHull4D();
+// var facets = CHull4D.ConvexHull4D(tesseract);
