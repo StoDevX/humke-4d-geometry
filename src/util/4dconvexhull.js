@@ -270,7 +270,7 @@ var ConvexHull4D = (function (scope) {
 
         osi = 0;
         counter++;
-        if (counter >= 9) break;
+        if (counter >= 3) break;
       }
     }
 

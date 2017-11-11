@@ -272,7 +272,65 @@ var Mode4D = (function (scope) {
 			points.push(newPoint);
 		}
 
-		var tesseractMesh = this.projector.MakeTesseractGPU();
+		// We should be passing these points into the 4D projection function
+		// But just for testing, we're going to just manually define and pass a tesseract
+		var CHull4D = new ConvexHull4D();
+		// Generate tesseract points
+		var start = -5;
+		var end = 5;
+
+		var vectorArray = [];
+		// Generate the tesseract points
+		for(var x=start;x<=end;x+=(end-start)){
+			for(var y=start;y<=end;y+=(end-start)){
+				for(var z=start;z<=end;z+=(end-start)){
+					for(var w=start;w<=end;w+=(end-start)){
+						vectorArray.push(new THREE.Vector4(x,y,z,w));
+					}
+				}
+			}
+		}
+
+		// Generate the pairs of points that create the edges
+		var edgesArray = [];
+		for(var i=0;i<vectorArray.length;i++){
+			var p = vectorArray[i];
+			for(var j=0;j<vectorArray.length;j++){
+				if(i == j) continue;
+				var p2 = vectorArray[j];
+				// For two points to be connected, they must share exactly 3 coordinates
+				// xyz, xyw, xzw, yzw
+				if(p.x == p2.x && p.y == p2.y && p.z == p2.z ||
+				   p.x == p2.x && p.y == p2.y && p.w == p2.w ||
+				   p.y == p2.y && p.z == p2.z && p.w == p2.w ||
+				   p.x == p2.x && p.z == p2.z && p.w == p2.w ){
+
+					edgesArray.push(p);
+					edgesArray.push(p2);
+				}
+			}
+		}
+
+		// Flatten the vectorArray
+		var tesseract = [];
+		for(var i=0;i<vectorArray.length;i++){
+			var v = vectorArray[i];
+			tesseract.push([v.x,v.y,v.z,v.w]);
+		}
+
+		// Obtain facets that cover the surface 
+		var facets = CHull4D.ConvexHull4D(tesseract);
+		var edges_arr = this.util.FlattenFacets(facets, tesseract);
+
+		// Format the points so the projector can render them 
+		var edges = [];
+		for(var i=0;i<edges_arr.length;i+=4){
+			var e = edges_arr;
+			var p = {x:e[i],y:e[i+1],z:e[i+2],w:e[i+3]}
+			edges.push(p);
+		}
+
+		var tesseractMesh = this.projector.Wireframe4D(vectorArray,edges);
 		this.leftMesh = tesseractMesh;
 		this.leftView.add(this.leftMesh);
 

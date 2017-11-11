@@ -5,50 +5,13 @@ anything related to the left side of the screen (projection n dimensional object
 var Projecting = (function (scope) {
 	function Projecting(){}
 
-	Projecting.prototype.MakeTesseractGPU = function(){
-		var start = -5;
-		var end = 5;
+	Projecting.prototype.Wireframe4D = function(points,edges){
+		/*
+			Takes an array of 4 dimensional points and/or edges and draws them projected from 4D to 3D
 
-		var vectorArray = [];
-		// Generate the tesseract points
-		for(var x=start;x<=end;x+=(end-start)){
-			for(var y=start;y<=end;y+=(end-start)){
-				for(var z=start;z<=end;z+=(end-start)){
-					for(var w=start;w<=end;w+=(end-start)){
-						vectorArray.push(new THREE.Vector4(x,y,z,w));
-					}
-				}
-			}
-		}
-
-		// Generate the pairs of points that create the edges
-		var edgesArray = [];
-		for(var i=0;i<vectorArray.length;i++){
-			var p = vectorArray[i];
-			for(var j=0;j<vectorArray.length;j++){
-				if(i == j) continue;
-				var p2 = vectorArray[j];
-				// For two points to be connected, they must share exactly 3 coordinates
-				// xyz, xyw, xzw, yzw
-				if(p.x == p2.x && p.y == p2.y && p.z == p2.z ||
-				   p.x == p2.x && p.y == p2.y && p.w == p2.w ||
-				   p.y == p2.y && p.z == p2.z && p.w == p2.w ||
-				   p.x == p2.x && p.z == p2.z && p.w == p2.w ){
-
-					edgesArray.push(p);
-					edgesArray.push(p2);
-				}
-			}
-		}
-
-		// var tesseract = [];
-
-		// for(var i=0;i<vectorArray.length;i++){
-		// 	var p = vectorArray[i];
-		// 	tesseract.push([p.x,p.y,p.z,p.w]);
-		// }
-
-
+			points: [THREE.Vector4] <--- just an array of points
+			edges: [THREE.Vector4] <---- an array of edge pairs. So edges[0] and edges[1] make a line. edges[2] and edges[3] make another
+		 */
 		vertexShader = `
 			precision mediump float;
 			precision mediump int;
@@ -105,33 +68,23 @@ var Projecting = (function (scope) {
 			uniforms: uniforms
 		});
 
-		//var CHull4D = new ConvexHull4D();
-		//var facets = CHull4D.ConvexHull4D(tesseract);
-		//console.log("facets",facets);
-		//var util = new Util();
-		//var edges_arr = util.FlattenFacets(facets, tesseract);
-		//console.log("edges_arr");
-		//console.log(edges_arr);
-
-		// var new_points = [];
-		// for(var i=0;i<edges_arr.length;i+=4){
-		// 	var e = edges_arr;
-		// 	var p = {x:e[i],y:e[i+1],z:e[i+2],w:e[i+3]}
-		// 	new_points.push(p);
-		// }
-
-		var geometry = new THREE.HyperBufferGeometry( edgesArray );
-		var mesh = new THREE.LineSegments( geometry, shaderMaterial );
 		var container = new THREE.Object3D();
 		container.uniforms = uniforms;
 		container.angleSpeed = new THREE.Vector3(0,0,0);
 
-		var geometry2 = new THREE.HyperBufferGeometry( vectorArray );
-		var mesh2 = new THREE.Points( geometry2, shaderMaterial );
-		container.add(mesh2);
+		if(edges != undefined){
+			var geometry = new THREE.HyperBufferGeometry( edges );
+			var mesh = new THREE.LineSegments( geometry, shaderMaterial );
+			container.add(mesh);
+		}
 
-		container.add(mesh);
+		if(points != undefined){
+			var geometry2 = new THREE.HyperBufferGeometry( points );
+			var mesh2 = new THREE.Points( geometry2, shaderMaterial );
+			container.add(mesh2);
+		}
 
+		
 		return container;
 	}
 
