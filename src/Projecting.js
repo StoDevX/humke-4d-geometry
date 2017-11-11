@@ -5,34 +5,6 @@ anything related to the left side of the screen (projection n dimensional object
 var Projecting = (function (scope) {
 	function Projecting(){}
 
-	Projecting.prototype.GetUndirectedEdgesOfTetrahedron = function(tetrahedron) {
-		return [tetrahedron[0],tetrahedron[1],
-						tetrahedron[1], tetrahedron[2],
-						tetrahedron[2], tetrahedron[0],
-						tetrahedron[2], tetrahedron[3],
-						tetrahedron[0], tetrahedron[3],
-						tetrahedron[1], tetrahedron[3]];
-	}
-
-	Projecting.prototype.FlattenFacets = function(facets, points) {
-		var edges_arr = [];
-		for (var facet_i = 0; facet_i < facets.length; facet_i++) {
-			var edges_of_facet = this.GetUndirectedEdgesOfTetrahedron(facets[facet_i]);
-			edges_arr = edges_arr.concat(edges_of_facet);
-		}
-
-		for (var i = 0; i < edges_arr.length; i++) {
-			edges_arr[i] = points[edges_arr[i]];
-		}
-
-		var flattened_edges_arr = [];
-		for (var i = 0; i < edges_arr.length; i++) {
-			flattened_edges_arr = flattened_edges_arr.concat(edges_arr[i]);
-		}
-
-		return flattened_edges_arr;
-	}
-
 	Projecting.prototype.MakeTesseractGPU = function(){
 		var start = -5;
 		var end = 5;
@@ -49,7 +21,7 @@ var Projecting = (function (scope) {
 			}
 		}
 
-	/*	// Generate the pairs of points that create the edges
+		// Generate the pairs of points that create the edges
 		var edgesArray = [];
 		for(var i=0;i<vectorArray.length;i++){
 			var p = vectorArray[i];
@@ -67,32 +39,15 @@ var Projecting = (function (scope) {
 					edgesArray.push(p2);
 				}
 			}
-		}*/
+		}
 
-var tesseract = [];
-console.log(vectorArray);
-for(var i=0;i<vectorArray.length;i++){
-	var p = vectorArray[i];
-	tesseract.push([p.x,p.y,p.z,p.w]);
-}
+		// var tesseract = [];
 
-// var tesseract = [
-//  [0,0,0,0]
-// ,[1,0,0,0]
-// ,[0,1,0,0]
-// ,[1,1,0,0]
-// ,[0,0,1,0]
-// ,[1,0,1,0]
-// ,[0,1,1,0]
-// ,[1,1,1,0]
-// ,[0,0,0,1]
-// ,[1,0,0,1]
-// ,[0,1,0,1]
-// ,[1,1,0,1]
-// ,[1,0,1,1]
-// ,[0,1,1,1]
-// ,[1,1,1,1]
-// ,[0,0,1,1]];
+		// for(var i=0;i<vectorArray.length;i++){
+		// 	var p = vectorArray[i];
+		// 	tesseract.push([p.x,p.y,p.z,p.w]);
+		// }
+
 
 		vertexShader = `
 			precision mediump float;
@@ -150,21 +105,22 @@ for(var i=0;i<vectorArray.length;i++){
 			uniforms: uniforms
 		});
 
-		var CHull4D = new ConvexHull4D();
-		var facets = CHull4D.ConvexHull4D(tesseract);
+		//var CHull4D = new ConvexHull4D();
+		//var facets = CHull4D.ConvexHull4D(tesseract);
 		//console.log("facets",facets);
-		var edges_arr = this.FlattenFacets(facets, tesseract);
+		//var util = new Util();
+		//var edges_arr = util.FlattenFacets(facets, tesseract);
 		//console.log("edges_arr");
 		//console.log(edges_arr);
 
-		var new_points = [];
-		for(var i=0;i<edges_arr.length;i+=4){
-			var e = edges_arr;
-			var p = {x:e[i],y:e[i+1],z:e[i+2],w:e[i+3]}
-			new_points.push(p);
-		}
+		// var new_points = [];
+		// for(var i=0;i<edges_arr.length;i+=4){
+		// 	var e = edges_arr;
+		// 	var p = {x:e[i],y:e[i+1],z:e[i+2],w:e[i+3]}
+		// 	new_points.push(p);
+		// }
 
-		var geometry = new THREE.HyperBufferGeometry( new_points );
+		var geometry = new THREE.HyperBufferGeometry( edgesArray );
 		var mesh = new THREE.LineSegments( geometry, shaderMaterial );
 		var container = new THREE.Object3D();
 		container.uniforms = uniforms;
