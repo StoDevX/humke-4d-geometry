@@ -2,24 +2,59 @@
 <html>
 <head>
     <title>Tesseract Intersection</title>
-    <link rel="icon", href="favicon.png" />
-</head>
-<body>
-    <section id="viewer"></section>
+    <meta charset="UTF-8">
 
     <script src="../../src/lib/threejs/three.min.js"></script>
     <script src="../../src/lib/threejs/OrbitControls.js"></script>
 	<script src="../../src/lib/threejs/QuickHull.js"></script>
-
 	<script src="../../src/lib/threejs/ConvexGeometry.js"></script>
     <script src="../../src/util/HyperGeometry.js"></script>
     <script src="../../src/util/util.js"></script>
     <script src="../../src/Projecting.js"></script>
 
+</head>
+<body>
+    <section id="viewer"></section>
+
     <script type="text/javascript">
 
-        function calculate_intersections() {
-          // calculate if triangles intersect
+        function calculate_intersection_points(edges) {
+          var intersection_axis = 'w';
+			var axis_value = 0;
+
+			var intersection_points = [];
+
+			for(var i=0;i<edges.length;i+=2) {
+				var point_a = edges[i];
+				var point_b = edges[i+1];
+
+				if ((point_a.w > axis_value) != (point_b.w > axis_value)) {
+
+					// TODO: check if line is parallel to the plane
+
+					// This edge is an edge that intersects the hyperplane. 
+					// Calculate the intersection point and push it into 
+					// the array intersection_points
+					var direction = {
+						x:point_a.x-point_b.x,
+						y:point_a.y-point_b.y,
+						z:point_a.z-point_b.z,
+						w:point_a.w-point_b.w
+					}
+
+					var t = (point_a.w - axis_value)/(direction.w*-1);
+
+					var intersection_point = {
+						x: point_a.x + t*direction.x,
+						y: point_a.y + t*direction.y,
+						z: point_a.z + t*direction.z,
+						w:axis_value
+					}
+					intersection_points.push(intersection_point);
+				}
+			}
+
+			return intersection_points;
         }
 
         var container, scene, camera, renderer, controls;
@@ -165,40 +200,7 @@
 			//-------- calculate intersection points  ----------//
 
 			// look at every edge to find the intersection with the 10*10*10 cube
-			var intersection_axis = 'w';
-			var axis_value = 5;
-
-			var intersection_points = [];
-
-			for(var i=0;i<edges.length;i+=2) {
-				var point_a = edges[i];
-				var point_b = edges[i+1];
-
-				if ((point_a.w > axis_value) != (point_b.w > axis_value)) {
-
-					// TODO: check if line is parallel to the plane
-
-					// This edge is an edge that intersects the hyperplane. 
-					// Calculate the intersection point and push it into 
-					// the array intersection_points
-					var direction = {
-						x:point_a.x-point_b.x,
-						y:point_a.y-point_b.y,
-						z:point_a.z-point_b.z,
-						w:point_a.w-point_b.w
-					}
-
-					var t = (point_a.w - axis_value)/(direction.w*-1);
-
-					var intersection_point = {
-						x: point_a.x + t*direction.x,
-						y: point_a.y + t*direction.y,
-						z: point_a.z + t*direction.z,
-						w:axis_value
-					}
-					intersection_points.push(intersection_point);
-				}
-			}
+			var intersection_points = calculate_intersection_points(edges);
 
 			//-----------------------------------------------//
 
