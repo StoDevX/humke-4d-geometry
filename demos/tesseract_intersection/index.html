@@ -9,7 +9,9 @@
 
     <script src="../../src/lib/threejs/three.min.js"></script>
     <script src="../../src/lib/threejs/OrbitControls.js"></script>
+	<script src="../../src/lib/threejs/QuickHull.js"></script>
 
+	<script src="../../src/lib/threejs/ConvexGeometry.js"></script>
     <script src="../../src/util/HyperGeometry.js"></script>
     <script src="../../src/util/util.js"></script>
     <script src="../../src/Projecting.js"></script>
@@ -58,7 +60,7 @@
 			      var material = new THREE.MeshPhongMaterial( {flatShading:true} );
 			      var cube = new THREE.Mesh( cube_geometry, material );
             cube.scale.set(10,10,10);
-			      scene.add( cube );
+			      //scene.add( cube );
 
 
 		// Testing output from Qhull. This is 16 random points within a unit tesseract
@@ -156,31 +158,66 @@
 				p.w *= scale;
 				edges.push(p);
 			}
+			// var tesseractMesh = projector.Wireframe4D(new_points,edges);
+			// scene.add(tesseractMesh);
 
-			// calculate intersection points
 
+			//-------- calculate intersection points  ----------//
 
 			// look at every edge to find the intersection with the 10*10*10 cube
 			var intersection_axis = 'w';
-			var axis_value = 0;
+			var axis_value = 5;
+
+			var intersection_points = [];
 
 			for(var i=0;i<edges.length;i+=2) {
 				var point_a = edges[i];
 				var point_b = edges[i+1];
 
-				if ((a.w > axis_value) != (b.w > axis_value)) {
+				if ((point_a.w > axis_value) != (point_b.w > axis_value)) {
 
-					// this is a good point. Calculate the intersection point
+					// TODO: check if line is parallel to the plane
 
+					// This edge is an edge that intersects the hyperplane. 
+					// Calculate the intersection point and push it into 
+					// the array intersection_points
+					var direction = {
+						x:point_a.x-point_b.x,
+						y:point_a.y-point_b.y,
+						z:point_a.z-point_b.z,
+						w:point_a.w-point_b.w
+					}
+
+					var t = (point_a.w - axis_value)/(direction.w*-1);
+
+					var intersection_point = {
+						x: point_a.x + t*direction.x,
+						y: point_a.y + t*direction.y,
+						z: point_a.z + t*direction.z,
+						w:axis_value
+					}
+					intersection_points.push(intersection_point);
 				}
-				
-			} 
+			}
 
+			//-----------------------------------------------//
 
-	
-			var tesseractMesh = projector.Wireframe4D(new_points,edges);
-			var mesh = tesseractMesh;
-			scene.add(mesh);
+			var geometry_vertices = [];
+
+			for (var i=0;i<intersection_points.length;i++) {
+				geometry_vertices.push(
+					new THREE.Vector3(
+						intersection_points[i].x,
+						intersection_points[i].y,
+						intersection_points[i].z
+					)
+				)
+			}
+
+			var geometry = new THREE.ConvexGeometry( geometry_vertices );
+			var material = new THREE.MeshPhongMaterial( {flatShading:true} );
+			var intersection_mesh = new THREE.Mesh( geometry, material );
+			scene.add(intersection_mesh);
 
             update();
             window.addEventListener('resize', update, false);
