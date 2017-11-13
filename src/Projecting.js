@@ -5,6 +5,160 @@ anything related to the left side of the screen (projection n dimensional object
 var Projecting = (function (scope) {
 	function Projecting(){}
 
+	Projecting.prototype.Mesh4D = function(color){
+		// Draws a 3D cube projected in 4D
+
+		var geometry = new THREE.BoxBufferGeometry( 10, 10, 10 );
+		// Add a W position for each position
+		var posAttribute = geometry.getAttribute("position");
+		var Wpositions = [];
+		for(var i=0;i<posAttribute.count;i++){
+			Wpositions.push(0);
+		}
+		var WposAttribute = new THREE.Float32BufferAttribute( Wpositions, 1 ) ;
+		geometry.addAttribute( 'W', WposAttribute);
+
+		var wCount = 0;
+		// Edit the vertices data of the original box 
+		for(var i=0;i<posAttribute.array.length;i+=3){
+			var X = posAttribute.array[i];
+			var Y = posAttribute.array[i+1];
+			var Z = posAttribute.array[i+2];
+			var W = WposAttribute.array[wCount];
+			WposAttribute.array[wCount] = 0;
+
+			console.log({x:X,y:Y,z:Z,w:W})
+
+			wCount++;
+		}
+
+		projection4DFunction = `
+		vec3 project4D(vec4 pos){
+			// Rotate in 4D world space
+
+			// Translate in 4D world space 
+			pos.w += Wtranslation;
+
+			float Lw = 1.0 / (10.0 - pos.w);
+			mat3 projection4DMatrix;
+			projection4DMatrix[0] = vec3(Lw,0.,0.);
+			projection4DMatrix[1] = vec3(0.,Lw,0.);
+			projection4DMatrix[2] = vec3(0.,0.,Lw);
+
+			return projection4DMatrix * pos.xyz;
+		}
+		`;
+
+		vertexShader = `
+			
+			varying vec3 vNormal;
+			attribute float W;
+			uniform float Wtranslation;
+
+			${projection4DFunction}
+
+			void main() {
+				vec4 worldPos4D = vec4(position,W);
+				vNormal = normal;
+
+				vec3 newPos = project4D(worldPos4D);
+
+				gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos,1.0);
+			}
+		`;
+
+		var fragmentShader =`
+			varying vec3 vNormal;
+			void main(){
+				vec4 color = vec4(${color.r/255},${color.g/255},${color.b/255},0.5);
+				
+				gl_FragColor = color;
+			}
+		`;
+		var uniforms = {
+			Wtranslation: { type: "f", value: 0 }
+		};
+
+		var material = new THREE.ShaderMaterial({
+			fragmentShader: fragmentShader,
+			vertexShader: vertexShader,
+			uniforms: uniforms,
+			transparent:true
+		});
+
+		var material2 = new THREE.MeshPhongMaterial( {color: color, opacity:0.5,transparent:true, flatShading:true } );
+
+		var cube = new THREE.Mesh( geometry, material );
+
+		var container = new THREE.Object3D();
+		container.uniforms = uniforms;
+
+		// Draw the edges 
+		var util = new Util();
+		var lineColor = {r:color.r,g:color.g,b:color.b};
+		lineColor.r *= 0.9;
+		lineColor.g *= 0.9;
+		lineColor.b *= 0.9;
+		lineColor = util.rgbToHex(lineColor.r,lineColor.g,lineColor.b);
+
+		var geo = new THREE.EdgesGeometry( geometry ); 
+		var mat = new MeshLineMaterial({
+			color:new THREE.Color(lineColor),
+			lineWidth:.1,
+			side: THREE.DoubleSide,
+			projectionFunction: projection4DFunction
+		});
+
+		
+		var posArray = geo.getAttribute("position").array;
+		var wireframe = new THREE.Object3D();
+		for(var i=0;i<posArray.length;i+=6){
+			// Grab two points from the edge array
+			var v1 = new THREE.Vector3( posArray[i], posArray[i+1],posArray[i+2] );
+			var v2 = new THREE.Vector3( posArray[i+3], posArray[i+4],posArray[i+5] );
+			// Create a new line 
+			var geometryLine = new THREE.Geometry();
+			geometryLine.vertices.push( v1 );
+			geometryLine.vertices.push( v2 );
+
+			var line = new MeshLine();
+			line.setGeometry( geometryLine );
+			var lineMesh = new THREE.Mesh( line.geometry, mat );
+			// Add a W component 
+			var posAttribute = lineMesh.geometry.getAttribute("position");
+			var Wpos = [];
+			for(var j=0;j<posAttribute.count;j++){
+				Wpos.push(0);
+			}
+			var WposAttribute = new THREE.Float32BufferAttribute( Wpos, 1 ) ;
+			lineMesh.geometry.addAttribute( 'W', WposAttribute);
+
+			var wCount = 0;
+			// Edit the vertices data of the original box 
+			for(var j=0;j<posAttribute.array.length;j+=3){
+				var X = posAttribute.array[j];
+				var Y = posAttribute.array[j+1];
+				var Z = posAttribute.array[j+2];
+				var W = WposAttribute.array[wCount];
+				WposAttribute.array[wCount] = 0;
+
+				wCount++;
+			}
+
+			// Add it to the container
+			wireframe.add(lineMesh);
+		}
+		
+
+		container.add(cube);
+		container.add(wireframe);
+
+		container.uniforms2 = mat.uniforms;
+
+
+		return container;
+	}
+
 	Projecting.prototype.Wireframe4D = function(points,edges){
 		/*
 			Takes an array of 4 dimensional points and/or edges and draws them projected from 4D to 3D

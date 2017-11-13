@@ -69,6 +69,16 @@ var Util = (function (scope) {
 		} : null;
 	}
 
+	Util.prototype.componentToHex = function(c) {
+		c = Math.round(c);
+	    var hex = c.toString(16);
+	    return hex.length == 1 ? "0" + hex : hex;
+	}
+
+	Util.prototype.rgbToHex = function(r, g, b) {
+		return "#" + this.componentToHex(r) + this.componentToHex(g) + this.componentToHex(b);
+	}
+
 	Util.prototype.Line = function(p1, p2,color,lineWidth){
 		/*
 			Creates a mesh line out of two points that look like {x:[num],y:[num],z:[num]}

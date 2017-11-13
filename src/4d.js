@@ -117,6 +117,8 @@ var Mode4D = (function (scope) {
 		this.projector = new Projecting();
 		this.slicer = new Slicing();
 
+		this.intersectionPlane = this.CreateIntersectionHyperPlane();
+
 		// Key down 
 		document.addEventListener("keydown", onDocumentKeyDown, false);
 		document.addEventListener("keyup", onDocumentKeyUp, false);
@@ -183,7 +185,7 @@ var Mode4D = (function (scope) {
 	Mode4D.prototype.callbacks = {
 		'axis':function(self,val) {
 			if(self.current_mode == "cartesian") {
-				self.cleanupLeftmesh();
+				self.cleanupLeftMesh();
 				self.initCartesian();
 			}
 		},
@@ -204,12 +206,29 @@ var Mode4D = (function (scope) {
 				self.cleanupLeftMesh();
 				self.initCartesian();
 			}
+
+			// Update intersection plane position 
+			if(self.gui.params.axis == "W"){
+				self.intersectionPlane.uniforms.Wtranslation.value = val * 0.95 ;
+				self.intersectionPlane.uniforms2.Wtranslation.value = self.intersectionPlane.uniforms.Wtranslation.value;
+			}
+			if(self.gui.params.axis == "X"){
+				self.intersectionPlane.position.x = val;
+			}
 		},
 		'points': function(self,val){
 			self.cleanupLeftMesh()
 			self.initConvexHull()
 		},
 	};
+
+	Mode4D.prototype.CreateIntersectionHyperPlane = function(){
+		var color =  this.gui.colors.slices;
+
+		var mesh = this.projector.Mesh4D(this.util.HexToRgb(color));
+		this.leftView.add(mesh);
+		return mesh;
+	}
 
 	// Generalizing the 3D cartesian drawing
 	Mode4D.prototype.polygonizeCartesian = function(equation_string,resolution,variables){
@@ -449,6 +468,7 @@ var Mode4D = (function (scope) {
 		}
 	}
 
+
 	//Destroys everything created
 	Mode4D.prototype.cleanup = function(){
 		cancelAnimationFrame(this.animId); // stop the animation loop
@@ -487,7 +507,7 @@ var Mode4D = (function (scope) {
 
 	
 
-	Mode4D.prototype.animate = function(){
+	Mode4D.prototype.animate = function(){				
 		if(this.current_mode == "convex-hull"){
 			// XW rotation
 			if(this.keysDown[this.keyMap['A']]){
