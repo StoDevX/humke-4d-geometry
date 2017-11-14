@@ -162,6 +162,174 @@ var Mode4D = (function (scope) {
 		};
 	}
 
+	Mode4D.prototype.ComputeSlicesCPU = function() {
+
+		var axis = this.gui.params.axis;
+		var axisValue = this.gui.params.axis_value;
+		var color = this.gui.colors.slices;
+
+		// Testing output from Qhull. This is 16 random points within a unit tesseract
+			var points = [
+				[0.8143297795339766, 0.440590428598775, -0.9966778149797374, 0.8359636104069312],
+				[0.04038574084675473, 0.7631382697849891, 0.06488647783630208, 0.5470246612532295],
+				[-0.1565304241669647, -0.8068455753911711, -0.6535871109492957, -0.8385764358924482],
+				[0.04584069274909863, 0.4445148496371831, 0.9610665477449694, 0.6454526024362561],
+				[0.1218762687611172, 0.3744402885198968, -0.7820816028696314, -0.4455011351457807],
+				[0.4624172658309502, -0.1530246242443329, 0.1151336972742656, -0.9479586388431104],
+				[-0.3408434431448983, -0.555754094902197, -0.5590764978519422, -0.3987028481426675],
+				[-0.9987734397861859, -0.3852024957399839, -0.09835071312110011, -0.9804424829598912],
+				[-0.2968112596280977, -0.5068460726242942, -0.5619464559126146, -0.6340879515130893],
+				[0.8837960566243119, -0.03969105802447637, 0.9123802677843536, 0.3751456852770836],
+				[-0.926478310419692, 0.6790362016102636, 0.5614273236705245, -0.09098328937867961],
+				[0.8438482990896778, 0.5583483703046557, 0.1610475146780233, 0.7255701075546166],
+				[0.656784166262284, 0.5714694043355708, 0.6862663698254772, 0.07886445995314473],
+				[-0.5250300108688232, -0.1793963892193478, 0.8848799689532072, 0.1776234453335623],
+				[-0.6827634951870549, 0.7939339091944824, -0.3528022080220302, 0.4532847092051848],
+				[0.3560962382295134, 0.9094653110108015, -0.6165327854608491, -0.06652824121204037]
+			]
+
+			var facets = [
+				[5,10,15,7],
+				[0,5,2,9],
+				[6,0,2,9],
+				[4,5,15,7],
+				[5,4,2,7],
+				[4,5,0,15],
+				[5,4,0,2],
+				[4,6,0,2],
+				[12,5,10,15],
+				[5,12,0,15],
+				[14,4,0,15],
+				[10,14,15,7],
+				[14,4,15,7],
+				[14,4,6,0],
+				[14,6,2,7],
+				[4,14,2,7],
+				[4,14,6,2],
+				[12,11,0,15],
+				[3,11,0,9],
+				[12,11,3,9],
+				[11,5,0,9],
+				[11,12,5,9],
+				[12,11,5,0],
+				[14,1,10,15],
+				[14,1,3,10],
+				[1,12,10,15],
+				[1,12,3,10],
+				[1,11,12,15],
+				[11,1,12,3],
+				[1,14,0,15],
+				[11,1,0,15],
+				[1,14,3,0],
+				[11,1,3,0],
+				[13,14,6,0],
+				[14,13,3,0],
+				[6,13,0,9],
+				[13,3,0,9],
+				[14,13,6,7],
+				[13,14,10,7],
+				[13,14,3,10],
+				[6,13,2,7],
+				[13,6,2,9],
+				[13,5,2,7],
+				[5,13,2,9],
+				[5,13,10,7],
+				[13,12,3,9],
+				[12,13,3,10],
+				[12,13,5,9],
+				[13,12,5,10]
+			]
+
+			var new_points = [];
+			var scale = 10;
+			for(var i=0;i<points.length;i++){
+				var e = points[i];
+				var p = {x:e[0],y:e[1],z:e[2],w:e[3]}
+				p.x *= scale;
+				p.y *= scale;
+				p.z *= scale;
+				p.w *= scale;
+				new_points.push(p);
+			}
+
+				// Construct edges
+			var edges_arr = this.util.FlattenFacets(facets, points);
+			var edges = [];
+			for(var i=0;i<edges_arr.length;i+=4){
+				var p = {x:edges_arr[i],y:edges_arr[i+1],z:edges_arr[i+2],w:edges_arr[i+3]}
+				p.x *= scale;
+				p.y *= scale;
+				p.z *= scale;
+				p.w *= scale;
+				edges.push(p);
+			}
+
+			var material;
+
+			var intersection_points = [];
+
+			for(var i=0;i<edges.length;i+=2) {
+				var point_a = edges[i];
+				var point_b = edges[i+1];
+
+				if ((point_a.w > axisValue) != (point_b.w > axisValue)) {
+
+					// TODO: check if line is parallel to the plane
+
+					// This edge is an edge that intersects the hyperplane. 
+					// Calculate the intersection point and push it into 
+					// the array intersection_points
+					var direction = {
+						x:point_a.x-point_b.x,
+						y:point_a.y-point_b.y,
+						z:point_a.z-point_b.z,
+						w:point_a.w-point_b.w
+					}
+
+					var t = (point_a.w - axisValue)/(direction.w*-1);
+
+					var intersection_point = {
+						x: point_a.x + t*direction.x,
+						y: point_a.y + t*direction.y,
+						z: point_a.z + t*direction.z,
+						w:axisValue
+					}
+					intersection_points.push(intersection_point);
+				}
+			}
+
+			if (intersection_points[3]) {
+
+				var geometry_vertices = [];
+
+				for (var i=0;i<intersection_points.length;i++) {
+					geometry_vertices.push(
+						new THREE.Vector3(
+							intersection_points[i].x,
+							intersection_points[i].y,
+							intersection_points[i].z
+						)
+					)
+				}
+
+				if (this.rightMesh) {
+					this.rightView.remove(this.rightMesh);
+					this.rightMesh = null;
+				}
+
+				geometry = new THREE.ConvexGeometry( geometry_vertices );
+				material = new THREE.MeshPhongMaterial( {flatShading:true} );
+				this.rightMesh = new THREE.Mesh( geometry, material );
+				this.rightView.add(this.rightMesh);
+			} else {
+				console.log("no intersection points found");
+				if (this.rightMesh) {
+					this.rightView.remove(this.rightMesh)
+					this.rightMesh = null;
+				}
+			}
+	}
+
 	Mode4D.prototype.addLabel = function(label,camera){
 		//Add the label and its camera to the label array 
 		this.labels.push({l:label,c:camera});
@@ -186,10 +354,14 @@ var Mode4D = (function (scope) {
 				self.cleanupLeftmesh();
 				self.initCartesian();
 			}
+
+			self.ComputeSlicesCPU();
 		},
 		'source': function(self,val){
 			self.setMode();
 			self.gui.params.render_shape = true; //Reset this back to true
+
+			self.ComputeSlicesCPU();
 		},
 		'resolution': function(self,val){
 			self.cleanupLeftMesh();
@@ -204,6 +376,8 @@ var Mode4D = (function (scope) {
 				self.cleanupLeftMesh();
 				self.initCartesian();
 			}
+
+			self.ComputeSlicesCPU();
 		},
 		'points': function(self,val){
 			self.cleanupLeftMesh()
@@ -432,7 +606,7 @@ var Mode4D = (function (scope) {
 		this.leftMesh = tesseractMesh;
 		this.leftView.add(this.leftMesh);
 
-
+		this.ComputeSlicesCPU();
 
 	}
 
