@@ -168,6 +168,12 @@ var Mode4D = (function (scope) {
 		var axisValue = this.gui.params.axis_value;
 		var color = this.gui.colors.slices;
 
+		if(this.current_mode == "convex-hull") {
+
+			if(this.rightMesh) {
+				this.rightView.remove(this.rightMesh);
+			}
+
 		// Testing output from Qhull. This is 16 random points within a unit tesseract
 			var points = [
 				[0.8143297795339766, 0.440590428598775, -0.9966778149797374, 0.8359636104069312],
@@ -240,94 +246,12 @@ var Mode4D = (function (scope) {
 				[13,12,5,10]
 			]
 
-			var new_points = [];
-			var scale = 10;
-			for(var i=0;i<points.length;i++){
-				var e = points[i];
-				var p = {x:e[0],y:e[1],z:e[2],w:e[3]}
-				p.x *= scale;
-				p.y *= scale;
-				p.z *= scale;
-				p.w *= scale;
-				new_points.push(p);
-			}
-
-				// Construct edges
-			var edges_arr = this.util.FlattenFacets(facets, points);
-			var edges = [];
-			for(var i=0;i<edges_arr.length;i+=4){
-				var p = {x:edges_arr[i],y:edges_arr[i+1],z:edges_arr[i+2],w:edges_arr[i+3]}
-				p.x *= scale;
-				p.y *= scale;
-				p.z *= scale;
-				p.w *= scale;
-				edges.push(p);
-			}
-
-			var material;
-
-			var intersection_points = [];
-
-			for(var i=0;i<edges.length;i+=2) {
-				var point_a = edges[i];
-				var point_b = edges[i+1];
-
-				if ((point_a.w > axisValue) != (point_b.w > axisValue)) {
-
-					// TODO: check if line is parallel to the plane
-
-					// This edge is an edge that intersects the hyperplane. 
-					// Calculate the intersection point and push it into 
-					// the array intersection_points
-					var direction = {
-						x:point_a.x-point_b.x,
-						y:point_a.y-point_b.y,
-						z:point_a.z-point_b.z,
-						w:point_a.w-point_b.w
-					}
-
-					var t = (point_a.w - axisValue)/(direction.w*-1);
-
-					var intersection_point = {
-						x: point_a.x + t*direction.x,
-						y: point_a.y + t*direction.y,
-						z: point_a.z + t*direction.z,
-						w:axisValue
-					}
-					intersection_points.push(intersection_point);
-				}
-			}
-
-			if (intersection_points[3]) {
-
-				var geometry_vertices = [];
-
-				for (var i=0;i<intersection_points.length;i++) {
-					geometry_vertices.push(
-						new THREE.Vector3(
-							intersection_points[i].x,
-							intersection_points[i].y,
-							intersection_points[i].z
-						)
-					)
-				}
-
-				if (this.rightMesh) {
-					this.rightView.remove(this.rightMesh);
-					this.rightMesh = null;
-				}
-
-				geometry = new THREE.ConvexGeometry( geometry_vertices );
-				material = new THREE.MeshPhongMaterial( {flatShading:true} );
-				this.rightMesh = new THREE.Mesh( geometry, material );
+			this.rightMesh = this.slicer.SliceConvex4D(points,facets,axis,axisValue,color);
+			if (this.rightMesh != null) {
 				this.rightView.add(this.rightMesh);
-			} else {
-				console.log("no intersection points found");
-				if (this.rightMesh) {
-					this.rightView.remove(this.rightMesh)
-					this.rightMesh = null;
-				}
 			}
+		}
+
 	}
 
 	Mode4D.prototype.addLabel = function(label,camera){

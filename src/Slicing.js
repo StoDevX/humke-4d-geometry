@@ -215,6 +215,64 @@ var Slicing = (function (scope) {
 		}
 	}
 
+	Slicing.prototype.SliceConvex4D = function(points,facets,axis,axisValue,color) {
+		var new_points = [];
+		var scale = 5;
+		for(var i=0;i<points.length;i++){
+			var e = points[i];
+			var p = {x:e[0],y:e[1],z:e[2],w:e[3]}
+			p.x *= scale;
+			p.y *= scale;
+			p.z *= scale;
+			p.w *= scale;
+			new_points.push(p);
+		}
+
+		var util = new Util();
+
+			// Construct edges
+		var edges_arr = util.FlattenFacets(facets, points);
+		var edges = [];
+		for(var i=0;i<edges_arr.length;i+=4){
+			var p = {x:edges_arr[i],y:edges_arr[i+1],z:edges_arr[i+2],w:edges_arr[i+3]}
+			p.x *= scale;
+			p.y *= scale;
+			p.z *= scale;
+			p.w *= scale;
+			edges.push(p);
+		}
+
+		var intersection_points = [];
+
+		for(var i=0;i<edges.length;i+=2) {
+			var point_a = edges[i];
+			var point_b = edges[i+1];
+
+			var point = this.Calculate4DIntersectionPoints(point_a,point_b,axis,axisValue);
+
+			if (point!=null) {
+				intersection_points.push(
+					new THREE.Vector3(
+						point.x,
+						point.y,
+						point.z
+					)
+				)
+			}
+
+		}
+
+		if (intersection_points[3]) {
+
+			geometry = new THREE.ConvexGeometry( intersection_points );
+			material = new THREE.MeshPhongMaterial( {flatShading:true} );
+			var mesh = new THREE.Mesh( geometry, material );
+			return mesh;
+		} else {
+			console.log("no intersection points found");
+		}
+	}
+
 	Slicing.prototype.CalculateIntersectionPoints = function(p1,p2,p3,axis,axis_value) {
 		/*
 		Given a triangle (as 3 points) and a line (an axis), return the two points of intersection 
@@ -307,6 +365,35 @@ var Slicing = (function (scope) {
 			return intersection_point;
 		}
 	}
+
+	Slicing.prototype.Calculate4DIntersectionPoints = function(p1,p2,axis,axis_value) {
+
+		if ((p1.w > axis_value) != (p2.w > axis_value)) {
+
+			// TODO: check if line is parallel to the plane
+
+			// This edge is an edge that intersects the hyperplane. 
+			// Calculate the intersection point and push it into 
+			// the array intersection_points
+			var direction = {
+				x:p1.x-p2.x,
+				y:p1.y-p2.y,
+				z:p1.z-p2.z,
+				w:p1.w-p2.w
+			}
+
+			var t = (p1.w - axis_value)/(direction.w*-1);
+
+			var intersection_point = {
+				x: p1.x + t*direction.x,
+				y: p1.y + t*direction.y,
+				z: p1.z + t*direction.z,
+				w:axis_value
+			}
+			return intersection_point;
+		}
+	}
+
 	scope.Slicing = Slicing;
 	return Slicing;
 })(typeof exports === 'undefined' ? {} : exports);
