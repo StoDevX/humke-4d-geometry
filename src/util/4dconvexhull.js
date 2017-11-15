@@ -18,9 +18,30 @@ var ConvexHull4D = (function (scope) {
     return false;
   }
 
-  ConvexHull4D.prototype.CreateInitialSimplex = function() {
+  ConvexHull4D.prototype.CreateInitialSimplex = function(hull) {
     // Create an initial simplex of d+1 points and return its facets
-    return [[1,2,3,4],[4,3,2,0],[0,1,3,4],[4,2,1,0],[0,1,2,3]];
+		hull.facets.push([1,2,3,4]);
+		if (this.IsPointAboveFacet(0, 0, hull)) {
+			hull.facets[0] = [4,3,2,1];
+		}
+		hull.facets.push([4,3,2,0]);
+		if(this.IsPointAboveFacet(1, 1, hull)) {
+			hull.facets[1] = [0,2,3,4];
+		}
+		hull.facets.push([0,1,3,4]);
+		if(this.IsPointAboveFacet(2, 2, hull)) {
+			hull.facets[2] = [4,3,1,0];
+		}
+		hull.facets.push([4,2,1,0]);
+		if(this.IsPointAboveFacet(3,3, hull)) {
+			hull.facets[3] = [0,1,2,4];
+		}
+		hull.facets.push([0,1,2,3]);
+		if(this.IsPointAboveFacet(4,4, hull)) {
+			hull.facets[4] = [3,2,1,0];
+		}
+
+		return hull;
   }
 
   ConvexHull4D.prototype.vecSubtract = function(A, B) {
@@ -31,17 +52,29 @@ var ConvexHull4D = (function (scope) {
     return result;
   }
 
-  ConvexHull4D.prototype.Cross = function(A,B,C) {
+  ConvexHull4D.prototype.Cross = function(U,V,W) {
     // Calculate the normal vector to the hyperplane defined by vectors A, B, and C.
     // Values taken from a 4x4 determinant calculated by hand.
     // For more info, see the "multilinear algebra" section of
     // https://en.wikipedia.org/wiki/Cross_product#Generalizations
 
-    var e0 = A[1]*B[3]*C[2] - A[1]*B[2]*C[3] + A[2]*B[1]*C[3] - A[2]*B[3]*C[1] - A[3]*B[1]*C[2] + A[3]*B[2]*C[1];
-    var e1 = A[0]*B[2]*C[3] - A[0]*B[3]*C[2] - A[2]*B[0]*C[3] + A[2]*B[3]*C[0] + A[3]*B[0]*C[2] - A[3]*B[2]*C[0];
-    var e2 = A[0]*B[3]*C[1] - A[0]*B[1]*C[3] + A[1]*B[0]*C[3] - A[1]*B[3]*C[0] - A[3]*B[0]*C[1] + A[3]*B[1]*C[0];
-    var e3 = A[0]*B[1]*C[2] - A[0]*B[2]*C[1] - A[1]*B[0]*C[2] + A[1]*B[2]*C[0] + A[2]*B[0]*C[1] - A[2]*B[1]*C[0];
-    return [e0, e1, e2, e3];
+    // var e0 = A[1]*B[3]*C[2] - A[1]*B[2]*C[3] + A[2]*B[1]*C[3] - A[2]*B[3]*C[1] - A[3]*B[1]*C[2] + A[3]*B[2]*C[1];
+    // var e1 = A[0]*B[2]*C[3] - A[0]*B[3]*C[2] - A[2]*B[0]*C[3] + A[2]*B[3]*C[0] + A[3]*B[0]*C[2] - A[3]*B[2]*C[0];
+    // var e2 = A[0]*B[3]*C[1] - A[0]*B[1]*C[3] + A[1]*B[0]*C[3] - A[1]*B[3]*C[0] - A[3]*B[0]*C[1] + A[3]*B[1]*C[0];
+    // var e3 = A[0]*B[1]*C[2] - A[0]*B[2]*C[1] - A[1]*B[0]*C[2] + A[1]*B[2]*C[0] + A[2]*B[0]*C[1] - A[2]*B[1]*C[0];
+
+		var A = (V[0] * W[1]) - (V[1] * W[0]);
+		var B = (V[0] * W[2]) - (V[2] * W[0]);
+		var C = (V[0] * W[3]) - (V[3] * W[0]);
+		var D = (V[1] * W[2]) - (V[2] * W[1]);
+		var E = (V[1] * W[3]) - (V[3] * W[1]);
+		var F = (V[2] * W[3]) - (V[3] * W[2]);
+ 		// Calculate the result-vector components.
+ 		var result0 =   (U[1] * F) - (U[2] * E) + (U[3] * D);
+    var result1 = - (U[0] * F) + (U[2] * C) - (U[3] * B);
+		var result2 =   (U[0] * E) - (U[1] * C) + (U[3] * A);
+		var result3 = - (U[0] * D) + (U[1] * B) - (U[2] * A);
+    return [result0, result1, result2, result3];
   }
 
   ConvexHull4D.prototype.Dot = function(A,B) {
@@ -77,6 +110,7 @@ var ConvexHull4D = (function (scope) {
   }
 
   ConvexHull4D.prototype.IsPointAboveFacet = function(facet_index, point_index, hull) {
+		if (hull.points_on_hull.indexOf(point_index) != -1) return false;
     var hyperplane = this.GetHyperplaneOfFacet(hull.facets[facet_index], hull.points);
     return this.IsPointAboveHyperplane(hyperplane[0], hyperplane[1], hull.points[point_index]);
   }
@@ -121,11 +155,11 @@ var ConvexHull4D = (function (scope) {
     var hyperplane = this.GetHyperplaneOfFacet(hull.facets[facet_i], hull.points);
     var normal = hyperplane[0];
     var p0 = hyperplane[1];
-    var furthest_distance = this.DistanceFromHyperplane(normal, p0, hull.points[0]);
-    var furthest_point_i = 0;
-    for (var i = 1; i < hull.points.length; i++) {
-      if (this.DistanceFromHyperplane(normal, p0, hull.points[i]) > furthest_distance) {
-        furthest_point_i = i;
+    var furthest_distance = this.DistanceFromHyperplane(normal, p0, hull.points[hull.outside_sets[facet_i][0]]);
+    var furthest_point_i = hull.outside_sets[facet_i][0];
+    for (var i = 1; i < hull.outside_sets[facet_i].length; i++) {
+      if (this.DistanceFromHyperplane(normal, p0, hull.points[hull.outside_sets[facet_i][i]]) > furthest_distance) {
+        furthest_point_i = hull.outside_sets[facet_i][i];
       }
     }
     return furthest_point_i;
@@ -190,7 +224,7 @@ var ConvexHull4D = (function (scope) {
   }
 
   ConvexHull4D.prototype.RemoveFacetsFromHull = function(facets, hull) {
-    facets = facets.sort(function(a,b){ return a > b }); // ascending order
+    facets = facets.sort(function(a,b) { return a > b }); // ascending order
     for (var facets_i = facets.length - 1; facets_i >= 0; facets_i--) {
       hull.facets.splice(facets[facets_i], 1);
       hull.outside_sets.splice(facets[facets_i], 1);
@@ -234,9 +268,12 @@ var ConvexHull4D = (function (scope) {
   ConvexHull4D.prototype.ConvexHull4D = function(points) {
     var hull = {};
     hull.points = points;
-    hull.facets = this.CreateInitialSimplex();
+		hull.facets = [];
+		hull.points_on_hull = [];
+    hull = this.CreateInitialSimplex(hull);
+		hull.points_on_hull = [0,1,2,3,4];
     hull.outside_sets = this.GetInitialOutsideSets(hull);
-    var counter = 0;
+
     for (var osi = 0; osi < hull.outside_sets.length; osi++) {
       if (hull.outside_sets[osi].length > 0) {
         var furthest_point_i = this.GetFurthestOutsidePointFromFacet(osi, hull);
@@ -260,11 +297,8 @@ var ConvexHull4D = (function (scope) {
         hull = this.RemoveFacetsFromHull(visible_set, hull);
         var start_of_new_facets = hull.facets.length;
         hull = this.CreateFacetsFromPointAndRidges(hull, horizon_ridges, furthest_point_i);
+				hull.points_on_hull.push(furthest_point_i);
         hull = this.UpdateOutsideSets(outside_points_of_visible_set, start_of_new_facets, hull);
-
-        osi = 0;
-        counter++;
-        if (counter >= 9) break;
       }
     }
 

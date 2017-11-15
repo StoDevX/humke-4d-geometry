@@ -18,9 +18,30 @@ var ConvexHull4D = (function (scope) {
     return false;
   }
 
-  ConvexHull4D.prototype.CreateInitialSimplex = function() {
+  ConvexHull4D.prototype.CreateInitialSimplex = function(hull) {
     // Create an initial simplex of d+1 points and return its facets
-    return [[1,2,3,4],[4,3,2,0],[0,1,3,4],[4,2,1,0],[0,1,2,3]];
+		hull.facets.push([1,2,3,4]);
+		if (this.IsPointAboveFacet(0, 0, hull)) {
+			hull.facets[0] = [4,3,2,1];
+		}
+		hull.facets.push([4,3,2,0]);
+		if(this.IsPointAboveFacet(1, 1, hull)) {
+			hull.facets[1] = [0,2,3,4];
+		}
+		hull.facets.push([0,1,3,4]);
+		if(this.IsPointAboveFacet(2, 2, hull)) {
+			hull.facets[2] = [4,3,1,0];
+		}
+		hull.facets.push([4,2,1,0]);
+		if(this.IsPointAboveFacet(3,3, hull)) {
+			hull.facets[3] = [0,1,2,4];
+		}
+		hull.facets.push([0,1,2,3]);
+		if(this.IsPointAboveFacet(4,4, hull)) {
+			hull.facets[4] = [3,2,1,0];
+		}
+
+		return hull;
   }
 
   ConvexHull4D.prototype.vecSubtract = function(A, B) {
@@ -89,6 +110,7 @@ var ConvexHull4D = (function (scope) {
   }
 
   ConvexHull4D.prototype.IsPointAboveFacet = function(facet_index, point_index, hull) {
+		if (hull.points_on_hull.indexOf(point_index) != -1) return false;
     var hyperplane = this.GetHyperplaneOfFacet(hull.facets[facet_index], hull.points);
     return this.IsPointAboveHyperplane(hyperplane[0], hyperplane[1], hull.points[point_index]);
   }
@@ -133,11 +155,11 @@ var ConvexHull4D = (function (scope) {
     var hyperplane = this.GetHyperplaneOfFacet(hull.facets[facet_i], hull.points);
     var normal = hyperplane[0];
     var p0 = hyperplane[1];
-    var furthest_distance = this.DistanceFromHyperplane(normal, p0, hull.points[0]);
-    var furthest_point_i = 0;
-    for (var i = 1; i < hull.points.length; i++) {
-      if (this.DistanceFromHyperplane(normal, p0, hull.points[i]) > furthest_distance) {
-        furthest_point_i = i;
+    var furthest_distance = this.DistanceFromHyperplane(normal, p0, hull.points[hull.outside_sets[facet_i][0]]);
+    var furthest_point_i = hull.outside_sets[facet_i][0];
+    for (var i = 1; i < hull.outside_sets[facet_i].length; i++) {
+      if (this.DistanceFromHyperplane(normal, p0, hull.points[hull.outside_sets[facet_i][i]]) > furthest_distance) {
+        furthest_point_i = hull.outside_sets[facet_i][i];
       }
     }
     return furthest_point_i;
@@ -202,7 +224,7 @@ var ConvexHull4D = (function (scope) {
   }
 
   ConvexHull4D.prototype.RemoveFacetsFromHull = function(facets, hull) {
-    facets = facets.sort(function(a,b){ return a > b }); // ascending order
+    facets = facets.sort(function(a,b) { return a > b }); // ascending order
     for (var facets_i = facets.length - 1; facets_i >= 0; facets_i--) {
       hull.facets.splice(facets[facets_i], 1);
       hull.outside_sets.splice(facets[facets_i], 1);
@@ -246,7 +268,9 @@ var ConvexHull4D = (function (scope) {
   ConvexHull4D.prototype.ConvexHull4D = function(points) {
     var hull = {};
     hull.points = points;
-    hull.facets = this.CreateInitialSimplex();
+		hull.facets = [];
+		hull.points_on_hull = [];
+    hull = this.CreateInitialSimplex(hull);
 		hull.points_on_hull = [0,1,2,3,4];
     hull.outside_sets = this.GetInitialOutsideSets(hull);
 
@@ -273,6 +297,7 @@ var ConvexHull4D = (function (scope) {
         hull = this.RemoveFacetsFromHull(visible_set, hull);
         var start_of_new_facets = hull.facets.length;
         hull = this.CreateFacetsFromPointAndRidges(hull, horizon_ridges, furthest_point_i);
+				hull.points_on_hull.push(furthest_point_i);
         hull = this.UpdateOutsideSets(outside_points_of_visible_set, start_of_new_facets, hull);
 
         //osi = 0;
@@ -286,22 +311,38 @@ scope.ConvexHull4D = ConvexHull4D;
 return ConvexHull4D;
 })(typeof exports === 'undefined' ? {} : exports);
 
-var tesseract = [[0,0,0,0]
-,[1,0,0,0]
-,[0,1,0,0]
-,[1,1,0,0]
-,[0,0,1,0]
-,[1,0,1,0]
-,[0,1,1,0]
-,[1,1,1,0]
-,[0,0,0,1]
-,[1,0,0,1]
-,[0,1,0,1]
-,[1,1,0,1]
-,[1,0,1,1]
-,[0,1,1,1]
-,[1,1,1,1]
-,[0,0,1,1]];
+// var tesseract = [[0,0,0,0]
+// ,[1,0,0,0]
+// ,[0,1,0,0]
+// ,[1,1,0,0]
+// ,[0,0,1,0]
+// ,[1,0,1,0]
+// ,[0,1,1,0]
+// ,[1,1,1,0]
+// ,[0,0,0,1]
+// ,[1,0,0,1]
+// ,[0,1,0,1]
+// ,[1,1,0,1]
+// ,[1,0,1,1]
+// ,[0,1,1,1]
+// ,[1,1,1,1]
+// ,[0,0,1,1]];
+
+var start = -5;
+var end = 5;
+
+var tesseract = [];
+// Generate the tesseract points
+for(var x=start;x<=end;x+=(end-start)){
+	for(var y=start;y<=end;y+=(end-start)){
+		for(var z=start;z<=end;z+=(end-start)){
+			for(var w=start;w<=end;w+=(end-start)){
+				tesseract.push([x,y,z,w]);
+			}
+		}
+	}
+}
 
  var CHull4D = new ConvexHull4D();
  var facets = CHull4D.ConvexHull4D(tesseract);
+ console.log(facets);
