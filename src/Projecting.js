@@ -5,95 +5,167 @@ anything related to the left side of the screen (projection n dimensional object
 var Projecting = (function (scope) {
 	function Projecting(){}
 
-	Projecting.prototype.GetUndirectedEdgesOfTetrahedron = function(tetrahedron) {
-		return [tetrahedron[0],tetrahedron[1],
-						tetrahedron[1], tetrahedron[2],
-						tetrahedron[2], tetrahedron[0],
-						tetrahedron[2], tetrahedron[3],
-						tetrahedron[0], tetrahedron[3],
-						tetrahedron[1], tetrahedron[3]];
+	Projecting.prototype.Mesh4D = function(color){
+		// Draws a 3D cube projected in 4D
+
+		var geometry = new THREE.BoxBufferGeometry( 10, 10, 10 );
+		// Add a W position for each position
+		var posAttribute = geometry.getAttribute("position");
+		var Wpositions = [];
+		for(var i=0;i<posAttribute.count;i++){
+			Wpositions.push(0);
+		}
+		var WposAttribute = new THREE.Float32BufferAttribute( Wpositions, 1 ) ;
+		geometry.addAttribute( 'W', WposAttribute);
+
+		var wCount = 0;
+		// Edit the vertices data of the original box 
+		for(var i=0;i<posAttribute.array.length;i+=3){
+			var X = posAttribute.array[i];
+			var Y = posAttribute.array[i+1];
+			var Z = posAttribute.array[i+2];
+			var W = WposAttribute.array[wCount];
+			WposAttribute.array[wCount] = 0;
+
+			console.log({x:X,y:Y,z:Z,w:W})
+
+			wCount++;
+		}
+
+		projection4DFunction = `
+		vec3 project4D(vec4 pos){
+			// Rotate in 4D world space
+
+			// Translate in 4D world space 
+			pos.w += Wtranslation;
+
+			float Lw = 1.0 / (10.0 - pos.w);
+			mat3 projection4DMatrix;
+			projection4DMatrix[0] = vec3(Lw,0.,0.);
+			projection4DMatrix[1] = vec3(0.,Lw,0.);
+			projection4DMatrix[2] = vec3(0.,0.,Lw);
+
+			return projection4DMatrix * pos.xyz;
+		}
+		`;
+
+		vertexShader = `
+			
+			varying vec3 vNormal;
+			attribute float W;
+			uniform float Wtranslation;
+
+			${projection4DFunction}
+
+			void main() {
+				vec4 worldPos4D = vec4(position,W);
+				vNormal = normal;
+
+				vec3 newPos = project4D(worldPos4D);
+
+				gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos,1.0);
+			}
+		`;
+
+		var fragmentShader =`
+			varying vec3 vNormal;
+			void main(){
+				vec4 color = vec4(${color.r/255},${color.g/255},${color.b/255},0.5);
+				
+				gl_FragColor = color;
+			}
+		`;
+		var uniforms = {
+			Wtranslation: { type: "f", value: 0 }
+		};
+
+		var material = new THREE.ShaderMaterial({
+			fragmentShader: fragmentShader,
+			vertexShader: vertexShader,
+			uniforms: uniforms,
+			transparent:true
+		});
+
+		var material2 = new THREE.MeshPhongMaterial( {color: color, opacity:0.5,transparent:true, flatShading:true } );
+
+		var cube = new THREE.Mesh( geometry, material );
+
+		var container = new THREE.Object3D();
+		container.uniforms = uniforms;
+
+		// Draw the edges 
+		var util = new Util();
+		var lineColor = {r:color.r,g:color.g,b:color.b};
+		lineColor.r *= 0.9;
+		lineColor.g *= 0.9;
+		lineColor.b *= 0.9;
+		lineColor = util.rgbToHex(lineColor.r,lineColor.g,lineColor.b);
+
+		var geo = new THREE.EdgesGeometry( geometry ); 
+		var mat = new MeshLineMaterial({
+			color:new THREE.Color(lineColor),
+			lineWidth:.1,
+			side: THREE.DoubleSide,
+			projectionFunction: projection4DFunction
+		});
+
+		
+		var posArray = geo.getAttribute("position").array;
+		var wireframe = new THREE.Object3D();
+		for(var i=0;i<posArray.length;i+=6){
+			// Grab two points from the edge array
+			var v1 = new THREE.Vector3( posArray[i], posArray[i+1],posArray[i+2] );
+			var v2 = new THREE.Vector3( posArray[i+3], posArray[i+4],posArray[i+5] );
+			// Create a new line 
+			var geometryLine = new THREE.Geometry();
+			geometryLine.vertices.push( v1 );
+			geometryLine.vertices.push( v2 );
+
+			var line = new MeshLine();
+			line.setGeometry( geometryLine );
+			var lineMesh = new THREE.Mesh( line.geometry, mat );
+			// Add a W component 
+			var posAttribute = lineMesh.geometry.getAttribute("position");
+			var Wpos = [];
+			for(var j=0;j<posAttribute.count;j++){
+				Wpos.push(0);
+			}
+			var WposAttribute = new THREE.Float32BufferAttribute( Wpos, 1 ) ;
+			lineMesh.geometry.addAttribute( 'W', WposAttribute);
+
+			var wCount = 0;
+			// Edit the vertices data of the original box 
+			for(var j=0;j<posAttribute.array.length;j+=3){
+				var X = posAttribute.array[j];
+				var Y = posAttribute.array[j+1];
+				var Z = posAttribute.array[j+2];
+				var W = WposAttribute.array[wCount];
+				WposAttribute.array[wCount] = 0;
+
+				wCount++;
+			}
+
+			// Add it to the container
+			wireframe.add(lineMesh);
+		}
+		
+
+		container.add(cube);
+		container.add(wireframe);
+
+		container.uniforms2 = mat.uniforms;
+
+
+		return container;
 	}
 
-	Projecting.prototype.FlattenFacets = function(facets, points) {
-		var edges_arr = [];
-		for (var facet_i = 0; facet_i < facets.length; facet_i++) {
-			var edges_of_facet = this.GetUndirectedEdgesOfTetrahedron(facets[facet_i]);
-			edges_arr = edges_arr.concat(edges_of_facet);
-		}
+	Projecting.prototype.Wireframe4D = function(points,edges){
+		/*
+			Takes an array of 4 dimensional points and/or edges and draws them projected from 4D to 3D
 
-		for (var i = 0; i < edges_arr.length; i++) {
-			edges_arr[i] = points[edges_arr[i]];
-		}
-
-		var flattened_edges_arr = [];
-		for (var i = 0; i < edges_arr.length; i++) {
-			flattened_edges_arr = flattened_edges_arr.concat(edges_arr[i]);
-		}
-
-		return flattened_edges_arr;
-	}
-
-	Projecting.prototype.MakeTesseractGPU = function(){
-		var start = -5;
-		var end = 5;
-
-		var vectorArray = [];
-		// Generate the tesseract points
-		for(var x=start;x<=end;x+=(end-start)){
-			for(var y=start;y<=end;y+=(end-start)){
-				for(var z=start;z<=end;z+=(end-start)){
-					for(var w=start;w<=end;w+=(end-start)){
-						vectorArray.push(new THREE.Vector4(x,y,z,w));
-					}
-				}
-			}
-		}
-
-	/*	// Generate the pairs of points that create the edges
-		var edgesArray = [];
-		for(var i=0;i<vectorArray.length;i++){
-			var p = vectorArray[i];
-			for(var j=0;j<vectorArray.length;j++){
-				if(i == j) continue;
-				var p2 = vectorArray[j];
-				// For two points to be connected, they must share exactly 3 coordinates
-				// xyz, xyw, xzw, yzw
-				if(p.x == p2.x && p.y == p2.y && p.z == p2.z ||
-				   p.x == p2.x && p.y == p2.y && p.w == p2.w ||
-				   p.y == p2.y && p.z == p2.z && p.w == p2.w ||
-				   p.x == p2.x && p.z == p2.z && p.w == p2.w ){
-
-					edgesArray.push(p);
-					edgesArray.push(p2);
-				}
-			}
-		}*/
-
-var tesseract = [];
-console.log(vectorArray);
-for(var i=0;i<vectorArray.length;i++){
-	var p = vectorArray[i];
-	tesseract.push([p.x,p.y,p.z,p.w]);
-}
-
-// var tesseract = [
-//  [0,0,0,0]
-// ,[1,0,0,0]
-// ,[0,1,0,0]
-// ,[1,1,0,0]
-// ,[0,0,1,0]
-// ,[1,0,1,0]
-// ,[0,1,1,0]
-// ,[1,1,1,0]
-// ,[0,0,0,1]
-// ,[1,0,0,1]
-// ,[0,1,0,1]
-// ,[1,1,0,1]
-// ,[1,0,1,1]
-// ,[0,1,1,1]
-// ,[1,1,1,1]
-// ,[0,0,1,1]];
-
+			points: [THREE.Vector4] <--- just an array of points
+			edges: [THREE.Vector4] <---- an array of edge pairs. So edges[0] and edges[1] make a line. edges[2] and edges[3] make another
+		 */
 		vertexShader = `
 			precision mediump float;
 			precision mediump int;
@@ -150,32 +222,23 @@ for(var i=0;i<vectorArray.length;i++){
 			uniforms: uniforms
 		});
 
-		var CHull4D = new ConvexHull4D();
-		var facets = CHull4D.ConvexHull4D(tesseract);
-		//console.log("facets",facets);
-		var edges_arr = this.FlattenFacets(facets, tesseract);
-		//console.log("edges_arr");
-		//console.log(edges_arr);
-
-		var new_points = [];
-		for(var i=0;i<edges_arr.length;i+=4){
-			var e = edges_arr;
-			var p = {x:e[i],y:e[i+1],z:e[i+2],w:e[i+3]}
-			new_points.push(p);
-		}
-
-		var geometry = new THREE.HyperBufferGeometry( new_points );
-		var mesh = new THREE.LineSegments( geometry, shaderMaterial );
 		var container = new THREE.Object3D();
 		container.uniforms = uniforms;
 		container.angleSpeed = new THREE.Vector3(0,0,0);
 
-		var geometry2 = new THREE.HyperBufferGeometry( vectorArray );
-		var mesh2 = new THREE.Points( geometry2, shaderMaterial );
-		container.add(mesh2);
+		if(edges != undefined){
+			var geometry = new THREE.HyperBufferGeometry( edges );
+			var mesh = new THREE.LineSegments( geometry, shaderMaterial );
+			container.add(mesh);
+		}
 
-		container.add(mesh);
+		if(points != undefined){
+			var geometry2 = new THREE.HyperBufferGeometry( points );
+			var mesh2 = new THREE.Points( geometry2, shaderMaterial );
+			container.add(mesh2);
+		}
 
+		
 		return container;
 	}
 

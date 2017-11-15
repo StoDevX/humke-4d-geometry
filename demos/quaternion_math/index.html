@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Quaternion Math Test</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/87/three.min.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+	// Testing quaternions - using the formulas: https://math.stackexchange.com/questions/44873/rotating-a-4-dimensional-point
+	// First define the angle we're rotating by 
+	var theta = -Math.PI/2; 
+
+	var cos = Math.cos(theta/2); 
+	var sin = Math.sin(theta/2);
+
+	// Now we define our pair of quaternions to rotate by
+	// This is rotating in the XW
+	var eL = new THREE.Quaternion(sin,0,0,cos); 
+	var eR = new THREE.Quaternion(sin,0,0,cos);
+
+	// Now rotate this arbitrary point through:
+	var v = new THREE.Quaternion(0,0,0,5); 
+	var result = new THREE.Quaternion();
+	result.multiplyQuaternions(result.multiplyQuaternions(v,eL),eR);
+	console.log("Quaternion",result);
+
+	// Now result should be the same as multiplying by matrix:
+	var rXW = new THREE.Matrix4();
+	var cos2 = Math.cos(theta);
+	var sin2 = Math.sin(theta);
+	rXW.elements = [
+	cos2,0,0,-sin2,
+	0,   1,0,    0,
+	0,   0,1,    0,
+	sin2,0,0,cos2
+	]
+
+	var v2 = new THREE.Vector4(0,0,0,5);
+	var result2 = v2.applyMatrix4(rXW);
+	console.log("Matrices",result2);
+
+	function Rotate4DPoint(point4D,plane,angle){
+		// Takes a point, a plane of rotation, and an angle in radians
+		// Returns the rotated point 
+		var cos = Math.cos(angle/2); 
+		var sin = Math.sin(angle/2);
+		var eL,eR;
+
+		if(plane == "XW"){
+			eL = new THREE.Quaternion(sin,0,0,cos); 
+			eR = new THREE.Quaternion(sin,0,0,cos);
+		}
+		if(plane == "YW"){
+			eL = new THREE.Quaternion(0,sin,0,cos); 
+			eR = new THREE.Quaternion(0,sin,0,cos);
+		}
+		if(plane == "ZW"){
+			eL = new THREE.Quaternion(0,0,sin,cos); 
+			eR = new THREE.Quaternion(0,0,sin,cos);
+		}
+		if(plane == "XY"){
+			eL = new THREE.Quaternion(0,0,-sin,cos); 
+			eR = new THREE.Quaternion(0,0,sin,cos);
+		}
+		if(plane == "XZ"){
+			eL = new THREE.Quaternion(0,-sin,0,cos); 
+			eR = new THREE.Quaternion(0,sin,0,cos);
+		}
+		if(plane == "YZ"){
+			eL = new THREE.Quaternion(-sin,0,0,cos); 
+			eR = new THREE.Quaternion(sin,0,0,cos);
+		}
+
+		var v  = new THREE.Quaternion(point4D.x,point4D.y,point4D.z,point4D.w);
+
+		var result = new THREE.Quaternion();
+		result.multiplyQuaternions(result.multiplyQuaternions(v,eL),eR);
+
+		return new THREE.Vector4(result.x,result.y,result.z,result.w);
+	}
+
+	var originalV = new THREE.Vector4(0,0,0,5);
+	console.log("Original",originalV);
+	originalV = Rotate4DPoint(originalV,"XW",-Math.PI/2);
+	console.log(originalV);
+	originalV = Rotate4DPoint(originalV,"XW",-Math.PI/2);
+	console.log(originalV);
+	originalV = Rotate4DPoint(originalV,"XW",-Math.PI/2);
+	console.log(originalV);
+	originalV = Rotate4DPoint(originalV,"XW",-Math.PI/2);
+	console.log("Final",originalV);
+</script>
+</body>
+</html>

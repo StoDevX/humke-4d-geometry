@@ -4,6 +4,34 @@ This class is for misc. functions that don't fit anywhere else.
 var Util = (function (scope) {
 	function Util(){}
 
+	Util.prototype.GetUndirectedEdgesOfTetrahedron = function(tetrahedron) {
+		return [tetrahedron[0],tetrahedron[1],
+						tetrahedron[1], tetrahedron[2],
+						tetrahedron[2], tetrahedron[0],
+						tetrahedron[2], tetrahedron[3],
+						tetrahedron[0], tetrahedron[3],
+						tetrahedron[1], tetrahedron[3]];
+	}
+
+	Util.prototype.FlattenFacets = function(facets, points) {
+		var edges_arr = [];
+		for (var facet_i = 0; facet_i < facets.length; facet_i++) {
+			var edges_of_facet = this.GetUndirectedEdgesOfTetrahedron(facets[facet_i]);
+			edges_arr = edges_arr.concat(edges_of_facet);
+		}
+
+		for (var i = 0; i < edges_arr.length; i++) {
+			edges_arr[i] = points[edges_arr[i]];
+		}
+
+		var flattened_edges_arr = [];
+		for (var i = 0; i < edges_arr.length; i++) {
+			flattened_edges_arr = flattened_edges_arr.concat(edges_arr[i]);
+		}
+
+		return flattened_edges_arr;
+	}
+
 	Util.prototype.ConstructGLSLFunction = function(equationString){
 		/*
 			Takes an equation as a string (for ex: "x^2 + y^2 = 10")
@@ -39,6 +67,16 @@ var Util = (function (scope) {
 			g: parseInt(result[2], 16),
 			b: parseInt(result[3], 16)
 		} : null;
+	}
+
+	Util.prototype.componentToHex = function(c) {
+		c = Math.round(c);
+	    var hex = c.toString(16);
+	    return hex.length == 1 ? "0" + hex : hex;
+	}
+
+	Util.prototype.rgbToHex = function(r, g, b) {
+		return "#" + this.componentToHex(r) + this.componentToHex(g) + this.componentToHex(b);
 	}
 
 	Util.prototype.Line = function(p1, p2,color,lineWidth){

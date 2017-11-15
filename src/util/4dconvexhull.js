@@ -266,6 +266,12 @@ var ConvexHull4D = (function (scope) {
   }
 
   ConvexHull4D.prototype.ConvexHull4D = function(points) {
+    /*
+      Takes an array of 4-arrays, so something like:
+      [[x,y,z,w],[x,y,z,w],...]
+
+      Returns an array of indices that make up the facets
+    */
     var hull = {};
     hull.points = points;
 		hull.facets = [];
