@@ -158,6 +158,16 @@
 			// scene.add(tesseractMesh);
 
 			document.addEventListener('keydown', onKeyDown, false);
+			document.addEventListener("mousemove", onMouseMove,false);
+
+			function onMouseMove(event){
+				var Y = event.clientY;
+				// Normalize
+				Y /= window.innerHeight;
+				// Scale it to -10 to 10 
+				Y = ((1-Y)*20) -10;
+				calculate_intersection_points(Y)
+			}
 
 			function onKeyDown(event) {
 				if (event.which > 47 && event.which < 58) {
