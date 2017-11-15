@@ -232,9 +232,14 @@ var Slicing = (function (scope) {
 
 			// Construct edges
 		var edges_arr = util.FlattenFacets(facets, points);
+		//console.log("POINTS",points)
+		//console.log("FACETS",facets)
+		//console.log("EDGES",edges_arr)
+
 		var edges = [];
 		for(var i=0;i<edges_arr.length;i+=4){
 			var p = {x:edges_arr[i],y:edges_arr[i+1],z:edges_arr[i+2],w:edges_arr[i+3]}
+
 			p.x *= scale;
 			p.y *= scale;
 			p.z *= scale;
@@ -242,11 +247,16 @@ var Slicing = (function (scope) {
 			edges.push(p);
 		}
 
+		//console.log("EDGES",edges)
+
 		var intersection_points = [];
 
 		for(var i=0;i<edges.length;i+=2) {
 			var point_a = edges[i];
 			var point_b = edges[i+1];
+			if(point_b == undefined){
+				break;
+			}
 
 			var point = this.Calculate4DIntersectionPoints(point_a,point_b,axis,axisValue);
 
