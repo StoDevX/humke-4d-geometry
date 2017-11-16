@@ -305,7 +305,9 @@ var ConvexHull4D = (function (scope) {
         hull = this.CreateFacetsFromPointAndRidges(hull, horizon_ridges, furthest_point_i);
 				hull.points_on_hull.push(furthest_point_i);
         hull = this.UpdateOutsideSets(outside_points_of_visible_set, start_of_new_facets, hull);
-      }
+
+				osi = 0;
+			}
     }
 
     return hull.facets;

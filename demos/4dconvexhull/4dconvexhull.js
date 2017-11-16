@@ -300,7 +300,7 @@ var ConvexHull4D = (function (scope) {
 				hull.points_on_hull.push(furthest_point_i);
         hull = this.UpdateOutsideSets(outside_points_of_visible_set, start_of_new_facets, hull);
 
-        //osi = 0;
+        osi = 0;
       }
     }
 
