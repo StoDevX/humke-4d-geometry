@@ -3,7 +3,7 @@ var Mode4D = (function (scope) {
 	function Mode4D(document){
 		this.document = document;
 
-		this.leftView = null;
+		this.leftScene = null;
 		this.leftCamera = null;
 		this.leftRenderer = null;
 		this.leftControls = null;
@@ -34,7 +34,7 @@ var Mode4D = (function (scope) {
 		this.gui = gui;
 
 		// Set up left view
-		this.leftView = new THREE.Scene();
+		this.leftScene = new THREE.Scene();
 		this.leftCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
 		this.leftCamera.position.set(5,10,20);
 		this.leftRenderer = new THREE.WebGLRenderer({ canvas: leftCanvas, antialias: true });
@@ -47,26 +47,26 @@ var Mode4D = (function (scope) {
 		var GridHelper = new Grid();
 
 		var grid = GridHelper.CreateGrid("XZ");
-		//this.leftView.add(grid);
+		//this.leftScene.add(grid);
 
 		var axis = GridHelper.CreateAxis("X");
-		this.leftView.add(axis); this.leftAxes.push(axis);
+		this.leftScene.add(axis); this.leftAxes.push(axis);
 		axis = GridHelper.CreateAxis("Y");
-		this.leftView.add(axis); this.leftAxes.push(axis);
+		this.leftScene.add(axis); this.leftAxes.push(axis);
 		axis = GridHelper.CreateAxis("Z");
-		this.leftView.add(axis); this.leftAxes.push(axis);
+		this.leftScene.add(axis); this.leftAxes.push(axis);
 		axis = GridHelper.CreateAxis("W");
-		this.leftView.add(axis);  this.leftAxes.push(axis);
+		this.leftScene.add(axis);  this.leftAxes.push(axis);
 		
 
 		var leftXLabel = GridHelper.CreateLabel("X",12,0,0); this.addLabel(leftXLabel,this.leftCamera);
-		this.leftView.add(leftXLabel);
+		this.leftScene.add(leftXLabel);
 		var leftYLabel = GridHelper.CreateLabel("Y",0,12,0); this.addLabel(leftYLabel,this.leftCamera);
-		this.leftView.add(leftYLabel);
+		this.leftScene.add(leftYLabel);
 		var leftZLabel = GridHelper.CreateLabel("Z",0,0,12); this.addLabel(leftZLabel,this.leftCamera);
-		this.leftView.add(leftZLabel);
+		this.leftScene.add(leftZLabel);
 		var leftWLabel = GridHelper.CreateLabel("W",5,10,-5); this.addLabel(leftWLabel,this.leftCamera);
-		this.leftView.add(leftWLabel);
+		this.leftScene.add(leftWLabel);
 
 		this.rightView = new THREE.Scene();
 		this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
@@ -96,9 +96,9 @@ var Mode4D = (function (scope) {
 		this.rightView.add(rightZLabel);
 		// Add lights to the scene
 		var lightSky = new THREE.HemisphereLight( 0xffffbb, 0x080820, .7 );
-		this.leftView.add( lightSky );
+		this.leftScene.add( lightSky );
 		var lightGround = new THREE.HemisphereLight( 0xffffbb, 0x080820, .4 );
-		this.leftView.add( lightGround );
+		this.leftScene.add( lightGround );
 		lightGround.position.y = -5;
 		lightGround.position.x = 2;
 
@@ -264,7 +264,7 @@ var Mode4D = (function (scope) {
 		var color =  this.gui.colors.slices;
 
 		var mesh = this.projector.Mesh4D(this.util.HexToRgb(color));
-		this.leftView.add(mesh);
+		this.leftScene.add(mesh);
 		return mesh;
 	}
 
@@ -347,7 +347,7 @@ var Mode4D = (function (scope) {
 
 		var tesseractMesh = this.projector.Wireframe4D(new_points,edges);
 		this.leftMesh = tesseractMesh;
-		this.leftView.add(this.leftMesh);
+		this.leftScene.add(this.leftMesh);
 		this.leftMesh.DATA_points = points;
 		this.leftMesh.DATA_facets = facets;
 
@@ -513,7 +513,7 @@ var Mode4D = (function (scope) {
 	Mode4D.prototype.cleanupLeftMesh = function(){
 		console.log("CLEANING UP");
 		if(this.leftMesh){
-			this.leftView.remove(this.leftMesh);
+			this.leftScene.remove(this.leftMesh);
 			this.leftMesh = null;
 		}
 		if(this.rightMesh){
@@ -527,9 +527,9 @@ var Mode4D = (function (scope) {
 	Mode4D.prototype.cleanup = function(){
 		cancelAnimationFrame(this.animId); // stop the animation loop
 
-		this.util.CleanUpScene(this.leftView);
+		this.util.CleanUpScene(this.leftScene);
 
-		this.leftView = null;
+		this.leftScene = null;
 		this.leftRenderer.dispose();
 		this.leftRenderer = null;
 		this.leftCamera = null;
@@ -601,7 +601,7 @@ var Mode4D = (function (scope) {
 			this.labels[i].l.quaternion.copy(this.labels[i].c.quaternion);
 
 		requestAnimationFrame( this.animate.bind(this) );
-		this.leftRenderer.render( this.leftView, this.leftCamera );
+		this.leftRenderer.render( this.leftScene, this.leftCamera );
 		this.rightRenderer.render( this.rightView, this.rightCamera );
 	}
 

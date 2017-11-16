@@ -20,13 +20,13 @@ var Mode2D = (function (scope) {
 		// Convex Hull points
 		this.pointsArray = [];
 
-		this.leftView = null;
+		this.leftScene = null;
 		this.leftCamera = null;
 		this.leftRenderer = null;
 		this.leftControls = null;
 		this.leftMesh = null;
 
-		this.rightView = null;
+		this.rightScene = null;
 		this.rightCamera = null;
 		this.rightRenderer = null;
 		this.rightControls = null;
@@ -44,7 +44,7 @@ var Mode2D = (function (scope) {
 		gui.init("2D",this.callbacks,this);
 		this.gui = gui;
 
-		this.leftView = new THREE.Scene();
+		this.leftScene = new THREE.Scene();
 		this.leftCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
 		this.leftCamera.position.set(0,0,20);
 		this.leftRenderer = new THREE.WebGLRenderer({ canvas: leftCanvas, antialias: true });
@@ -57,19 +57,19 @@ var Mode2D = (function (scope) {
 
 		var GridHelper = new Grid();
 		var grid = GridHelper.CreateGrid("XY");
-		this.leftView.add(grid);
+		this.leftScene.add(grid);
 
 		var axis = GridHelper.CreateAxis("X");
-		this.leftView.add(axis);
+		this.leftScene.add(axis);
 		axis = GridHelper.CreateAxis("Y");
-		this.leftView.add(axis);
+		this.leftScene.add(axis);
 
 		var leftXLabel = GridHelper.CreateLabel("X",11,-0.25,0);
-		this.leftView.add(leftXLabel);
+		this.leftScene.add(leftXLabel);
 		var leftYLabel = GridHelper.CreateLabel("Y",-0.25,11,0);
-		this.leftView.add(leftYLabel);
+		this.leftScene.add(leftYLabel);
 
-		this.rightView = new THREE.Scene();
+		this.rightScene = new THREE.Scene();
 		this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
 		this.rightCamera.position.set(0,0,20);
 		this.rightRenderer = new THREE.WebGLRenderer({ canvas: rightCanvas, antialias: true });
@@ -89,7 +89,7 @@ var Mode2D = (function (scope) {
 		// Create intersection line
 		var axisY = this.gui.params.axis_value;
 		this.intersectionLine = this.util.Line({x:-10,y:axisY,z:0.2},{x:10,y:axisY,z:0.2},this.gui.colors.slices,0.15)
-		this.leftView.add(this.intersectionLine);
+		this.leftScene.add(this.intersectionLine);
 
 		this.animate();
 
@@ -101,8 +101,8 @@ var Mode2D = (function (scope) {
 	// define a function to be called when each param is updated
 	function updateParametricCallback(self,val){
 		self.cleanupLeftMesh();
-		self.initParametric(self.leftView);
-		//self.initParametric(self.rightView);
+		self.initParametric(self.leftScene);
+		//self.initParametric(self.rightScene);
 	}
 
 	function updateRenderShape(self,val,opacity_val){
@@ -122,7 +122,7 @@ var Mode2D = (function (scope) {
 		// Hijacking this to fill in for parametric
 		if(self.current_mode == "parametric"){
 			self.cleanupLeftMesh();
-			self.initParametric(self.leftView);
+			self.initParametric(self.leftScene);
 		}
 	}
 
@@ -157,15 +157,15 @@ var Mode2D = (function (scope) {
 		},
 		'resolution': function(self,val){
 			self.cleanupLeftMesh();
-			self.initCartesian(self.leftView);
+			self.initCartesian(self.leftScene);
 		},
 		'fill': function(self,val){
 			self.cleanupLeftMesh();
-			self.initCartesian(self.leftView);
+			self.initCartesian(self.leftScene);
 		},
 		'equation': function(self,val){
 			self.cleanupLeftMesh();
-			self.initCartesian(self.leftView);
+			self.initCartesian(self.leftScene);
 		},
 		'points': function(self,val){
 			self.updateConvexHull()
@@ -207,8 +207,8 @@ var Mode2D = (function (scope) {
 	Mode2D.prototype.setRightAxis = function(type){
 		// first delete the axis if it exists
 		if(this.rightAxis){
-			this.rightView.remove(this.rightAxis);
-			this.rightView.remove(this.rightLabel);
+			this.rightScene.remove(this.rightAxis);
+			this.rightScene.remove(this.rightLabel);
 		}
 		var GridHelper = new Grid();
 		this.rightAxis = GridHelper.CreateAxis(type);
@@ -217,12 +217,12 @@ var Mode2D = (function (scope) {
 			this.rightAxis.position.y -= 0.5;
 		if(type == "Y")
 			this.rightAxis.position.x -= 0.5;
-		this.rightView.add(this.rightAxis);
+		this.rightScene.add(this.rightAxis);
 
 		var LabelPositions = {'X':{x:11,y:-0.75,z:0},'Y':{x:-0.75,y:11,z:0}}
 		var p = LabelPositions[type];
 		this.rightLabel = GridHelper.CreateLabel(type,p.x,p.y,p.z);
-		this.rightView.add(this.rightLabel);
+		this.rightScene.add(this.rightLabel);
 	}
 
 	Mode2D.prototype.setMode = function(){
@@ -235,15 +235,15 @@ var Mode2D = (function (scope) {
 		this.current_mode = params.source;
 		//Init new
 		if(this.current_mode == "cartesian") {
-			this.initCartesian(this.leftView);
+			this.initCartesian(this.leftScene);
 		}
 		if(this.current_mode == "parametric") {
 			this.cleanupLeftMesh();
-			this.initParametric(this.leftView);
-			//this.initParametric(this.rightView);
+			this.initParametric(this.leftScene);
+			//this.initParametric(this.rightScene);
 		}
 		if(this.current_mode == "convex-hull") {
-			this.initConvexHull(this.leftView);
+			this.initConvexHull(this.leftScene);
 		}
 
 	}
@@ -269,7 +269,7 @@ var Mode2D = (function (scope) {
 		};
 		this.leftMesh = this.projector.CartesianShaderMesh2D(glslFuncString,operator,defaultUniforms,projectingColor);
 		this.leftMesh.position.z = 0.1;
-		this.leftView.add(this.leftMesh);
+		this.leftScene.add(this.leftMesh);
 
 		var axis = this.gui.params.axis;
 		var axisValue = new THREE.Vector2(this.gui.params.axis_value,this.gui.params.axis_value);
@@ -282,7 +282,7 @@ var Mode2D = (function (scope) {
 		};
 		this.rightMesh = this.projector.CartesianShaderMesh2D(glslFuncString,operator,this.uniforms,slicingColor);
 		this.rightMesh.position.z = 0.1;
-		this.rightView.add(this.rightMesh);
+		this.rightScene.add(this.rightMesh);
 	}
 
 	// >>>>>>>>>>> Parametric mode functions
@@ -309,7 +309,7 @@ var Mode2D = (function (scope) {
 		
 		this.leftMesh = this.projector.ParametricMesh2D(xFunction,yFunction,a_range,b_range,this.gui.colors.projections,this.gui.params.render_slices);
 		this.leftMesh.position.z = 0.1;
-		this.leftView.add(this.leftMesh);
+		this.leftScene.add(this.leftMesh);
 
 		var slicingColor = this.util.HexToRgb(this.gui.colors.slices);
 		var axis = this.gui.params.axis;
@@ -327,7 +327,7 @@ var Mode2D = (function (scope) {
 			this.rightMesh.position.y = -axisValue.y;
 		if(axis == "X")
 			this.rightMesh.position.x = -axisValue.x;
-		this.rightView.add(this.rightMesh);
+		this.rightScene.add(this.rightMesh);
 	}
 
 	//  >>>>>>>>>>> Convex Hull mode functions
@@ -350,7 +350,7 @@ var Mode2D = (function (scope) {
 
 		this.leftMesh = this.projector.ConvexHullMesh2D(points,projectingColor);
 		this.leftMesh.position.z = 0.1;
-		this.leftView.add(this.leftMesh);
+		this.leftScene.add(this.leftMesh);
 
 		var slicingColor = this.util.HexToRgb(this.gui.colors.slices);
 		var axis = this.gui.params.axis;
@@ -364,23 +364,23 @@ var Mode2D = (function (scope) {
 		};
 		this.rightMesh = this.slicer.Slice2DMesh(this.leftMesh,this.uniforms,slicingColor);
 		this.rightMesh.position.z = 0.2;
-		this.rightView.add(this.rightMesh);
+		this.rightScene.add(this.rightMesh);
 	}
 
 	Mode2D.prototype.updateConvexHull = function(){
 		this.cleanupLeftMesh();
-		this.initConvexHull(this.leftView);
+		this.initConvexHull(this.leftScene);
 	}
 
 	//  >>>>>>>>>>> Destroy the shared leftMesh mesh.
 	Mode2D.prototype.cleanupLeftMesh = function(){
 		console.log("CLEANING UP");
 		if(this.leftMesh){
-			this.leftView.remove(this.leftMesh);
+			this.leftScene.remove(this.leftMesh);
 			this.leftMesh = null;
 		}
 		if(this.rightMesh){
-			this.rightView.remove(this.rightMesh);
+			this.rightScene.remove(this.rightMesh);
 			this.rightMesh = null;
 		}
 	}
@@ -389,19 +389,19 @@ var Mode2D = (function (scope) {
 	Mode2D.prototype.cleanup = function(){
 		cancelAnimationFrame(this.animId); // stop the animation loop
 
-		this.util.CleanUpScene(this.leftView);
+		this.util.CleanUpScene(this.leftScene);
 
 		this.intersectionLine = null;
-		this.leftView = null;
+		this.leftScene = null;
 		this.leftRenderer.dispose();
 		this.leftRenderer = null;
 		this.leftCamera = null;
 		this.leftControls = null;
 		this.leftMesh = null;
 
-		this.util.CleanUpScene(this.rightView);
+		this.util.CleanUpScene(this.rightScene);
 
-		this.rightView = null;
+		this.rightScene = null;
 		this.rightRenderer.dispose();
 		this.rightRenderer = null;
 		this.rightCamera = null;
@@ -420,8 +420,8 @@ var Mode2D = (function (scope) {
 	Mode2D.prototype.animate = function(){
 
 		this.animId = requestAnimationFrame( this.animate.bind(this) );
-		this.leftRenderer.render( this.leftView, this.leftCamera );
-		this.rightRenderer.render( this.rightView, this.rightCamera );
+		this.leftRenderer.render( this.leftScene, this.leftCamera );
+		this.rightRenderer.render( this.rightScene, this.rightCamera );
 	}
 
 	scope.Mode2D = Mode2D;
