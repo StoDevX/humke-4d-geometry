@@ -27,7 +27,7 @@ var Projecting = (function (scope) {
 			var W = WposAttribute.array[wCount];
 			WposAttribute.array[wCount] = 0;
 
-			console.log({x:X,y:Y,z:Z,w:W})
+//			console.log({x:X,y:Y,z:Z,w:W})
 
 			wCount++;
 		}
@@ -104,7 +104,7 @@ var Projecting = (function (scope) {
 		var geo = new THREE.EdgesGeometry( geometry ); 
 		var mat = new MeshLineMaterial({
 			color:new THREE.Color(lineColor),
-			lineWidth:.1,
+			lineWidth:.01,
 			side: THREE.DoubleSide,
 			projectionFunction: projection4DFunction
 		});
