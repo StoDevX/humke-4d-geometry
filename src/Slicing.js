@@ -216,6 +216,8 @@ var Slicing = (function (scope) {
 	}
 
 	Slicing.prototype.SliceConvex4D = function(points,facets,axis,axisValue,color) {
+		axis = axis.toLowerCase();
+
 		var new_points = [];
 		var scale = 5;
 		for(var i=0;i<points.length;i++){
@@ -260,12 +262,18 @@ var Slicing = (function (scope) {
 
 			var point = this.Calculate4DIntersectionPoints(point_a,point_b,axis,axisValue);
 
+			var axes = ['x','y','z','w']
+			var index = axes.indexOf(axis);
+			if (index > -1) {
+				axes.splice(index,1);
+			}
+
 			if (point!=null) {
 				intersection_points.push(
 					new THREE.Vector3(
-						point.x,
-						point.y,
-						point.z
+						point[axes[0]],
+						point[axes[1]],
+						point[axes[2]]
 					)
 				)
 			}
@@ -377,29 +385,35 @@ var Slicing = (function (scope) {
 	}
 
 	Slicing.prototype.Calculate4DIntersectionPoints = function(p1,p2,axis,axis_value) {
+		
+		var axes = ['x','y','z','w']
+		var index = axes.indexOf(axis);
+		if (index > -1) {
+			axes.splice(index,1);
+		}
 
-		if ((p1.w > axis_value) != (p2.w > axis_value)) {
+		if ((p1[axis] > axis_value) != (p2[axis] > axis_value)) {
 
 			// TODO: check if line is parallel to the plane
 
 			// This edge is an edge that intersects the hyperplane. 
 			// Calculate the intersection point and push it into 
 			// the array intersection_points
-			var direction = {
-				x:p1.x-p2.x,
-				y:p1.y-p2.y,
-				z:p1.z-p2.z,
-				w:p1.w-p2.w
-			}
+			var direction = {}
 
-			var t = (p1.w - axis_value)/(direction.w*-1);
+			direction[axes[0]]=p1[axes[0]]-p2[axes[0]];
+			direction[axes[1]]=p1[axes[1]]-p2[axes[1]];
+			direction[axes[2]]=p1[axes[2]]-p2[axes[2]];
+			direction[axis] = p1[axis]-p2[axis];
 
-			var intersection_point = {
-				x: p1.x + t*direction.x,
-				y: p1.y + t*direction.y,
-				z: p1.z + t*direction.z,
-				w:axis_value
-			}
+			var t = (p1[axis] - axis_value)/(direction[axis]*-1);
+
+			var intersection_point = {}
+
+			intersection_point[axes[0]]=p1[axes[0]] + t*direction[axes[0]];
+			intersection_point[axes[1]]=p1[axes[1]] + t*direction[axes[1]];
+			intersection_point[axes[2]]=p1[axes[2]] + t*direction[axes[2]];
+			intersection_point[axis]=axis_value;
 			return intersection_point;
 		}
 	}
