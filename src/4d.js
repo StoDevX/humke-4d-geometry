@@ -3,7 +3,7 @@ var Mode4D = (function (scope) {
 	function Mode4D(document){
 		this.document = document;
 
-		this.leftView = null;
+		this.leftScene = null;
 		this.leftCamera = null;
 		this.leftRenderer = null;
 		this.leftControls = null;
@@ -12,7 +12,7 @@ var Mode4D = (function (scope) {
 		this.keysDown = {};
 		this.keyMap = {'A':65,'D':68,'S':83,'W':87,'Q':81,'E':69}
 
-		this.rightView = null;
+		this.rightScene = null;
 		this.rightCamera = null;
 		this.rightRenderer = null;
 		this.rightControls = null;
@@ -34,7 +34,7 @@ var Mode4D = (function (scope) {
 		this.gui = gui;
 
 		// Set up left view
-		this.leftView = new THREE.Scene();
+		this.leftScene = new THREE.Scene();
 		this.leftCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
 		this.leftCamera.position.set(5,10,20);
 		this.leftRenderer = new THREE.WebGLRenderer({ canvas: leftCanvas, antialias: true });
@@ -47,28 +47,27 @@ var Mode4D = (function (scope) {
 		var GridHelper = new Grid();
 
 		var grid = GridHelper.CreateGrid("XZ");
-		//this.leftView.add(grid);
+		//this.leftScene.add(grid);
 
 		var axis = GridHelper.CreateAxis("X");
-		this.leftView.add(axis); this.leftAxes.push(axis);
+		this.leftScene.add(axis); this.leftAxes.push(axis);
 		axis = GridHelper.CreateAxis("Y");
-		this.leftView.add(axis); this.leftAxes.push(axis);
+		this.leftScene.add(axis); this.leftAxes.push(axis);
 		axis = GridHelper.CreateAxis("Z");
-		this.leftView.add(axis); this.leftAxes.push(axis);
+		this.leftScene.add(axis); this.leftAxes.push(axis);
 		axis = GridHelper.CreateAxis("W");
-		this.leftView.add(axis);  this.leftAxes.push(axis);
-
+		this.leftScene.add(axis);  this.leftAxes.push(axis);
 
 		var leftXLabel = GridHelper.CreateLabel("X",12,0,0); this.addLabel(leftXLabel,this.leftCamera);
-		this.leftView.add(leftXLabel);
+		this.leftScene.add(leftXLabel);
 		var leftYLabel = GridHelper.CreateLabel("Y",0,12,0); this.addLabel(leftYLabel,this.leftCamera);
-		this.leftView.add(leftYLabel);
+		this.leftScene.add(leftYLabel);
 		var leftZLabel = GridHelper.CreateLabel("Z",0,0,12); this.addLabel(leftZLabel,this.leftCamera);
-		this.leftView.add(leftZLabel);
+		this.leftScene.add(leftZLabel);
 		var leftWLabel = GridHelper.CreateLabel("W",5,10,-5); this.addLabel(leftWLabel,this.leftCamera);
-		this.leftView.add(leftWLabel);
+		this.leftScene.add(leftWLabel);
 
-		this.rightView = new THREE.Scene();
+		this.rightScene = new THREE.Scene();
 		this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
 		this.rightCamera.position.set(5,10,20);
 		this.rightRenderer = new THREE.WebGLRenderer({ canvas: rightCanvas, antialias: true });
@@ -79,31 +78,31 @@ var Mode4D = (function (scope) {
 		this.rightControls.enableKeys = false;
 
 		grid = GridHelper.CreateGrid("XZ");
-		this.rightView.add(grid);
+		this.rightScene.add(grid);
 
 		axis = GridHelper.CreateAxis("X");
-		this.rightView.add(axis);
+		this.rightScene.add(axis);
 		axis = GridHelper.CreateAxis("Y");
-		this.rightView.add(axis);
+		this.rightScene.add(axis);
 		axis = GridHelper.CreateAxis("Z");
-		this.rightView.add(axis);
+		this.rightScene.add(axis);
 
 		var rightXLabel = GridHelper.CreateLabel("X",12,0,0); this.addLabel(rightXLabel,this.rightCamera);
-		this.rightView.add(rightXLabel);
+		this.rightScene.add(rightXLabel);
 		var rightYLabel = GridHelper.CreateLabel("Y",0,12,0); this.addLabel(rightYLabel,this.rightCamera);
-		this.rightView.add(rightYLabel);
+		this.rightScene.add(rightYLabel);
 		var rightZLabel = GridHelper.CreateLabel("Z",0,0,12); this.addLabel(rightZLabel,this.rightCamera);
-		this.rightView.add(rightZLabel);
+		this.rightScene.add(rightZLabel);
 		// Add lights to the scene
 		var lightSky = new THREE.HemisphereLight( 0xffffbb, 0x080820, .7 );
-		this.leftView.add( lightSky );
+		this.leftScene.add( lightSky );
 		var lightGround = new THREE.HemisphereLight( 0xffffbb, 0x080820, .4 );
-		this.leftView.add( lightGround );
+		this.leftScene.add( lightGround );
 		lightGround.position.y = -5;
 		lightGround.position.x = 2;
 
-		this.rightView.add(lightSky.clone());
-		this.rightView.add(lightGround.clone());
+		this.rightScene.add(lightSky.clone());
+		this.rightScene.add(lightGround.clone());
 
 		this.util = new Util();
 		this.projector = new Projecting();
@@ -174,7 +173,7 @@ var Mode4D = (function (scope) {
 		if(this.current_mode == "convex-hull") {
 
 			if(this.rightMesh) {
-				this.rightView.remove(this.rightMesh);
+				this.rightScene.remove(this.rightMesh);
 			}
 
 		// Testing output from Qhull. This is 16 random points within a unit tesseract
@@ -188,7 +187,7 @@ var Mode4D = (function (scope) {
 			this.rightMesh = this.slicer.SliceConvex4D(points,facets,axis,axisValue,color);
 
 			if (this.rightMesh != null) {
-				this.rightView.add(this.rightMesh);
+				this.rightScene.add(this.rightMesh);
 			}
 		}
 
@@ -264,7 +263,7 @@ var Mode4D = (function (scope) {
 		var color =  this.gui.colors.slices;
 
 		var mesh = this.projector.Mesh4D(this.util.HexToRgb(color));
-		this.leftView.add(mesh);
+		this.leftScene.add(mesh);
 		return mesh;
 	}
 
@@ -312,7 +311,7 @@ var Mode4D = (function (scope) {
 		var mesh = this.projector.PolygonizeCartesian3D(equation,resolution,projectingColor,variables);
 		if(mesh){
 			this.rightMesh = mesh;
-			this.rightView.add(this.rightMesh);
+			this.rightScene.add(this.rightMesh);
 		}
 
 
@@ -347,7 +346,7 @@ var Mode4D = (function (scope) {
 
 		var tesseractMesh = this.projector.Wireframe4D(new_points,edges);
 		this.leftMesh = tesseractMesh;
-		this.leftView.add(this.leftMesh);
+		this.leftScene.add(this.leftMesh);
 		this.leftMesh.DATA_points = points;
 		this.leftMesh.DATA_facets = facets;
 
@@ -557,11 +556,11 @@ var Mode4D = (function (scope) {
 	Mode4D.prototype.cleanupLeftMesh = function(){
 		console.log("CLEANING UP");
 		if(this.leftMesh){
-			this.leftView.remove(this.leftMesh);
+			this.leftScene.remove(this.leftMesh);
 			this.leftMesh = null;
 		}
 		if(this.rightMesh){
-			this.rightView.remove(this.rightMesh);
+			this.rightScene.remove(this.rightMesh);
 			this.rightMesh = null;
 		}
 	}
@@ -571,9 +570,9 @@ var Mode4D = (function (scope) {
 	Mode4D.prototype.cleanup = function(){
 		cancelAnimationFrame(this.animId); // stop the animation loop
 
-		this.util.CleanUpScene(this.leftView);
+		this.util.CleanUpScene(this.leftScene);
 
-		this.leftView = null;
+		this.leftScene = null;
 		this.leftRenderer.dispose();
 		this.leftRenderer = null;
 		this.leftCamera = null;
@@ -584,9 +583,9 @@ var Mode4D = (function (scope) {
 		this.rightXLabel = null;
 		this.rightYLabel = null;
 
-		this.util.CleanUpScene(this.rightView);
+		this.util.CleanUpScene(this.rightScene);
 
-		this.rightView = null;
+		this.rightScene = null;
 		this.rightRenderer.dispose();
 		this.rightRenderer = null;
 		this.rightCamera = null;
@@ -645,8 +644,8 @@ var Mode4D = (function (scope) {
 			this.labels[i].l.quaternion.copy(this.labels[i].c.quaternion);
 
 		requestAnimationFrame( this.animate.bind(this) );
-		this.leftRenderer.render( this.leftView, this.leftCamera );
-		this.rightRenderer.render( this.rightView, this.rightCamera );
+		this.leftRenderer.render( this.leftScene, this.leftCamera );
+		this.rightRenderer.render( this.rightScene, this.rightCamera );
 	}
 
 	scope.Mode4D = Mode4D;
