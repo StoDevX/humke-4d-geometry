@@ -348,9 +348,12 @@ var Mode3D = (function (scope) {
 	Mode3D.prototype.initCartesian = function(){
 		var projectingColor = this.gui.colors.projections;
 		var equation = this.gui.params.equation;
-		var resolution = this.gui.params.resolution;
 
-		var mesh = this.projector.PolygonizeCartesian3D(equation,resolution,projectingColor);
+		var res = 20;
+		if (this.gui.params.resolution == "high") var res = 112;
+		else if (this.gui.params.resolution == "medium") var res = 60;
+
+		var mesh = this.projector.PolygonizeCartesian3D(equation,res,projectingColor);
 		if(mesh){
 			this.leftMesh = mesh;
 			this.leftScene.add(this.leftMesh);

@@ -28,7 +28,7 @@ var GUI = (function (scope) {
 			'param_eq_w':'',
 			'render_shape':false,
 			'render_slices':false,
-			'resolution':60, // For the marching squares/cubes
+			'resolution': 'low', // For the marching squares/cubes
 
 			// Viewing Controls
 			'axis_value':0.1,
@@ -95,7 +95,7 @@ var GUI = (function (scope) {
 		// 3D defaults
 		this.defaults['3D'] = {
 			'equation':'x^2+y^2+z^2 = 10', // Sphere
-			'resolution':20,
+			'resolution':'low',
 			'points':'(5,0,5),(5,0,-5),(-5,0,-5),(-5,0,5),(5,5,5),(5,5,-5),(-5,5,-5),(-5,5,5)', // Cube
 			'param_eq_x':'cos(a)*(7+cos(b))',
 			'param_eq_y':'sin(a)*(7+cos(b))',
@@ -126,7 +126,7 @@ var GUI = (function (scope) {
 		this.defaults['4D'] = {
 			'equation':'x^2+y^2+z^2+w^2 = 10',
 			'points':'',
-			'resolution':20,
+			'resolution':'low',
 			'param_eq_x':'',
 			'param_eq_y':'',
 			'param_eq_z':'',
@@ -252,7 +252,20 @@ var GUI = (function (scope) {
 			if(callbacks['equation']) callbacks['equation'](mode_obj,val);
 		});
 		arr.push(eq);
-		var res = this.shapeProperties.add(this.params, 'resolution', 20, 200).name('Resolution').step(1).onChange(function(val){
+		// var res = this.shapeProperties.add(this.params, 'resolution', 20, 200).name('Resolution').step(1).onChange(function(val){
+		// 	if(callbacks['resolution']) callbacks['resolution'](mode_obj,val);
+		// });
+		var res = this.shapeProperties.add(this.params, 'resolution',['low','medium','high']).name('Resolution').onChange(function(val){
+			if(val == 'low'){
+
+			}
+			if(val == 'medium'){
+
+			}
+			if(val == 'high'){
+
+			}
+
 			if(callbacks['resolution']) callbacks['resolution'](mode_obj,val);
 		});
 		arr.push(res);

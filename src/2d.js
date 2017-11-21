@@ -274,6 +274,9 @@ var Mode2D = (function (scope) {
 	Mode2D.prototype.initCartesian = function(view){
 		var params = this.gui.params
 		var equation = this.gui.params.equation;
+		var res = 20;
+		if (this.gui.params.resolution == "high") var res = 112;
+		else if (this.gui.params.resolution == "medium") var res = 60;
 		
 		var output = this.util.ConstructGLSLFunction(equation);
 		var glslFuncString = output[0];
@@ -289,7 +292,7 @@ var Mode2D = (function (scope) {
 			slice: {type: "f", value: 0},
 			renderWholeShape: {type:"f", value:renderWholeShape }
 		};
-		this.leftMesh = this.projector.CartesianShaderMesh2D(glslFuncString,operator,defaultUniforms,projectingColor);
+		this.leftMesh = this.projector.CartesianShaderMesh2D(glslFuncString,operator,defaultUniforms,projectingColor,res);
 		this.leftMesh.position.z = 0.1;
 		this.leftScene.add(this.leftMesh);
 
