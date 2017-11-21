@@ -35,6 +35,8 @@ var GUI = (function (scope) {
 			'axis':'Y',
 			'samples':200,
 			'thickness':'medium',
+			'show left view': true,
+			'show right view': true,
 
 			// Builtin Examples 2D
 			'Filled in Circle': function() {}, // cartesian examples
@@ -220,6 +222,14 @@ var GUI = (function (scope) {
 		});
 		// Set axis name
 		axis_value_control.name(params.axis + " = ")
+
+		// show or hide left/right views
+		this.viewingControls.add(params, 'show left view').name("Show Left View").listen().onChange(function(val){
+			if(callbacks['show left view']) callbacks['show left view'](mode_obj,val);
+		});
+		this.viewingControls.add(params, 'show right view').name("Show Right View").listen().onChange(function(val){
+			if(callbacks['show right view']) callbacks['show right view'](mode_obj,val);
+		});
 
 		// Turn all sliders orange after the first one (the first one is the resolution one)
 		var sliders = document.querySelectorAll(".slider-fg")
