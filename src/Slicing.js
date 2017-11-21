@@ -215,7 +215,24 @@ var Slicing = (function (scope) {
 		}
 	}
 
-	Slicing.prototype.SliceConvex4D = function(points,facets,axis,axisValue,color) {
+	Slicing.prototype.SliceConvex4D = function(mesh,axis,axisValue,color) {
+		/*
+		Given a 4D mesh and axis, return the new convex hull mesh of the intersection 
+			Input: 
+				mesh = the 4D mesh
+				axis = "X" | "Y" | "Z" | "W"
+				axis_value = axis position
+				color = color of the slice
+			Output:
+				if there are at least 4 intersection points
+					3D convex geometry meshmesh
+				else
+					nothing returned
+		*/
+
+		var points = mesh.DATA_points;
+		var facets = mesh.DATA_facets;
+
 		axis = axis.toLowerCase();
 
 		var new_points = [];
@@ -232,11 +249,7 @@ var Slicing = (function (scope) {
 
 		var util = new Util();
 
-			// Construct edges
 		var edges_arr = util.FlattenFacets(facets, points);
-		//console.log("POINTS",points)
-		//console.log("FACETS",facets)
-		//console.log("EDGES",edges_arr)
 
 		var edges = [];
 		for(var i=0;i<edges_arr.length;i+=4){
@@ -249,8 +262,6 @@ var Slicing = (function (scope) {
 			edges.push(p);
 		}
 
-		//console.log("EDGES",edges)
-
 		var intersection_points = [];
 
 		for(var i=0;i<edges.length;i+=2) {
@@ -260,7 +271,7 @@ var Slicing = (function (scope) {
 				break;
 			}
 
-			var point = this.Calculate4DIntersectionPoints(point_a,point_b,axis,axisValue);
+			var point = this.Calculate4DIntersectionPoint(point_a,point_b,axis,axisValue);
 
 			var axes = ['x','y','z','w']
 			var index = axes.indexOf(axis);
@@ -287,7 +298,7 @@ var Slicing = (function (scope) {
 			var mesh = new THREE.Mesh( geometry, material );
 			return mesh;
 		} else {
-			console.log("no intersection points found");
+			//console.log("not enough intersection points found");
 		}
 	}
 
@@ -384,8 +395,20 @@ var Slicing = (function (scope) {
 		}
 	}
 
-	Slicing.prototype.Calculate4DIntersectionPoints = function(p1,p2,axis,axis_value) {
-		
+	Slicing.prototype.Calculate4DIntersectionPoint = function(p1,p2,axis,axis_value) {
+		/*
+		Given an edge (as 2 points) an axis, return the intersection point
+			Input: 
+				p1,p2 = {'x':val, 'y':val, 'z':val, 'w': val} representing 4D points
+				axis = "x" | "y" | "z" | "w"
+				axis_value = Number
+			Output:
+				if there is an intersection
+					intersection_point: {'x':val, 'y':val, 'z':val, 'w': val}
+				else
+					nothing
+		*/
+
 		var axes = ['x','y','z','w']
 		var index = axes.indexOf(axis);
 		if (index > -1) {
@@ -394,11 +417,9 @@ var Slicing = (function (scope) {
 
 		if ((p1[axis] > axis_value) != (p2[axis] > axis_value)) {
 
-			// TODO: check if line is parallel to the plane
+			// TODO: check if line is parallel to the plane (dot product = 0)
 
-			// This edge is an edge that intersects the hyperplane. 
-			// Calculate the intersection point and push it into 
-			// the array intersection_points
+			// Calculate the intersection point
 			var direction = {}
 
 			direction[axes[0]]=p1[axes[0]]-p2[axes[0]];
@@ -415,6 +436,8 @@ var Slicing = (function (scope) {
 			intersection_point[axes[2]]=p1[axes[2]] + t*direction[axes[2]];
 			intersection_point[axis]=axis_value;
 			return intersection_point;
+		} else{
+			//console.log("no intersection point")
 		}
 	}
 

@@ -176,15 +176,7 @@ var Mode4D = (function (scope) {
 				this.rightScene.remove(this.rightMesh);
 			}
 
-		// Testing output from Qhull. This is 16 random points within a unit tesseract
-			var points = this.leftMesh.DATA_points;
-
-			var facets = this.leftMesh.DATA_facets;
-
-			//console.log(JSON.stringify(points))
-			//console.log(JSON.stringify(facets))
-
-			this.rightMesh = this.slicer.SliceConvex4D(points,facets,axis,axisValue,color);
+			this.rightMesh = this.slicer.SliceConvex4D(this.leftMesh,axis,axisValue,color);
 
 			if (this.rightMesh != null) {
 				this.rightScene.add(this.rightMesh);
