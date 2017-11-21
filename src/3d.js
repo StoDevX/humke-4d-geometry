@@ -209,8 +209,11 @@ var Mode3D = (function (scope) {
 			var outline = false;
 			if(this.current_mode == "parametric") outline = true;
 			this.rightMesh = this.slicer.SliceConvex3D(this.leftMesh,axis,axisValue,color,outline);
-			this.rightScene.add( this.rightMesh );
-			this.rightMesh.position.z = 0.1;
+
+			if (this.rightMesh != null) {
+				this.rightScene.add(this.rightMesh);
+				this.rightMesh.position.z = 0.1;
+			}
 		}
 	}
 
