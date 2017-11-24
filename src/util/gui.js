@@ -176,7 +176,12 @@ var GUI = (function (scope) {
 			}
 		}
 
-		shapeProperties.add(params, 'source',['cartesian','parametric','convex-hull']).onChange(function(val){
+		let inputOptions = ['cartesian','parametric','convex-hull'];
+		if(mode == "4D"){
+			inputOptions = ['cartesian','convex-hull'];
+		}
+
+		shapeProperties.add(params, 'source',inputOptions).onChange(function(val){
 			if(val == 'cartesian' && current_scope.last_source != 'cartesian'){
 				current_scope.destroyConvexSource();
 				current_scope.destroyParamSource();
