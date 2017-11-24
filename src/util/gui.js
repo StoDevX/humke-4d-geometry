@@ -26,9 +26,8 @@ var GUI = (function (scope) {
 			'param_eq_y':'',
 			'param_eq_z':'',
 			'param_eq_w':'',
-			'render_shape':false,
-			'render_slices':false,
 			'resolution': 'low', // For the marching squares/cubes
+			'whole_shape_slicing': false,
 
 			// Viewing Controls
 			'axis_value':0.1,
@@ -59,6 +58,7 @@ var GUI = (function (scope) {
 
 		// 2D defaults
 		this.defaults['2D'] = {
+			'whole_shape_slicing':false,
 			'equation':'x^2+y^2 = 9', // Circle
 			'points':'(5,5),(5,-5),(-5,-5),(-5,5)', // Square
 			'param_eq_x':'b * cos(a)', // Circle
@@ -196,14 +196,7 @@ var GUI = (function (scope) {
 			if(callbacks['source']) callbacks['source'](mode_obj,val);
 		});
 
-		shapeProperties.add(params, 'render_shape').name("Render Shape").listen().onChange(function(val){
-			if(callbacks['render_shape']) callbacks['render_shape'](mode_obj,val);
-		});
-
-			shapeProperties.add(params, 'render_slices').name("Render Slices").listen().onChange(function(val){
-			if(callbacks['render_slices']) callbacks['render_slices'](mode_obj,val);
-		});
-
+		
 		// Init cartesian by default
 		this.initCartesianSource();
 
@@ -230,6 +223,13 @@ var GUI = (function (scope) {
 		this.viewingControls.add(params, 'show right view').name("Show Right View").listen().onChange(function(val){
 			if(callbacks['show right view']) callbacks['show right view'](mode_obj,val);
 		});
+
+		if(mode == "2D"){
+			this.viewingControls.add(params, 'whole_shape_slicing').name("Whole Slicing").listen().onChange(function(val){
+				if(callbacks['whole_shape_slicing']) callbacks['whole_shape_slicing'](mode_obj,val);
+			});
+		}
+
 
 		// Turn all sliders orange 
 		var sliders = document.querySelectorAll(".slider-fg")

@@ -105,27 +105,6 @@ var Mode2D = (function (scope) {
 		//self.initParametric(self.rightScene);
 	}
 
-	function updateRenderShape(self,val,opacity_val){
-		if(opacity_val === undefined){
-			opacity_val = val ? 1 : 0;
-		}
-
-		/// I'm hijacking this to toggle the visibility of the rest of the shape on the slices
-		self.uniforms.renderWholeShape.value = Number(val);
-	}
-
-	function updateRenderSlices(self,val,opacity_val){
-		if(opacity_val === undefined){
-			opacity_val = val ? 1 : 0;
-		}
-		// TODO: Toggle slices visibility
-		// Hijacking this to fill in for parametric
-		if(self.current_mode == "parametric"){
-			self.cleanupLeftMesh();
-			self.initParametric(self.leftScene);
-		}
-	}
-
 	Mode2D.prototype.callbacks = {
 		'axis': function(self,val){
 
@@ -149,11 +128,7 @@ var Mode2D = (function (scope) {
 		},
 		'source': function(self,val){
 			self.setMode();
-			self.gui.params.render_shape = true; //Reset this back to true
-			self.gui.params.render_slices = false; //Reset this back to true
-			updateRenderShape(self,val,1);
-			updateRenderSlices(self,val,0);
-
+		
 		},
 		'resolution': function(self,val){
 			self.cleanupLeftMesh();
@@ -194,12 +169,8 @@ var Mode2D = (function (scope) {
 		'param_eq_y': updateParametricCallback,
 		'param_a': updateParametricCallback,
 		'param_b': updateParametricCallback,
-		'render_shape': function(self,val){
-			updateRenderShape(self,val);
-
-		},
-		'render_slices': function(self,val){
-			updateRenderSlices(self,val);
+		'whole_shape_slicing': function(self,val){
+			self.uniforms.renderWholeShape.value = Number(val);
 
 		},
 		'show left view': function(self,val){
@@ -282,7 +253,7 @@ var Mode2D = (function (scope) {
 		var glslFuncString = output[0];
 		var operator = output[1];
 
-		var renderWholeShape = Number(this.gui.params.render_shape);
+		var renderWholeShape = Number(this.gui.params.whole_shape_slicing);
 		var projectingColor = this.util.HexToRgb(this.gui.colors.projections);
 		var slicingColor = this.util.HexToRgb(this.gui.colors.slices);
 
@@ -339,7 +310,7 @@ var Mode2D = (function (scope) {
 		var slicingColor = this.util.HexToRgb(this.gui.colors.slices);
 		var axis = this.gui.params.axis;
 		var axisValue = new THREE.Vector2(this.gui.params.axis_value,this.gui.params.axis_value);
-		var renderWholeShape = Number(this.gui.params.render_shape);
+		var renderWholeShape = Number(this.gui.params.whole_shape_slicing);
 		this.uniforms = {
 			axis: { type: "f", value: axis == "Y" ? 1 : 0 } ,
 			axisValue: { type: "v2", value: axisValue},
@@ -380,7 +351,7 @@ var Mode2D = (function (scope) {
 		var slicingColor = this.util.HexToRgb(this.gui.colors.slices);
 		var axis = this.gui.params.axis;
 		var axisValue = new THREE.Vector2(this.gui.params.axis_value,this.gui.params.axis_value);
-		var renderWholeShape = Number(this.gui.params.render_shape);
+		var renderWholeShape = Number(this.gui.params.whole_shape_slicing);
 		this.uniforms = {
 			axis: { type: "f", value: axis == "Y" ? 1 : 0 } ,
 			axisValue: { type: "v2", value: axisValue},
