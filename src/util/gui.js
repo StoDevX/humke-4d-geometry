@@ -28,6 +28,7 @@ var GUI = (function (scope) {
 			'param_eq_w':'',
 			'resolution': 'low', // For the marching squares/cubes
 			'whole_shape_slicing': false,
+			'fill': true,
 
 			// Viewing Controls
 			'axis_value':0.1,
@@ -200,6 +201,8 @@ var GUI = (function (scope) {
 		// Init cartesian by default
 		this.initCartesianSource();
 
+		
+
 		// Now the viewing controls
 		var axis_value_control = this.viewingControls.add(params, 'axis_value').min(-10).max(10).step(0.01).listen();
 		axis_value_control.onChange(function(val){
@@ -299,6 +302,13 @@ var GUI = (function (scope) {
 		var names = ["param_eq_x","param_eq_y","param_a","param_b","param_eq_z","param_c","param_eq_w","param_d"]
 		var callbacks = this.callbacks;
 		var mode_obj = this.mode_obj;
+
+		if(this.mode == "2D"){
+			var fill_item = this.shapeProperties.add(this.params, 'fill').name("Fill Shape").listen().onChange(function(val){
+				if(callbacks['fill']) callbacks['fill'](mode_obj,val);
+			});
+			arr.push(fill_item);
+		}
 
 		arr.push(this.shapeProperties.add(this.params, 'param_eq_x').name('x = ').onChange(function(val){
 			if(callbacks['param_eq_x']) callbacks['param_eq_x'](mode_obj,val);

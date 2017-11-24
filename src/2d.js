@@ -136,7 +136,7 @@ var Mode2D = (function (scope) {
 		},
 		'fill': function(self,val){
 			self.cleanupLeftMesh();
-			self.initCartesian(self.leftScene);
+			self.initParametric(this.leftScene);
 		},
 		'equation': function(self,val){
 			self.cleanupLeftMesh();
@@ -303,7 +303,7 @@ var Mode2D = (function (scope) {
 		xFunction = Parser.parse(xFunction).toJSFunction(['a','b']);
 		yFunction = Parser.parse(yFunction).toJSFunction(['a','b']);
 		
-		this.leftMesh = this.projector.ParametricMesh2D(xFunction,yFunction,a_range,b_range,this.gui.colors.projections,this.gui.params.render_slices);
+		this.leftMesh = this.projector.ParametricMesh2D(xFunction,yFunction,a_range,b_range,this.gui.colors.projections,this.gui.params.fill);
 		this.leftMesh.position.z = 0.1;
 		this.leftScene.add(this.leftMesh);
 
