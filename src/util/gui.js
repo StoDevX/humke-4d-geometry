@@ -258,20 +258,13 @@ var GUI = (function (scope) {
 		// var res = this.shapeProperties.add(this.params, 'resolution', 20, 200).name('Resolution').step(1).onChange(function(val){
 		// 	if(callbacks['resolution']) callbacks['resolution'](mode_obj,val);
 		// });
-		var res = this.shapeProperties.add(this.params, 'resolution',['low','medium','high']).name('Resolution').onChange(function(val){
-			if(val == 'low'){
 
-			}
-			if(val == 'medium'){
-
-			}
-			if(val == 'high'){
-
-			}
-
-			if(callbacks['resolution']) callbacks['resolution'](mode_obj,val);
-		});
-		arr.push(res);
+		if(this.mode == '3D' || this.mode == '4D'){
+			var res = this.shapeProperties.add(this.params, 'resolution',['low','medium','high']).name('Resolution').onChange(function(val){
+				if(callbacks['resolution']) callbacks['resolution'](mode_obj,val);
+			});
+			arr.push(res);
+		}
 
 		// Now for Builtin Examples
 		if (this.mode == '2D') {

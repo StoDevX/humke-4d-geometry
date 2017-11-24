@@ -247,6 +247,7 @@ var Projecting = (function (scope) {
 			Takes in an equation string, polygonizes it into an array of trianges, and draws those trianges
 			returns a mesh
 		 */
+		 
 		if(variables == undefined)
 			variables = ['x','y','z'];
 		let sides = equationString.split('=');
@@ -263,6 +264,7 @@ var Projecting = (function (scope) {
 			if (resolution == "high") var res = 112;
 			else if (resolution == "medium") var res = 60;
 			triangleArray = Polygonize.generate(eq, [[-10, 10], [-10, 10], [-10, 10]], resolution);
+			console.log("Resulting triangle Array has length",triangleArray.length)
 
 			var material = new THREE.MeshPhongMaterial( {color: color, flatShading:true , side:THREE.DoubleSide} );
 			//var container = new THREE.Object3D();

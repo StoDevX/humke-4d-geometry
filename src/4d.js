@@ -295,7 +295,11 @@ var Mode4D = (function (scope) {
 			- Draw that 3D shape
 		*/
 		var equation = this.gui.params.equation
-		var resolution = this.gui.params.resolution;
+		
+		var resolution = 20;
+		if (this.gui.params.resolution == "high") var resolution = 112;
+		else if (this.gui.params.resolution == "medium") var resolution = 60;
+
 		var axis_variable = this.gui.params.axis.toLowerCase()
 		equation = equation.replace(new RegExp(axis_variable,'g'), "(" + this.gui.params.axis_value + ")")
 		var variables = ["x","y","z","w"];
