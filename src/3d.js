@@ -274,26 +274,10 @@ var Mode3D = (function (scope) {
 
 		},
 		'show left view': function(self,val){
-			var l = document.querySelector("#left-view");
-			var r = document.querySelector("#right-view");
-			if (!(l.style.display) || l.style.display == "block") {
-				l.style.display = "none";
-				r.style.margin = "0 auto";
-			} else {
-				l.style.display = "block";
-				delete r.style.margin;
-			}
+			self.util.SetLeftDivVisibility(val);
 		},
 		'show right view': function(self,val){
-			var l = document.querySelector("#left-view");
-			var r = document.querySelector("#right-view");
-			if (!(r.style.display) || r.style.display == "block") {
-				r.style.display = "none";
-				l.style.margin = "0 auto";
-			} else {
-				r.style.display = "block";
-				delete l.style.margin;
-			}
+			self.util.SetRightDivVisibility(val);
 		},
 		'fill': function(self,val){
 

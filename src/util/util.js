@@ -4,6 +4,30 @@ This class is for misc. functions that don't fit anywhere else.
 var Util = (function (scope) {
 	function Util(){}
 
+	Util.prototype.SetLeftDivVisibility = function(visible){
+		var l = document.querySelector("#left-view");
+		var r = document.querySelector("#right-view");
+		if (!visible) {
+			l.style.display = "none";
+			r.style.margin = "0 auto";
+		} else {
+			l.style.display = "block";
+			delete r.style.margin;
+		}
+	}
+
+	Util.prototype.SetRightDivVisibility = function(visible){
+		var l = document.querySelector("#left-view");
+		var r = document.querySelector("#right-view");
+		if (!visible) {
+			r.style.display = "none";
+			l.style.margin = "0 auto";
+		} else {
+			r.style.display = "block";
+			delete l.style.margin;
+		}
+	}
+
 	Util.prototype.GetUndirectedEdgesOfTetrahedron = function(tetrahedron) {
 		return [tetrahedron[0],tetrahedron[1],
 						tetrahedron[1], tetrahedron[2],
