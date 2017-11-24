@@ -231,9 +231,9 @@ var GUI = (function (scope) {
 			if(callbacks['show right view']) callbacks['show right view'](mode_obj,val);
 		});
 
-		// Turn all sliders orange after the first one (the first one is the resolution one)
+		// Turn all sliders orange 
 		var sliders = document.querySelectorAll(".slider-fg")
-		for(var i=1;i<sliders.length;i++){ //notice i=1
+		for(var i=0;i<sliders.length;i++){
 			var slider = sliders[i]
 			slider.style.background = this.colors.slices
 			slider.parentNode.parentNode.querySelector(".dg .cr.number input[type='text']").style.color = this.colors.slices
