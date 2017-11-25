@@ -95,7 +95,7 @@ var ConvexHull4D = (function (scope) {
     for (var i = 0; i < 4; i++) {
       vec.push(point[i] - p0[i]);
     }
-    return this.Dot(normal, vec) < 0;
+    return this.Dot(normal, vec) > 0;
   }
 
   ConvexHull4D.prototype.GetHyperplaneOfFacet = function(facet, points) {
@@ -240,13 +240,23 @@ var ConvexHull4D = (function (scope) {
   }
 
   ConvexHull4D.prototype.UpdateOutsideSets = function(outside_points_of_visible_set, start_of_new_facets, hull) {
-    for (var new_facet_i = start_of_new_facets; new_facet_i < hull.facets.length; new_facet_i++) {
-      hull.outside_sets.push([]);
-      for (var opi = 0; opi < outside_points_of_visible_set.length; opi++) {
-        if (this.IsPointAboveFacet(new_facet_i, outside_points_of_visible_set[opi], hull))
-          hull.outside_sets[new_facet_i].push(outside_points_of_visible_set[opi]);
-      }
-    }
+    // for (var new_facet_i = start_of_new_facets; new_facet_i < hull.facets.length; new_facet_i++) {
+    //   hull.outside_sets.push([]);
+    //   for (var opi = 0; opi < outside_points_of_visible_set.length; opi++) {
+    //     if (this.IsPointAboveFacet(new_facet_i, outside_points_of_visible_set[opi], hull))
+    //       hull.outside_sets[new_facet_i].push(outside_points_of_visible_set[opi]);
+    //   }
+    // }
+
+		hull.outside_sets = [];
+
+		for(var facet_i = 0; facet_i < hull.facets.length; facet_i++) {
+			hull.outside_sets.push([]);
+			for (var opi = 0; opi < hull.points.length; opi++) {
+				if (this.IsPointAboveFacet(facet_i, opi, hull))
+					hull.outside_sets[facet_i].push(opi);
+			}
+		}
 
     return hull;
   }
@@ -266,12 +276,6 @@ var ConvexHull4D = (function (scope) {
   }
 
   ConvexHull4D.prototype.ConvexHull4D = function(points) {
-    /*
-      Takes an array of 4-arrays, so something like:
-      [[x,y,z,w],[x,y,z,w],...]
-
-      Returns an array of indices that make up the facets
-    */
     var hull = {};
     hull.points = points;
 		hull.facets = [];
@@ -280,6 +284,7 @@ var ConvexHull4D = (function (scope) {
 		hull.points_on_hull = [0,1,2,3,4];
     hull.outside_sets = this.GetInitialOutsideSets(hull);
 
+		var counter = 0;
     for (var osi = 0; osi < hull.outside_sets.length; osi++) {
       if (hull.outside_sets[osi].length > 0) {
         var furthest_point_i = this.GetFurthestOutsidePointFromFacet(osi, hull);
@@ -306,8 +311,11 @@ var ConvexHull4D = (function (scope) {
 				hull.points_on_hull.push(furthest_point_i);
         hull = this.UpdateOutsideSets(outside_points_of_visible_set, start_of_new_facets, hull);
 
-				osi = 0;
-			}
+        osi = 0;
+
+				counter++;
+				if (counter == 7) break;
+      }
     }
 
     return hull.facets;

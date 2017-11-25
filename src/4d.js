@@ -355,8 +355,8 @@ var Mode4D = (function (scope) {
 	}
 
 	Mode4D.prototype.initConvexHull = function(){
-		// var pointsRaw = this.util.ParseConvexPoints(this.gui.params.points);
-		// Convert the points into Vector3 objects:
+		var pointsRaw = this.util.ParseConvexPoints(this.gui.params.points);
+		Convert the points into Vector3 objects:
 		var points = [];
 		var flatten_points = [];
 		for(var i=0;i<pointsRaw.length;i++){
@@ -500,8 +500,8 @@ var Mode4D = (function (scope) {
     //
     //
 
-		/* 4D CONVEX HULL DEMO CODE
-		var CHull4D = new ConvexHull4D();
+		// 4D CONVEX HULL DEMO CODE
+		/*var CHull4D = new ConvexHull4D();
 		var start = -5;
 		var end = 5;
 
@@ -517,7 +517,7 @@ var Mode4D = (function (scope) {
 			}
 		}
 
-		Obtain facets that cover the surface
+		//Obtain facets that cover the surface
 		var facets = CHull4D.ConvexHull4D(points);
 		var edges_arr = this.util.FlattenFacets(facets, points);
 
@@ -532,7 +532,7 @@ var Mode4D = (function (scope) {
 			p.w *= scale;
 			new_points.push(p);
 		}
-		
+
 		// Construct edges
 		var edges = [];
 		for(var i=0;i<edges_arr.length;i+=4){
