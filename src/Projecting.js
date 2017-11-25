@@ -247,6 +247,7 @@ var Projecting = (function (scope) {
 			Takes in an equation string, polygonizes it into an array of trianges, and draws those trianges
 			returns a mesh
 		 */
+		 
 		if(variables == undefined)
 			variables = ['x','y','z'];
 		let sides = equationString.split('=');
@@ -259,6 +260,9 @@ var Projecting = (function (scope) {
 		//Parses the equation, and polygonizes it
 		try {
 			var triangleArray = [];
+			var res = 20;
+			if (resolution == "high") var res = 112;
+			else if (resolution == "medium") var res = 60;
 			triangleArray = Polygonize.generate(eq, [[-10, 10], [-10, 10], [-10, 10]], resolution);
 
 			var material = new THREE.MeshPhongMaterial( {color: color, flatShading:true , side:THREE.DoubleSide} );
@@ -330,7 +334,7 @@ var Projecting = (function (scope) {
 		return mesh;
 	}
 
-	Projecting.prototype.CartesianShaderMesh2D = function(glslFuncString,operator,uniforms,color){
+	Projecting.prototype.CartesianShaderMesh2D = function(glslFuncString,operator,uniforms,color,res){
 		/*
 			Takes in a glsl function and an operator (>,< or =) and renders that
 		*/

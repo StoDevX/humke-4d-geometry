@@ -2,7 +2,58 @@
 This class is for misc. functions that don't fit anywhere else.
 */
 var Util = (function (scope) {
-	function Util(){}
+	function Util(){
+		this.keysDown = {};
+		this.keyMap = {};
+		// Add the letters
+		for (i = 97; i < 123; i++) this.keyMap[String.fromCharCode(i)] = i - 32
+	}
+
+	Util.prototype.SetupKeyListeners = function(){
+		document.addEventListener("keydown", onDocumentKeyDown, false);
+		document.addEventListener("keyup", onDocumentKeyUp, false);
+		var self = this;
+		function onDocumentKeyDown(event) {
+		    var keyCode = event.which;
+		    self.keysDown[keyCode] = true;
+		}
+		function onDocumentKeyUp(event) {
+		    var keyCode = event.which;
+		    delete self.keysDown[keyCode];
+		}
+	}
+	Util.prototype.isKeyDown = function(key){
+		key = key.toLowerCase();
+		if(this.keyMap[key] == undefined){
+			console.error("The key " + key + " is not defined in the map! Go to util.js and define it in this.keyMap");
+		}
+		return this.keysDown[this.keyMap[key]];
+	}
+
+
+	Util.prototype.SetLeftDivVisibility = function(visible){
+		var l = document.querySelector("#left-view");
+		var r = document.querySelector("#right-view");
+		if (!visible) {
+			l.style.display = "none";
+			r.style.margin = "0 auto";
+		} else {
+			l.style.display = "block";
+			delete r.style.margin;
+		}
+	}
+
+	Util.prototype.SetRightDivVisibility = function(visible){
+		var l = document.querySelector("#left-view");
+		var r = document.querySelector("#right-view");
+		if (!visible) {
+			r.style.display = "none";
+			l.style.margin = "0 auto";
+		} else {
+			r.style.display = "block";
+			delete l.style.margin;
+		}
+	}
 
 	Util.prototype.GetUndirectedEdgesOfTetrahedron = function(tetrahedron) {
 		return [tetrahedron[0],tetrahedron[1],
@@ -182,6 +233,9 @@ var Util = (function (scope) {
 			Given an three.js scene, remove all of the
 			objects (the children) in the scene
 		 */
+		// Reset visibility on divs 
+		this.SetLeftDivVisibility(true);
+		this.SetLeftDivVisibility(true);
 		while (scene.children.length) {
 
 				var obj = scene.children[0];

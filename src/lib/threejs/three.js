@@ -14020,28 +14020,24 @@
 				if ( position ) {
 
 					var center = this.boundingSphere.center;
-					console.log("ORIGINAL CENTER",center)
 
 					box.setFromBufferAttribute( position );
 					box.getCenter( center );
-
-					console.log("After box get center",center)
 
 					// hoping to find a boundingSphere with a radius smaller than the
 					// boundingSphere of the boundingBox: sqrt(3) smaller in the best case
 
 					var maxRadiusSq = 0;
-					console.log(position);
-					console.log(position.getX(0));
+
 					for ( var i = 0, il = position.count; i < il; i ++ ) {
 
 						vector.x = position.getX( i );
 						vector.y = position.getY( i );
 						vector.z = position.getZ( i );
-
 						maxRadiusSq = Math.max( maxRadiusSq, center.distanceToSquared( vector ) );
 
 					}
+
 					this.boundingSphere.radius = Math.sqrt( maxRadiusSq );
 
 					if ( isNaN( this.boundingSphere.radius ) ) {
@@ -17991,7 +17987,7 @@
 		fragmentShader = replaceLightNums( fragmentShader, parameters );
 
 		if ( ! material.isShaderMaterial ) {
-			
+
 			vertexShader = unrollLoops( vertexShader );
 			fragmentShader = unrollLoops( fragmentShader );
 
@@ -22184,7 +22180,7 @@
 			if ( isAnimating ) return;
 
 			var device = vr.getDevice();
-
+			
 			if ( device && device.isPresenting ) {
 
 				device.requestAnimationFrame( loop );
@@ -22204,7 +22200,7 @@
 			if ( onAnimationFrame !== null ) onAnimationFrame( time );
 
 			var device = vr.getDevice();
-
+			
 			if ( device && device.isPresenting ) {
 
 				device.requestAnimationFrame( loop );

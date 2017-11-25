@@ -5,21 +5,25 @@ var Mode3D = (function (scope) {
 
 		this.animId = null;
 
-		this.leftView = null;
+		this.leftScene = null;
 		this.leftCamera = null;
 		this.leftRenderer = null;
 		this.leftControls = null;
 		this.leftMesh = null;
+		this.leftAxes = [];
 
-		this.rightView = null;
+		this.rightScene = null;
 		this.rightCamera = null;
 		this.rightRenderer = null;
 		this.rightControls = null;
+		this.rightAxes = [];
 
 		this.leftMesh = null;
 		this.rightMesh = null;
 
 		this.labels = [];
+
+		this.gridIsVisible = true;
 	}
 
 	// Creates the scene and everything
@@ -34,7 +38,7 @@ var Mode3D = (function (scope) {
 		gui.init("3D",this.callbacks,this);
 		this.gui = gui;
 
-		this.leftView = new THREE.Scene();
+		this.leftScene = new THREE.Scene();
 		this.leftCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
 		this.leftCamera.position.set(5,10,20);
 		this.leftRenderer = new THREE.WebGLRenderer({ canvas: leftCanvas, antialias: true });
@@ -46,23 +50,23 @@ var Mode3D = (function (scope) {
 
 		var GridHelper = new Grid();
 		var grid = GridHelper.CreateGrid("XZ");
-		this.leftView.add(grid);
+		this.leftScene.add(grid); this.leftAxes.push(grid);
 
 		var axis = GridHelper.CreateAxis("X");
-		this.leftView.add(axis);
+		this.leftScene.add(axis); this.leftAxes.push(axis);
 		axis = GridHelper.CreateAxis("Y");
-		this.leftView.add(axis);
+		this.leftScene.add(axis); this.leftAxes.push(axis);
 		axis = GridHelper.CreateAxis("Z");
-		this.leftView.add(axis);
+		this.leftScene.add(axis); this.leftAxes.push(axis);
 
 		var leftXLabel = GridHelper.CreateLabel("X",12,0,0); this.labels.push(leftXLabel);
-		this.leftView.add(leftXLabel);
+		this.leftScene.add(leftXLabel); this.leftAxes.push(leftXLabel);
 		var leftYLabel = GridHelper.CreateLabel("Y",0,12,0); this.labels.push(leftYLabel);
-		this.leftView.add(leftYLabel);
+		this.leftScene.add(leftYLabel); this.leftAxes.push(leftYLabel);
 		var leftZLabel = GridHelper.CreateLabel("Z",0,0,12); this.labels.push(leftZLabel);
-		this.leftView.add(leftZLabel);
+		this.leftScene.add(leftZLabel); this.leftAxes.push(leftZLabel);
 
-		this.rightView = new THREE.Scene();
+		this.rightScene = new THREE.Scene();
 		this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
 		this.rightCamera.position.set(0,0,20);
 		this.rightRenderer = new THREE.WebGLRenderer({ canvas: rightCanvas, antialias: true });
@@ -70,33 +74,33 @@ var Mode3D = (function (scope) {
 		this.rightRenderer.setSize( viewWidth, window.innerHeight );
 
 		this.rightControls = new THREE.OrbitControls( this.rightCamera, this.rightRenderer.domElement );
-		this.rightControls.enableRotate = true;
+		this.rightControls.enableRotate = false;
 		this.rightControls.enableKeys  = false;
 
 		grid = GridHelper.CreateGrid("XY");
-		this.rightView.add(grid);
+		this.rightScene.add(grid); this.rightAxes.push(grid);
 
 		axis = GridHelper.CreateAxis("X");
-		this.rightView.add(axis);
+		this.rightScene.add(axis); this.rightAxes.push(axis);
 		axis = GridHelper.CreateAxis("Y");
-		this.rightView.add(axis);
+		this.rightScene.add(axis); this.rightAxes.push(axis);
 
 		var rightXLabel = GridHelper.CreateLabel("X",12,0,0);
 		this.rightXLabel = rightXLabel;
-		this.rightView.add(rightXLabel);
+		this.rightScene.add(rightXLabel); this.rightAxes.push(rightXLabel);
 		var rightYLabel = GridHelper.CreateLabel("Z",0,12,0);
 		this.rightYLabel = rightYLabel;
-		this.rightView.add(rightYLabel);
+		this.rightScene.add(rightYLabel); this.rightAxes.push(rightYLabel);
 		// Add lights to the scene
 		var lightSky = new THREE.HemisphereLight( 0xffffbb, 0x080820, .7 );
-		this.leftView.add( lightSky );
+		this.leftScene.add( lightSky );
 		var lightGround = new THREE.HemisphereLight( 0xffffbb, 0x080820, .4 );
-		this.leftView.add( lightGround );
+		this.leftScene.add( lightGround );
 		lightGround.position.y = -5;
 		lightGround.position.x = 2;
 
-		this.rightView.add(lightSky.clone());
-		this.rightView.add(lightGround.clone());
+		this.rightScene.add(lightSky.clone());
+		this.rightScene.add(lightGround.clone());
 
 		this.util = new Util();
 		this.projector = new Projecting();
@@ -104,13 +108,21 @@ var Mode3D = (function (scope) {
 
 		this.intersectionPlane = this.CreateIntersectionPlane();
 		this.intersectionPlane.position.y = this.gui.params.axis_value;
-		this.leftView.add(this.intersectionPlane);
+		this.leftScene.add(this.intersectionPlane);
 
 		this.animate();
 
 		this.setMode();
 
 		}
+
+	Mode3D.prototype.SetGridAndAxesVisible = function(visible){
+		this.gridIsVisible = visible;
+		for(var i=0;i<this.leftAxes.length;i++)
+			this.leftAxes[i].visible = visible;
+		for(var i=0;i<this.rightAxes.length;i++)
+			this.rightAxes[i].visible = visible;
+	}
 
 	Mode3D.prototype.CreateIntersectionPlane = function(){
 		var color =  this.gui.colors.slices;
@@ -200,17 +212,21 @@ var Mode3D = (function (scope) {
 		var axis = this.gui.params.axis;
 		var axisValue = this.gui.params.axis_value;
 		var color = this.gui.colors.slices;
+		console.log("COLOR",color)
 
 		if(this.current_mode == "convex-hull" || this.current_mode == "parametric"){
 			if(this.rightMesh){
-				this.rightView.remove(this.rightMesh);	
+				this.rightScene.remove(this.rightMesh);	
 			}
 
 			var outline = false;
 			if(this.current_mode == "parametric") outline = true;
 			this.rightMesh = this.slicer.SliceConvex3D(this.leftMesh,axis,axisValue,color,outline);
-			this.rightView.add( this.rightMesh );
-			this.rightMesh.position.z = 0.1;
+
+			if (this.rightMesh != null) {
+				this.rightScene.add(this.rightMesh);
+				this.rightMesh.position.z = 0.1;
+			}
 		}
 	}
 
@@ -270,6 +286,12 @@ var Mode3D = (function (scope) {
 			updateRenderSlices(self,val);
 
 		},
+		'show left view': function(self,val){
+			self.util.SetLeftDivVisibility(val);
+		},
+		'show right view': function(self,val){
+			self.util.SetRightDivVisibility(val);
+		},
 		'fill': function(self,val){
 
 			self.ComputeSlicesCPU();
@@ -323,12 +345,15 @@ var Mode3D = (function (scope) {
 	Mode3D.prototype.initCartesian = function(){
 		var projectingColor = this.gui.colors.projections;
 		var equation = this.gui.params.equation;
-		var resolution = this.gui.params.resolution;
 
-		var mesh = this.projector.PolygonizeCartesian3D(equation,resolution,projectingColor);
+		var res = 20;
+		if (this.gui.params.resolution == "high") var res = 112;
+		else if (this.gui.params.resolution == "medium") var res = 60;
+
+		var mesh = this.projector.PolygonizeCartesian3D(equation,res,projectingColor);
 		if(mesh){
 			this.leftMesh = mesh;
-			this.leftView.add(this.leftMesh);
+			this.leftScene.add(this.leftMesh);
 		}
 
 		// Now to slice it, we just render a 2D cartesian and plug in the value for the remaining variable
@@ -360,7 +385,7 @@ var Mode3D = (function (scope) {
 		};
 		this.rightMesh = this.slicer.CartesianSlice3D(glslFuncString,this.uniforms,this.util.HexToRgb(this.gui.colors.slices));
 		this.rightMesh.position.z = 0.1;
-		this.rightView.add(this.rightMesh);
+		this.rightScene.add(this.rightMesh);
 
 	}
 
@@ -376,13 +401,13 @@ var Mode3D = (function (scope) {
 		var parametricFunction = this.projector.CreateParametricFunction(xFunction,yFunction,zFunction,aParamRange,bParamRange);
 
 		this.leftMesh = this.projector.ParametricMesh3D(parametricFunction,this.gui.colors.projections);
-		this.leftView.add( this.leftMesh );
+		this.leftScene.add( this.leftMesh );
 
 		this.ComputeSlicesCPU();
 
 		// Slicing with Shader
 		// this.rightMesh = this.projector.ParametricMesh3D(parametricFunction,this.gui.colors.slices);
-		// this.rightView.add( this.rightMesh );
+		// this.rightScene.add( this.rightMesh );
 
 		// var axisValue = this.gui.params.axis_value;
 		// this.uniforms = {
@@ -407,7 +432,7 @@ var Mode3D = (function (scope) {
 		var projectingColor = this.gui.colors.projections;
 
 		this.leftMesh = this.projector.ConvexHullMesh3D(points,projectingColor);
-		this.leftView.add( this.leftMesh );
+		this.leftScene.add( this.leftMesh );
 
 		this.ComputeSlicesCPU();
 	}
@@ -416,11 +441,11 @@ var Mode3D = (function (scope) {
 	Mode3D.prototype.cleanupLeftMesh = function(){
 		console.log("CLEANING UP");
 		if(this.leftMesh){
-			this.leftView.remove(this.leftMesh);
+			this.leftScene.remove(this.leftMesh);
 			this.leftMesh = null;
 		}
 		if(this.rightMesh){
-			this.rightView.remove(this.rightMesh);
+			this.rightScene.remove(this.rightMesh);
 			this.rightMesh = null;
 		}
 	}
@@ -429,9 +454,9 @@ var Mode3D = (function (scope) {
 	Mode3D.prototype.cleanup = function(){
 		cancelAnimationFrame(this.animId); // stop the animation loop
 
-		this.util.CleanUpScene(this.leftView);
+		this.util.CleanUpScene(this.leftScene);
 
-		this.leftView = null;
+		this.leftScene = null;
 		this.leftRenderer.dispose();
 		this.leftRenderer = null;
 		this.leftCamera = null;
@@ -441,14 +466,17 @@ var Mode3D = (function (scope) {
 		this.labels = [];
 		this.rightXLabel = null;
 		this.rightYLabel = null;
+		this.leftAxes = [];
 
-		this.util.CleanUpScene(this.rightView);
+		this.util.CleanUpScene(this.rightScene);
 
-		this.rightView = null;
+		this.rightScene = null;
 		this.rightRenderer.dispose();
 		this.rightRenderer = null;
 		this.rightCamera = null;
 		this.rightControls = null;
+		this.rightAxes = [];
+		this.gridIsVisible = true;
 
 		// Destroy gui
 		this.gui.cleanup();
@@ -461,12 +489,20 @@ var Mode3D = (function (scope) {
 	}
 
 	Mode3D.prototype.animate = function(){
+		// Toggle axes visibility
+		if(window.Keyboard.isKeyDown("G") && !this.pressedHide){
+			this.pressedHide = true;
+			this.SetGridAndAxesVisible(!this.gridIsVisible);
+		}
+		if(!window.Keyboard.isKeyDown("G"))
+			this.pressedHide = false;
+
 		for(var i=0;i<this.labels.length;i++)
 			this.labels[i].quaternion.copy(this.leftCamera.quaternion);
 
 		this.animId = requestAnimationFrame( this.animate.bind(this) );
-		this.leftRenderer.render( this.leftView, this.leftCamera );
-		this.rightRenderer.render( this.rightView, this.rightCamera );
+		this.leftRenderer.render( this.leftScene, this.leftCamera );
+		this.rightRenderer.render( this.rightScene, this.rightCamera );
 	}
 
 	scope.Mode3D = Mode3D;
