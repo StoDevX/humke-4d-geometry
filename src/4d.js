@@ -127,9 +127,9 @@ var Mode4D = (function (scope) {
 	Mode4D.prototype.SetGridAndAxesVisible = function(visible){
 		this.gridIsVisible = visible;
 		for(var i=0;i<this.leftAxes.length;i++)
-			this.leftAxes[i].visible = !this.leftAxes[i].visible;
+			this.leftAxes[i].visible = visible;
 		for(var i=0;i<this.rightAxes.length;i++)
-			this.rightAxes[i].visible = !this.rightAxes[i].visible;
+			this.rightAxes[i].visible = visible;
 	}
 
 	Mode4D.prototype.ComputeSlicesCPU = function() {
@@ -437,6 +437,7 @@ var Mode4D = (function (scope) {
 		this.rightCamera = null;
 		this.rightControls = null;
 		this.leftAxes = [];
+		this.gridIsVisible = true;
 
 		// Destroy gui
 		this.gui.cleanup();

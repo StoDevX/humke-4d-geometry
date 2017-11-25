@@ -119,9 +119,9 @@ var Mode3D = (function (scope) {
 	Mode3D.prototype.SetGridAndAxesVisible = function(visible){
 		this.gridIsVisible = visible;
 		for(var i=0;i<this.leftAxes.length;i++)
-			this.leftAxes[i].visible = !this.leftAxes[i].visible;
+			this.leftAxes[i].visible = visible;
 		for(var i=0;i<this.rightAxes.length;i++)
-			this.rightAxes[i].visible = !this.rightAxes[i].visible;
+			this.rightAxes[i].visible = visible;
 	}
 
 	Mode3D.prototype.CreateIntersectionPlane = function(){
@@ -475,6 +475,7 @@ var Mode3D = (function (scope) {
 		this.rightCamera = null;
 		this.rightControls = null;
 		this.rightAxes = [];
+		this.gridIsVisible = true;
 
 		// Destroy gui
 		this.gui.cleanup();
