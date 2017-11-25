@@ -212,6 +212,7 @@ var Mode3D = (function (scope) {
 		var axis = this.gui.params.axis;
 		var axisValue = this.gui.params.axis_value;
 		var color = this.gui.colors.slices;
+		console.log("COLOR",color)
 
 		if(this.current_mode == "convex-hull" || this.current_mode == "parametric"){
 			if(this.rightMesh){

@@ -3,7 +3,77 @@
 
 var GUI = (function (scope) {
 	//Constructor
-	function GUI(){}
+	function GUI(){
+		// This is where all built in examples go. It is an array of objects 
+		// specifying which dimension and input mode they belong to, as well as the data needed to set their state 
+		this.built_in_examples_data = [
+			// 2D examples
+			{   name: 'Filled in Circle', dimension: 2, input: 'cartesian',
+				data: { 'equation': 'x^2 + y^2 < 10' } },
+			{   name: 'DNA', dimension: 2, input: 'cartesian',
+				data: { 'equation': 'cos(x) = sin(y)^2' } },
+			{   name: 'Heart', dimension: 2, input: 'parametric',
+				data: { 'param_eq_x': 'b * (1-cos(a))*sin(a) * 5',
+						'param_eq_y': 'b * (1-cos(a))*cos(a) * 5 + 5',
+						'param_a': '0 < a < 2 * PI',
+						'param_b': '0 < b < 1',
+						'fill':false }},
+			{   name: 'Hollow Circle', dimension: 2, input: 'parametric',
+				data: { 'param_eq_x': 'b * cos(a)',
+						'param_eq_y': 'b * sin(a)',
+						'param_a': '0 < a < 2 * PI',
+						'param_b': '2 < b < 4',
+						'fill':true }},
+			{ 	name: 'Diamond', dimension: 2, input: 'convex-hull',
+			  	data: {'points': '(0,5),(5,0),(0,-5),(-5,0)' }},
+			{ 	name: 'Approx. Circle', dimension: 2, input: 'convex-hull',
+			  	data: {'points': '(5.00,0.00),(4.90,0.99),(4.61,1.95),(4.13,2.82),(3.48,3.59),(2.70,4.21),(1.81,4.66),(0.85,4.93),(-0.15,5.00),(-1.14,4.87),(-2.08,4.55),(-2.94,4.04),(-3.69,3.38),(-4.28,2.58),(-4.71,1.67),(-4.95,0.71),(-4.99,-0.29),(-4.83,-1.28),(-4.48,-2.21),(-3.95,-3.06),(-3.27,-3.78),(-2.45,-4.36),(-1.54,-4.76),(-0.56,-4.97),(0.44,-4.98),(1.42,-4.79),(2.34,-4.42),(3.17,-3.86),(3.88,-3.16),(4.43,-2.32),(4.80,-1.40),(4.98,-0.42)'
+			  	}},
+			// 3D examples 
+			{   name: 'Sphere', dimension: 3, input: 'cartesian',
+				data: { 'equation': 'x^2 + y^2 + z^2 = 10' } },
+			{   name: 'Tube', dimension: 3, input: 'cartesian',
+				data: { 'equation': 'x^2 + y^2 = 10' } },
+			{   name: 'Wiggly Tube', dimension: 3, input: 'cartesian',
+				data: { 'equation': '(x+sin(z)*0.5)^2 + y^2 = 10' } },
+			{	name: 'Torus', dimension:3, input: 'parametric',
+				data: { 'param_eq_x':'cos(a)*(7+cos(b))',
+						'param_eq_y':'sin(a)*(7+cos(b))',
+						'param_eq_z':'sin(b)',
+						'param_a':'0 < a < 2 * PI',
+						'param_b':'0 < b < 2 * PI' }},
+			{	name: 'Twisted Ribbon', dimension:3, input: 'parametric',
+				data: { 'param_eq_x':'cos(b)*a',
+						'param_eq_y':'b',
+						'param_eq_z':'sin(b)*a',
+						'param_a':'0 < a < 2 * PI',
+						'param_b':'-10 < b < 10' }},
+			{	name: 'Cube', dimension:3, input: 'convex-hull',
+				data: { 'points': '(0,0,0),(0,0,5),(0,5,0),(0,5,5),(5,0,0),(5,0,5),(5,5,0),(5,5,5)' }},
+			{	name: 'Centered Cube', dimension:3, input: 'convex-hull',
+				data: { 'points': '(-2.5,-2.5,-2.5),(-2.5,-2.5,2.5),(-2.5,2.5,-2.5),(-2.5,2.5,2.5),(2.5,-2.5,-2.5),(2.5,-2.5,2.5),(2.5,2.5,-2.5),(2.5,2.5,2.5)' }},
+			{	name: 'Rotated Cube', dimension:3, input: 'convex-hull',
+				data: { 'points': '(-3.54,-1.45,2.03),(0.00,1.42,4.09),(-3.54,1.45,-2.03),(0.00,4.33,0.02),(0.00,-4.33,-0.02),(3.54,-1.45,2.03),(0.00,-1.42,-4.09),(3.54,1.45,-2.03)' }},
+			{	name: 'Diamond', dimension:3, input: 'convex-hull',
+				data: { 'points': '(0,0,5),(0,0,-5),(5,0,0),(-5,0,0),(0,5,0),(0,-5,0)' }},
+			// 4D examples
+			{
+				name: 'Hypersphere', dimension: 4, input: 'cartesian',
+				data: { 'equation': 'x^2+y^2+z^2+w^2 = 10' }},
+			{
+				name: 'Sheared Hypertube', dimension: 4, input: 'cartesian',
+				data: { 'equation': '(x+w)^2+y^2+z^2 = 10' }},
+			{
+				name: 'Tesseract', dimension: 4, input: 'convex-hull',
+				data: { 'points': '(-1.0,-1.0,-1.0,-1.0),(1.0,-1.0,-1.0,-1.0),(-1.0,1.0,-1.0,-1.0),(1.0,1.0,-1.0,-1.0),(-1.0,-1.0,1.0,-1.0),(1.0,-1.0,1.0,-1.0),(-1.0,1.0,1.0,-1.0),(1.0,1.0,1.0,-1.0),(-1.0,-1.0,-1.0,1.0),(1.0,-1.0,-1.0,1.0),(-1.0,1.0,-1.0,1.0),(1.0,1.0,-1.0,1.0),(-1.0,-1.0,1.0,1.0),(1.0,-1.0,1.0,1.0),(-1.0,1.0,1.0,1.0),(1.0,1.0,1.0,1.0)' }},
+			{
+				name: 'Fuzzy Tesseract', dimension: 4, input: 'convex-hull',
+				data: { 'points': '(-0.61,-0.71,-0.55,-0.51),(-0.98,-0.82,-0.97,1.41),(-0.57,-0.84,1.27,-0.54),(-0.65,-0.83,1.45,1.22),(-0.85,1.48,-0.62,-0.96),(-0.87,1.20,-0.78,1.07),(-0.82,1.16,1.32,-0.91),(-0.51,1.31,1.16,1.14),(1.45,-0.76,-0.77,-0.96),(1.11,-0.93,-0.99,1.27),(1.49,-0.81,1.29,-0.54),(1.06,-0.82,1.19,1.09),(1.11,1.42,-0.88,-0.78),(1.48,1.50,-0.54,1.34),(1.50,1.10,1.05,-0.95),(1.04,1.25,1.10,1.01)' }},
+			{
+				name: 'Random 16 Points', dimension: 4, input: 'convex-hull',
+				data: { 'points': '(0.81,0.44,-1.00,0.84),(0.04,0.76,0.06,0.55),(-0.16,-0.81,-0.65,-0.84),(0.05,0.44,0.96,0.65),(0.12,0.37,-0.78,-0.45),(0.46,-0.15,0.12,-0.95),(-0.34,-0.56,-0.56,-0.40),(-1.00,-0.39,-0.10,-0.98),(-0.30,-0.51,-0.56,-0.63),(0.88,-0.04,0.91,0.38),(-0.93,0.68,0.56,-0.09),(0.84,0.56,0.16,0.73),(0.66,0.57,0.69,0.08),(-0.53,-0.18,0.88,0.18),(-0.68,0.79,-0.35,0.45),(0.36,0.91,-0.62,-0.07)' }},
+		]
+	}
 
 	GUI.prototype.init = function(mode,callbacks,mode_obj){
 		// Colors to use throughout
@@ -28,7 +98,7 @@ var GUI = (function (scope) {
 			'param_eq_w':'',
 			'resolution': 'low', // For the marching squares/cubes
 			'whole_shape_slicing': false,
-			'fill': true,
+			'fill': false,
 
 			// Viewing Controls
 			'axis_value':0.1,
@@ -37,20 +107,6 @@ var GUI = (function (scope) {
 			'thickness':'medium',
 			'show left view': true,
 			'show right view': true,
-
-			// Builtin Examples 2D
-			'Filled in Circle': function() {}, // cartesian examples
-			'Parabola': function() {},
-			'Heart': function() {}, // parametric examples
-			'Diamond': function() {}, // convex hall examples
-
-			// Builtin Examples 3D
-			'Spiral Tube': function() {},
-
-			// Builtin Examples 4D
-			'Random 16 Points': function() {},
-			'Tesseract': function() {},
-			'Fuzzy Tesseract': function() {},
 		};
 		this.gui = null;
 		this.mode = "";
@@ -67,31 +123,6 @@ var GUI = (function (scope) {
 			'param_a':'0 < a < 2 * PI',
 			'param_b':'0 < b < 4',
 			'axis':'Y',
-
-			// builtin examples
-			'Filled in Circle': function() {
-				params.equation = 'x^2 + y^2 < 9';
-				if (callbacks['equation']) callbacks['equation'](mode_obj,params.equation);
-			},
-			'Parabola': function() {
-				params.equation = 'y = x^2';
-				if (callbacks['equation']) callbacks['equation'](mode_obj,params.equation);
-			},
-			'Heart': function() {
-				params.param_eq_x = 'b * (1-cos(a))*sin(a) * 5';
-				params.param_eq_y = 'b * (1-cos(a))*cos(a) * 5';
-				params.param_a = '0 < a < 2 * PI';
-				params.param_b = '0 < b < 0.5';
-
-				if(callbacks['param_eq_x']) callbacks['param_eq_x'](mode_obj,params.param_eq_x);
-				if(callbacks['param_eq_y']) callbacks['param_eq_y'](mode_obj,params.param_eq_y);
-				if(callbacks['param_a']) callbacks['param_a'](mode_obj,params.param_a);
-				if(callbacks['param_b']) callbacks['param_b'](mode_obj,params.param_b);
-			},
-			'Diamond': function() {
-				params.points = '(0,5),(5,0),(0,-5),(-5,0)';
-				if(callbacks['points']) callbacks['points'](mode_obj,params.points);
-			}
 		}
 		// 3D defaults
 		this.defaults['3D'] = {
@@ -104,23 +135,6 @@ var GUI = (function (scope) {
 			'param_a':'0 < a < 2 * PI',
 			'param_b':'0 < b < 2 * PI',
 			'param_c':'0 < c < 5',
-
-			// builtin examples
-			'Spiral Tube': function () {
-				params.param_eq_x = 'b * cos(a) - c * sin(a)';
-				params.param_eq_y = 'b * sin(a) + c * cos(a)';
-				params.param_eq_z = 'a/3';
-				params.param_a = '-4 * PI < a < 4 * PI';
-				params.param_b = '0 < b < 1';
-				params.param_c = '0 < c < 1';
-
-				if(callbacks['param_eq_x']) callbacks['param_eq_x'](mode_obj,params.param_eq_x);
-				if(callbacks['param_eq_y']) callbacks['param_eq_y'](mode_obj,params.param_eq_y);
-				if(callbacks['param_eq_z']) callbacks['param_eq_z'](mode_obj,params.param_eq_z);
-				if(callbacks['param_a']) callbacks['param_a'](mode_obj,params.param_a);
-				if(callbacks['param_b']) callbacks['param_b'](mode_obj,params.param_b);
-				if(callbacks['param_c']) callbacks['param_c'](mode_obj,params.param_c);
-			}
 		}
 
 		// 3D defaults
@@ -137,18 +151,6 @@ var GUI = (function (scope) {
 			'param_c':'0 < c < 1',
 			'param_d':'0 < d < 1',
 			'axis':'W',
-			'Random 16 Points': function(){
-				params.points = '(0.8143297795339766,0.440590428598775,-0.9966778149797374,0.8359636104069312),(0.04038574084675473,0.7631382697849891,0.06488647783630208,0.5470246612532295),(-0.1565304241669647,-0.8068455753911711,-0.6535871109492957,-0.8385764358924482),(0.04584069274909863,0.4445148496371831,0.9610665477449694,0.6454526024362561),(0.1218762687611172,0.3744402885198968,-0.7820816028696314,-0.4455011351457807),(0.4624172658309502,-0.1530246242443329,0.1151336972742656,-0.9479586388431104),(-0.3408434431448983,-0.555754094902197,-0.5590764978519422,-0.3987028481426675),(-0.9987734397861859,-0.3852024957399839,-0.09835071312110011,-0.9804424829598912),(-0.2968112596280977,-0.5068460726242942,-0.5619464559126146,-0.6340879515130893),(0.8837960566243119,-0.03969105802447637,0.9123802677843536,0.3751456852770836),(-0.926478310419692,0.6790362016102636,0.5614273236705245,-0.09098328937867961),(0.8438482990896778,0.5583483703046557,0.1610475146780233,0.7255701075546166),(0.656784166262284,0.5714694043355708,0.6862663698254772,0.07886445995314473),(-0.5250300108688232,-0.1793963892193478,0.8848799689532072,0.1776234453335623),(-0.6827634951870549,0.7939339091944824,-0.3528022080220302,0.4532847092051848),(0.3560962382295134,0.9094653110108015,-0.6165327854608491,-0.06652824121204037)';
-				if(callbacks['points']) callbacks['points'](mode_obj,params.points);
-			},
-			'Fuzzy Tesseract': function(){
-				params.points = '(-0.6135040544809501,-0.7083600692364611,-0.5532885895557511,-0.5131218627160746),(-0.9842106083758724,-0.8207424333121265,-0.9683424631029903,1.4057348770052331),(-0.5697005257810093,-0.8371310430270666,1.2695145619644275,-0.5438871799594522),(-0.6488804316618471,-0.8309874639248714,1.4489868027290274,1.2190381841698894),(-0.8527501119990695,1.4767111248825837,-0.6223483359549299,-0.958514618846246),(-0.8719088945840796,1.2043793208396778,-0.778504127489394,1.0726383532981478),(-0.8150201476369433,1.1593300470715358,1.3241994726214465,-0.9134777170826138),(-0.5136285240710708,1.3126778815306204,1.1635232949864884,1.1434050681805707),(1.4496085828755867,-0.7588841106040601,-0.7675349996521015,-0.9644440660699956),(1.1138085563711295,-0.9343847682950754,-0.9878665961486663,1.2654405274979101),(1.4852120610231325,-0.8052638963593651,1.2905424483642889,-0.5363260155288426),(1.0638587223425637,-0.822598163435883,1.1927779565077992,1.0856158654972432),(1.1140063839005623,1.4235965015513352,-0.8759095666831993,-0.7842518221550617),(1.4846413452736238,1.4954608508669196,-0.544027849412986,1.338911616702881),(1.4978930769746726,1.1005609046450204,1.0523788850998328,-0.9513194120213813),(1.0381154196359161,1.24724782192578,1.09612303905524,1.0109194774099028)';
-				if(callbacks['points']) callbacks['points'](mode_obj,params.points);
-			},
-			'Tesseract': function(){
-				params.points = '(-1.0,-1.0,-1.0,-1.0),(1.0,-1.0,-1.0,-1.0),(-1.0,1.0,-1.0,-1.0),(1.0,1.0,-1.0,-1.0),(-1.0,-1.0,1.0,-1.0),(1.0,-1.0,1.0,-1.0),(-1.0,1.0,1.0,-1.0),(1.0,1.0,1.0,-1.0),(-1.0,-1.0,-1.0,1.0),(1.0,-1.0,-1.0,1.0),(-1.0,1.0,-1.0,1.0),(1.0,1.0,-1.0,1.0),(-1.0,-1.0,1.0,1.0),(1.0,-1.0,1.0,1.0),(-1.0,1.0,1.0,1.0),(1.0,1.0,1.0,1.0)';
-				if(callbacks['points']) callbacks['points'](mode_obj,params.points);
-			}
 		}
 
 		this.mode_obj = null;
@@ -247,16 +249,19 @@ var GUI = (function (scope) {
 			slider.parentNode.parentNode.querySelector(".dg .cr.number input[type='text']").style.color = this.colors.slices
 			slider.parentNode.parentNode.parentNode.parentNode.style['border-left'] = "3px solid " + this.colors.slices
 		}
+		// Set the width on the built in example spans to be 100%
+		var properties = document.querySelectorAll("li.folder:nth-child(3) .property-name");
+		for(var i=0;i<properties.length;i++)
+			properties[i].style.width = "100%"
 	}
 
 	// Functions for creating the controls for the 3 different inputs (cartesian, parametric and convex hull)
 	GUI.prototype.initCartesianSource = function(){
 		var arr = [];
-		var builtin_arr = [];
 		var callbacks = this.callbacks;
 		var mode_obj = this.mode_obj;
 
-		var eq = this.shapeProperties.add(this.params, 'equation').name('Equation').onChange(function(val){
+		var eq = this.shapeProperties.add(this.params, 'equation').listen().name('Equation').onChange(function(val){
 			if(callbacks['equation']) callbacks['equation'](mode_obj,val);
 		});
 		arr.push(eq);
@@ -271,15 +276,10 @@ var GUI = (function (scope) {
 			arr.push(res);
 		}
 
-		// Now for Builtin Examples
-		if (this.mode == '2D') {
-			var filled_in_circle = this.builtinExamples.add(this.params, 'Filled in Circle');
-			var parabola = this.builtinExamples.add(this.params, 'Parabola');
-			builtin_arr.push(filled_in_circle); builtin_arr.push(parabola);
-		}
+
+		this.builtin_arr_cartesian = this.constructExampleItems(this.mode,'cartesian');
 
 		this.cartesianSourceItems = arr;
-		this.builtin_arr_cartesian = builtin_arr;
 	};
 
 	GUI.prototype.destroyCartesianSource = function(){
@@ -296,7 +296,6 @@ var GUI = (function (scope) {
 
 	GUI.prototype.initParamSource = function(){
 		var arr = [];
-		var builtin_arr = [];
 		var names = ["param_eq_x","param_eq_y","param_a","param_b","param_eq_z","param_c","param_eq_w","param_d"]
 		var callbacks = this.callbacks;
 		var mode_obj = this.mode_obj;
@@ -308,49 +307,42 @@ var GUI = (function (scope) {
 			arr.push(fill_item);
 		}
 
-		arr.push(this.shapeProperties.add(this.params, 'param_eq_x').name('x = ').onChange(function(val){
+		arr.push(this.shapeProperties.add(this.params, 'param_eq_x').name('x = ').listen().onChange(function(val){
 			if(callbacks['param_eq_x']) callbacks['param_eq_x'](mode_obj,val);
 		}));
-		arr.push(this.shapeProperties.add(this.params, 'param_eq_y').name('y = ').onChange(function(val){
+		arr.push(this.shapeProperties.add(this.params, 'param_eq_y').name('y = ').listen().onChange(function(val){
 			if(callbacks['param_eq_y']) callbacks['param_eq_y'](mode_obj,val);
 		}));
 		if(this.mode == "3D" || this.mode  == "4D"){
-			arr.push(this.shapeProperties.add(this.params, 'param_eq_z').name('z = ').onChange(function(val){
+			arr.push(this.shapeProperties.add(this.params, 'param_eq_z').name('z = ').listen().onChange(function(val){
 				if(callbacks['param_eq_z']) callbacks['param_eq_z'](mode_obj,val);
 			}));
 		}
 		if(this.mode == "4D"){
-			arr.push(this.shapeProperties.add(this.params, 'param_eq_w').name('w = ').onChange(function(val){
+			arr.push(this.shapeProperties.add(this.params, 'param_eq_w').name('w = ').listen().onChange(function(val){
 				if(callbacks['param_eq_w']) callbacks['param_eq_w'](mode_obj,val);
 			}));
 		}
-		arr.push(this.shapeProperties.add(this.params, 'param_a').name('a = ').onChange(function(val){
+		arr.push(this.shapeProperties.add(this.params, 'param_a').name('a = ').listen().onChange(function(val){
 			if(callbacks['param_a']) callbacks['param_a'](mode_obj,val);
 		}));
-		arr.push(this.shapeProperties.add(this.params, 'param_b').name('b = ').onChange(function(val){
+		arr.push(this.shapeProperties.add(this.params, 'param_b').name('b = ').listen().onChange(function(val){
 			if(callbacks['param_b']) callbacks['param_b'](mode_obj,val);
 		}));
 		if(this.mode == "3D" || this.mode  == "4D"){
-			arr.push(this.shapeProperties.add(this.params, 'param_c').name('c = ').onChange(function(val){
+			arr.push(this.shapeProperties.add(this.params, 'param_c').name('c = ').listen().onChange(function(val){
 				if(callbacks['param_c']) callbacks['param_c'](mode_obj,val);
 			}));
 		}
 		if(this.mode == "4D"){
-			arr.push(this.shapeProperties.add(this.params, 'param_d').name('d = ').onChange(function(val){
+			arr.push(this.shapeProperties.add(this.params, 'param_d').name('d = ').listen().onChange(function(val){
 				if(callbacks['param_d']) callbacks['param_d'](mode_obj,val);
 			}));
 		}
 
-		// Now for Builtin Examples
-		if (this.mode == '2D') {
-			var heart = this.builtinExamples.add(this.params, 'Heart');
-			builtin_arr.push(heart);
-		} else if (this.mode == '3D') {
-			var spiral = this.builtinExamples.add(this.params, 'Spiral Tube');
-		} 
+		this.builtin_arr_param = this.constructExampleItems(this.mode,'parametric');
 
 		this.paramSourceItems = arr;
-		this.builtin_arr_param = builtin_arr;
 	};
 
 	GUI.prototype.destroyParamSource = function(){
@@ -367,7 +359,6 @@ var GUI = (function (scope) {
 
 	GUI.prototype.initConvexSource = function(){
 		var arr = [];
-		var builtin_arr = [];
 		var callbacks = this.callbacks;
 		var mode_obj = this.mode_obj;
 
@@ -376,21 +367,10 @@ var GUI = (function (scope) {
 		}).listen();
 		arr.push(points);
 
-		if (this.mode == '2D') {
-			var diamond = this.builtinExamples.add(this.params, 'Diamond');
-			builtin_arr.push(diamond);
-		} else if(this.mode == '4D'){
-			var randomPoints = this.builtinExamples.add(this.params,'Random 16 Points');
-			var fuzzyTesseract = this.builtinExamples.add(this.params,'Fuzzy Tesseract');
-			var tesseract = this.builtinExamples.add(this.params,'Tesseract');
-			
-			builtin_arr.push(randomPoints)
-			builtin_arr.push(fuzzyTesseract)
-			builtin_arr.push(tesseract)
-		}
+		this.builtin_arr_convex = this.constructExampleItems(this.mode,'convex-hull');
+
 
 		this.convexSourceItems = arr;
-		this.builtin_arr_convex = builtin_arr;
 	};
 
 	GUI.prototype.destroyConvexSource = function(){
@@ -404,6 +384,46 @@ var GUI = (function (scope) {
 		this.convexSourceItems = [];
 		this.builtin_arr_convex = [];
 	};
+
+	GUI.prototype.constructExampleItems = function(mode,input){
+		/* 
+			Given a mode (ex '2D') and input (ex 'parametric')
+			it will construct the gui items, add them to builtinExamples and 
+			return the array of those items so you can destroy them later
+		*/
+		var dimension = 2;
+		if(mode == "3D") dimension = 3;
+		if(mode == "4D") dimension = 4;
+		console.log("Constructing",mode,input)
+		var params = this.params;
+		var callbacks = this.callbacks;
+		var mode_obj = this.mode_obj;
+
+		var arr = [];
+
+		for(var i=0;i<this.built_in_examples_data.length;i++){
+			var datum = this.built_in_examples_data[i];
+			if(datum.dimension == dimension && datum.input == input){
+				// Construct a function that will set all the datum's data when called 
+				this.params[datum.name] = (function(capturedDatum){
+					// We need to create a closure to capture the value of the current datum, otherwise the scopes will be change by the time this funciton is called
+					var d = capturedDatum;
+					return function(){
+						for(let param in d.data){
+							if(d.data.hasOwnProperty(param)){
+								params[param] = d.data[param];
+								console.log(param,d.data[param])
+								if(callbacks[param]) callbacks[param](mode_obj,params[param]);
+							}
+						}
+					}
+				})(datum);
+				arr.push(this.builtinExamples.add(this.params,datum.name));
+			}
+		}
+
+		return arr;
+	}
 
 	GUI.prototype.cleanup = function(){
 		//Destroys everything created

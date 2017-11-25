@@ -399,7 +399,6 @@ var Mode4D = (function (scope) {
 
 
 	Mode4D.prototype.cleanupLeftMesh = function(){
-		console.log("CLEANING UP");
 		if(this.leftMesh){
 			this.leftScene.remove(this.leftMesh);
 			this.leftMesh = null;
