@@ -70,7 +70,7 @@ var Mode3D = (function (scope) {
 		this.rightRenderer.setSize( viewWidth, window.innerHeight );
 
 		this.rightControls = new THREE.OrbitControls( this.rightCamera, this.rightRenderer.domElement );
-		this.rightControls.enableRotate = true;
+		this.rightControls.enableRotate = false;
 		this.rightControls.enableKeys  = false;
 
 		grid = GridHelper.CreateGrid("XY");
