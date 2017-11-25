@@ -64,7 +64,6 @@ var Slicing = (function (scope) {
 		if(mesh.type == "Object3D"){
 			var container = new THREE.Object3D();
 			for(var i=0;i<mesh.children.length;i++){
-				console.log(mesh.children[i]);
 				var geometry = mesh.children[i].geometry.clone();
 				var childMesh = new THREE.Line(geometry,material); ///////////////// THIS IS HARDCODED TO ONLY WORK WITH LINES!!!!
 				container.add(childMesh);
@@ -257,7 +256,7 @@ var Slicing = (function (scope) {
 		if (intersection_points[3]) {
 
 			var geometry = new THREE.ConvexGeometry( intersection_points );
-			material = new THREE.MeshPhongMaterial( {flatShading:true} );
+			material = new THREE.MeshBasicMaterial( {color:new THREE.Color(color)} );
 			var mesh = new THREE.Mesh( geometry, material );
 			return mesh;
 		} else {
@@ -351,7 +350,7 @@ var Slicing = (function (scope) {
 		if (intersection_points[3]) {
 
 			geometry = new THREE.ConvexGeometry( intersection_points );
-			material = new THREE.MeshPhongMaterial( {flatShading:true} );
+			material = new THREE.MeshPhongMaterial( {flatShading:true, color:color} );
 			var mesh = new THREE.Mesh( geometry, material );
 			return mesh;
 		} else {
