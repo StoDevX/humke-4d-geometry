@@ -9,16 +9,17 @@ var Mode4D = (function (scope) {
 		this.leftControls = null;
 		this.labels = [];
 		this.leftAxes = [];
-		this.keysDown = {};
-		this.keyMap = {'A':65,'D':68,'S':83,'W':87,'Q':81,'E':69}
 
 		this.rightScene = null;
 		this.rightCamera = null;
 		this.rightRenderer = null;
 		this.rightControls = null;
+		this.rightAxes = [];
 
 		this.leftMesh = null;
 		this.rightMesh = null;
+
+		this.gridIsVisible = true;
 	}
 
 	// Creates the scene and everything
@@ -59,13 +60,13 @@ var Mode4D = (function (scope) {
 		this.leftScene.add(axis);  this.leftAxes.push(axis);
 
 		var leftXLabel = GridHelper.CreateLabel("X",12,0,0); this.addLabel(leftXLabel,this.leftCamera);
-		this.leftScene.add(leftXLabel);
+		this.leftScene.add(leftXLabel); this.leftAxes.push(leftXLabel);
 		var leftYLabel = GridHelper.CreateLabel("Y",0,12,0); this.addLabel(leftYLabel,this.leftCamera);
-		this.leftScene.add(leftYLabel);
+		this.leftScene.add(leftYLabel); this.leftAxes.push(leftYLabel);
 		var leftZLabel = GridHelper.CreateLabel("Z",0,0,12); this.addLabel(leftZLabel,this.leftCamera);
-		this.leftScene.add(leftZLabel);
+		this.leftScene.add(leftZLabel); this.leftAxes.push(leftZLabel);
 		var leftWLabel = GridHelper.CreateLabel("W",5,10,-5); this.addLabel(leftWLabel,this.leftCamera);
-		this.leftScene.add(leftWLabel);
+		this.leftScene.add(leftWLabel); this.leftAxes.push(leftWLabel);
 
 		this.rightScene = new THREE.Scene();
 		this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
@@ -78,21 +79,21 @@ var Mode4D = (function (scope) {
 		this.rightControls.enableKeys = false;
 
 		grid = GridHelper.CreateGrid("XZ");
-		this.rightScene.add(grid);
+		this.rightScene.add(grid); this.rightAxes.push(grid);
 
 		axis = GridHelper.CreateAxis("X");
-		this.rightScene.add(axis);
+		this.rightScene.add(axis); this.rightAxes.push(axis);
 		axis = GridHelper.CreateAxis("Y");
-		this.rightScene.add(axis);
+		this.rightScene.add(axis); this.rightAxes.push(axis);
 		axis = GridHelper.CreateAxis("Z");
-		this.rightScene.add(axis);
+		this.rightScene.add(axis); this.rightAxes.push(axis);
 
 		var rightXLabel = GridHelper.CreateLabel("X",12,0,0); this.addLabel(rightXLabel,this.rightCamera);
-		this.rightScene.add(rightXLabel);
+		this.rightScene.add(rightXLabel);  this.rightAxes.push(rightXLabel);
 		var rightYLabel = GridHelper.CreateLabel("Y",0,12,0); this.addLabel(rightYLabel,this.rightCamera);
-		this.rightScene.add(rightYLabel);
+		this.rightScene.add(rightYLabel); this.rightAxes.push(rightYLabel);
 		var rightZLabel = GridHelper.CreateLabel("Z",0,0,12); this.addLabel(rightZLabel,this.rightCamera);
-		this.rightScene.add(rightZLabel);
+		this.rightScene.add(rightZLabel); this.rightAxes.push(rightZLabel);
 		// Add lights to the scene
 		var lightSky = new THREE.HemisphereLight( 0xffffbb, 0x080820, .7 );
 		this.leftScene.add( lightSky );
@@ -118,49 +119,17 @@ var Mode4D = (function (scope) {
 
 		this.intersectionPlane = this.CreateIntersectionHyperPlane();
 
-		// Key down
-		document.addEventListener("keydown", onDocumentKeyDown, false);
-		document.addEventListener("keyup", onDocumentKeyUp, false);
-		var self = this;
-		function onDocumentKeyDown(event) {
-		    var keyCode = event.which;
-		    self.keysDown[keyCode] = true;
+		
 
-		    if(keyCode == 66){
-		    	// Toggle axis visibility
-		    	for(var i=0;i<self.leftAxes.length;i++){
-		    		var axis = self.leftAxes[i];
-		    		axis.visible = !axis.visible;
-		    	}
-		    }
+	}
 
-		    if (keyCode == 87) {
-		        // W
-		    } else if (keyCode == 83) {
-		        // S
-		    } else if (keyCode == 65) {
-		        // A
-		    } else if (keyCode == 68) {
-		        // D
-		    } else if (keyCode == 32) {
-		        // Enter
-		    }
-		};
-		function onDocumentKeyUp(event) {
-		    var keyCode = event.which;
-		    delete self.keysDown[keyCode];
-		    if (keyCode == 87) {
-		        // W
-		    } else if (keyCode == 83) {
-		        // S
-		    } else if (keyCode == 65) {
-		        // A
-		    } else if (keyCode == 68) {
-		        // D
-		    } else if (keyCode == 32) {
-		        // Enter
-		    }
-		};
+
+	Mode4D.prototype.SetGridAndAxesVisible = function(visible){
+		this.gridIsVisible = visible;
+		for(var i=0;i<this.leftAxes.length;i++)
+			this.leftAxes[i].visible = !this.leftAxes[i].visible;
+		for(var i=0;i<this.rightAxes.length;i++)
+			this.rightAxes[i].visible = !this.rightAxes[i].visible;
 	}
 
 	Mode4D.prototype.ComputeSlicesCPU = function() {
@@ -458,6 +427,7 @@ var Mode4D = (function (scope) {
 		this.labels = [];
 		this.rightXLabel = null;
 		this.rightYLabel = null;
+		this.rightAxes = [];
 
 		this.util.CleanUpScene(this.rightScene);
 
@@ -481,27 +451,35 @@ var Mode4D = (function (scope) {
 
 
 	Mode4D.prototype.animate = function(){
+		// Toggle axes visibility
+		if(window.Keyboard.isKeyDown("G") && !this.pressedHide){
+			this.pressedHide = true;
+			this.SetGridAndAxesVisible(!this.gridIsVisible);
+		}
+		if(!window.Keyboard.isKeyDown("G"))
+			this.pressedHide = false;
+		
 
 		if(this.current_mode == "convex-hull" && this.leftMesh){
 			// XW rotation
-			if(this.keysDown[this.keyMap['A']]){
+			if(window.Keyboard.isKeyDown('A')){
 				this.leftMesh.angleSpeed.x ++;
 			}
-			if(this.keysDown[this.keyMap['D']]){
+			if(window.Keyboard.isKeyDown('D')){
 				this.leftMesh.angleSpeed.x --;
 			}
 			// YW rotation
-			if(this.keysDown[this.keyMap['W']]){
+			if(window.Keyboard.isKeyDown('W')){
 				this.leftMesh.angleSpeed.y ++;
 			}
-			if(this.keysDown[this.keyMap['S']]){
+			if(window.Keyboard.isKeyDown('S')){
 				this.leftMesh.angleSpeed.y --;
 			}
 			// ZW rotation
-			if(this.keysDown[this.keyMap['Q']]){
+			if(window.Keyboard.isKeyDown('Q')){
 				this.leftMesh.angleSpeed.z ++;
 			}
-			if(this.keysDown[this.keyMap['E']]){
+			if(window.Keyboard.isKeyDown('E')){
 				this.leftMesh.angleSpeed.z --;
 			}
 

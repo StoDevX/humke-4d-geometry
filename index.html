@@ -147,6 +147,9 @@
 </script>
 
 <script>
+	// Create a global copy of util for keyboard listening 
+	window.Keyboard = new Util();
+	window.Keyboard.SetupKeyListeners();
 	// Listen for clicks on any of the mode buttons to:
 	//  - Hide the menu
 	//  - Init the mode

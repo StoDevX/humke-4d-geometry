@@ -20,17 +20,21 @@ var Mode2D = (function (scope) {
 		// Convex Hull points
 		this.pointsArray = [];
 
+
 		this.leftScene = null;
 		this.leftCamera = null;
 		this.leftRenderer = null;
 		this.leftControls = null;
 		this.leftMesh = null;
+		this.leftAxes = [];
 
 		this.rightScene = null;
 		this.rightCamera = null;
 		this.rightRenderer = null;
 		this.rightControls = null;
+		this.rightAxes = [];
 
+		this.gridIsVisible = true;
 	}
 
 	// Creates the scene and everything
@@ -57,17 +61,17 @@ var Mode2D = (function (scope) {
 
 		var GridHelper = new Grid();
 		var grid = GridHelper.CreateGrid("XY");
-		this.leftScene.add(grid);
+		this.leftScene.add(grid); this.leftAxes.push(grid);
 
 		var axis = GridHelper.CreateAxis("X");
-		this.leftScene.add(axis);
+		this.leftScene.add(axis); this.leftAxes.push(axis);
 		axis = GridHelper.CreateAxis("Y");
-		this.leftScene.add(axis);
+		this.leftScene.add(axis); this.leftAxes.push(axis);
 
 		var leftXLabel = GridHelper.CreateLabel("X",11,-0.25,0);
-		this.leftScene.add(leftXLabel);
+		this.leftScene.add(leftXLabel); this.leftAxes.push(leftXLabel);
 		var leftYLabel = GridHelper.CreateLabel("Y",-0.25,11,0);
-		this.leftScene.add(leftYLabel);
+		this.leftScene.add(leftYLabel); this.leftAxes.push(leftYLabel);
 
 		this.rightScene = new THREE.Scene();
 		this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
@@ -181,6 +185,14 @@ var Mode2D = (function (scope) {
 		}
 	};
 
+	Mode2D.prototype.SetGridAndAxesVisible = function(visible){
+		this.gridIsVisible = visible;
+		for(var i=0;i<this.leftAxes.length;i++)
+			this.leftAxes[i].visible = this.gridIsVisible;
+		for(var i=0;i<this.rightAxes.length;i++)
+			this.rightAxes[i].visible = this.gridIsVisible;
+	}
+
 	Mode2D.prototype.setRightAxis = function(type){
 		// first delete the axis if it exists
 		if(this.rightAxis){
@@ -195,11 +207,18 @@ var Mode2D = (function (scope) {
 		if(type == "Y")
 			this.rightAxis.position.x -= 0.5;
 		this.rightScene.add(this.rightAxis);
+		this.rightAxes = [];
+
 
 		var LabelPositions = {'X':{x:11,y:-0.75,z:0},'Y':{x:-0.75,y:11,z:0}}
 		var p = LabelPositions[type];
 		this.rightLabel = GridHelper.CreateLabel(type,p.x,p.y,p.z);
 		this.rightScene.add(this.rightLabel);
+
+		this.rightAxes.push(this.rightAxis);
+		this.rightAxes.push(this.rightLabel);
+
+		this.SetGridAndAxesVisible(this.gridIsVisible);
 	}
 
 	Mode2D.prototype.setMode = function(){
@@ -287,7 +306,7 @@ var Mode2D = (function (scope) {
 		xFunction = Parser.parse(xFunction).toJSFunction(['a','b']);
 		yFunction = Parser.parse(yFunction).toJSFunction(['a','b']);
 		
-		this.leftMesh = this.projector.ParametricMesh2D(xFunction,yFunction,a_range,b_range,this.gui.colors.projections,this.gui.params.fill);
+		this.leftMesh = this.projector.ParametricMesh2D(xFunction,yFunction,a_range,b_range,this.gui.colors.projections,!this.gui.params.fill);
 		this.leftMesh.position.z = 0.1;
 		this.leftScene.add(this.leftMesh);
 
@@ -378,6 +397,7 @@ var Mode2D = (function (scope) {
 		this.leftCamera = null;
 		this.leftControls = null;
 		this.leftMesh = null;
+		this.leftAxes = [];
 
 		this.util.CleanUpScene(this.rightScene);
 
@@ -386,6 +406,7 @@ var Mode2D = (function (scope) {
 		this.rightRenderer = null;
 		this.rightCamera = null;
 		this.rightControls = null;
+		this.rightAxes = [];
 
 		// Destroy gui
 		this.gui.cleanup();
@@ -398,6 +419,13 @@ var Mode2D = (function (scope) {
 	}
 
 	Mode2D.prototype.animate = function(){
+		// Toggle axes visibility
+		if(window.Keyboard.isKeyDown("G") && !this.pressedHide){
+			this.pressedHide = true;
+			this.SetGridAndAxesVisible(!this.gridIsVisible);
+		}
+		if(!window.Keyboard.isKeyDown("G"))
+			this.pressedHide = false;
 
 		this.animId = requestAnimationFrame( this.animate.bind(this) );
 		this.leftRenderer.render( this.leftScene, this.leftCamera );

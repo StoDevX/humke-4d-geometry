@@ -10,16 +10,20 @@ var Mode3D = (function (scope) {
 		this.leftRenderer = null;
 		this.leftControls = null;
 		this.leftMesh = null;
+		this.leftAxes = [];
 
 		this.rightScene = null;
 		this.rightCamera = null;
 		this.rightRenderer = null;
 		this.rightControls = null;
+		this.rightAxes = [];
 
 		this.leftMesh = null;
 		this.rightMesh = null;
 
 		this.labels = [];
+
+		this.gridIsVisible = true;
 	}
 
 	// Creates the scene and everything
@@ -46,21 +50,21 @@ var Mode3D = (function (scope) {
 
 		var GridHelper = new Grid();
 		var grid = GridHelper.CreateGrid("XZ");
-		this.leftScene.add(grid);
+		this.leftScene.add(grid); this.leftAxes.push(grid);
 
 		var axis = GridHelper.CreateAxis("X");
-		this.leftScene.add(axis);
+		this.leftScene.add(axis); this.leftAxes.push(axis);
 		axis = GridHelper.CreateAxis("Y");
-		this.leftScene.add(axis);
+		this.leftScene.add(axis); this.leftAxes.push(axis);
 		axis = GridHelper.CreateAxis("Z");
-		this.leftScene.add(axis);
+		this.leftScene.add(axis); this.leftAxes.push(axis);
 
 		var leftXLabel = GridHelper.CreateLabel("X",12,0,0); this.labels.push(leftXLabel);
-		this.leftScene.add(leftXLabel);
+		this.leftScene.add(leftXLabel); this.leftAxes.push(leftXLabel);
 		var leftYLabel = GridHelper.CreateLabel("Y",0,12,0); this.labels.push(leftYLabel);
-		this.leftScene.add(leftYLabel);
+		this.leftScene.add(leftYLabel); this.leftAxes.push(leftYLabel);
 		var leftZLabel = GridHelper.CreateLabel("Z",0,0,12); this.labels.push(leftZLabel);
-		this.leftScene.add(leftZLabel);
+		this.leftScene.add(leftZLabel); this.leftAxes.push(leftZLabel);
 
 		this.rightScene = new THREE.Scene();
 		this.rightCamera = new THREE.PerspectiveCamera( 75, viewWidth / window.innerHeight, 0.1, 1000 );
@@ -74,19 +78,19 @@ var Mode3D = (function (scope) {
 		this.rightControls.enableKeys  = false;
 
 		grid = GridHelper.CreateGrid("XY");
-		this.rightScene.add(grid);
+		this.rightScene.add(grid); this.rightAxes.push(grid);
 
 		axis = GridHelper.CreateAxis("X");
-		this.rightScene.add(axis);
+		this.rightScene.add(axis); this.rightAxes.push(axis);
 		axis = GridHelper.CreateAxis("Y");
-		this.rightScene.add(axis);
+		this.rightScene.add(axis); this.rightAxes.push(axis);
 
 		var rightXLabel = GridHelper.CreateLabel("X",12,0,0);
 		this.rightXLabel = rightXLabel;
-		this.rightScene.add(rightXLabel);
+		this.rightScene.add(rightXLabel); this.rightAxes.push(rightXLabel);
 		var rightYLabel = GridHelper.CreateLabel("Z",0,12,0);
 		this.rightYLabel = rightYLabel;
-		this.rightScene.add(rightYLabel);
+		this.rightScene.add(rightYLabel); this.rightAxes.push(rightYLabel);
 		// Add lights to the scene
 		var lightSky = new THREE.HemisphereLight( 0xffffbb, 0x080820, .7 );
 		this.leftScene.add( lightSky );
@@ -111,6 +115,14 @@ var Mode3D = (function (scope) {
 		this.setMode();
 
 		}
+
+	Mode3D.prototype.SetGridAndAxesVisible = function(visible){
+		this.gridIsVisible = visible;
+		for(var i=0;i<this.leftAxes.length;i++)
+			this.leftAxes[i].visible = !this.leftAxes[i].visible;
+		for(var i=0;i<this.rightAxes.length;i++)
+			this.rightAxes[i].visible = !this.rightAxes[i].visible;
+	}
 
 	Mode3D.prototype.CreateIntersectionPlane = function(){
 		var color =  this.gui.colors.slices;
@@ -453,6 +465,7 @@ var Mode3D = (function (scope) {
 		this.labels = [];
 		this.rightXLabel = null;
 		this.rightYLabel = null;
+		this.leftAxes = [];
 
 		this.util.CleanUpScene(this.rightScene);
 
@@ -461,6 +474,7 @@ var Mode3D = (function (scope) {
 		this.rightRenderer = null;
 		this.rightCamera = null;
 		this.rightControls = null;
+		this.rightAxes = [];
 
 		// Destroy gui
 		this.gui.cleanup();
@@ -473,6 +487,14 @@ var Mode3D = (function (scope) {
 	}
 
 	Mode3D.prototype.animate = function(){
+		// Toggle axes visibility
+		if(window.Keyboard.isKeyDown("G") && !this.pressedHide){
+			this.pressedHide = true;
+			this.SetGridAndAxesVisible(!this.gridIsVisible);
+		}
+		if(!window.Keyboard.isKeyDown("G"))
+			this.pressedHide = false;
+
 		for(var i=0;i<this.labels.length;i++)
 			this.labels[i].quaternion.copy(this.leftCamera.quaternion);
 
