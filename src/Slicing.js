@@ -293,7 +293,7 @@ var Slicing = (function (scope) {
 		}
 
 		var new_points = [];
-		var scale = 5;
+		var scale = 1;
 		for(var i=0;i<points.length;i++){
 			var e = points[i];
 			var p = {x:e[0],y:e[1],z:e[2],w:e[3]}

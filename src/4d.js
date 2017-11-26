@@ -117,10 +117,7 @@ var Mode4D = (function (scope) {
 		this.projector = new Projecting();
 		this.slicer = new Slicing();
 
-		this.intersectionPlane = this.CreateIntersectionHyperPlane();
-
-		
-
+		this.intersectionPlane = this.CreateIntersectionHyperPlane();		
 	}
 
 
@@ -178,6 +175,8 @@ var Mode4D = (function (scope) {
 				self.cleanupLeftMesh();
 				self.initCartesian();
 			}
+			let axisMap = {'X':0,'Y':1,'Z':2,'W':3}
+			self.intersectionPlane.uniforms.axis.value = axisMap[val];
 
 			self.ComputeSlicesCPU();
 		},
@@ -202,14 +201,7 @@ var Mode4D = (function (scope) {
 			}
 
 			// Update intersection plane position
-			if(self.gui.params.axis == "W"){
-				self.intersectionPlane.uniforms.Wtranslation.value = val * 0.95 ;
-				self.intersectionPlane.uniforms2.Wtranslation.value = self.intersectionPlane.uniforms.Wtranslation.value;
-			}
-			if(self.gui.params.axis == "X"){
-				self.intersectionPlane.position.x = val;
-			}
-
+			self.intersectionPlane.uniforms.axisValue.value = val;
 
 			self.ComputeSlicesCPU();
 
@@ -229,8 +221,33 @@ var Mode4D = (function (scope) {
 	Mode4D.prototype.CreateIntersectionHyperPlane = function(){
 		var color =  this.gui.colors.slices;
 
-		var mesh = this.projector.Mesh4D(this.util.HexToRgb(color));
+		// Make points of cube 
+		let points =  [];
+		for(let x = 0;x <= 1;x++){
+			for(let y = 0;y <= 1;y++){
+				for(let z = 0;z <= 1;z++){
+					var min = -5;
+					var max = 5;
+					var X = x * (max - min) + min;
+					var Y = y * (max - min) + min;
+					var Z = z * (max - min) + min;
+
+					points.push(new THREE.Vector4(X,Y,Z,0));	
+				}
+			}
+		}
+
+		var geometry = new THREE.ConvexBufferHyperGeometry(points);
+		var material = new THREE.HyperMaterial({color:new THREE.Color(color)});
+		var mesh = new THREE.Mesh(geometry,material);
+
 		this.leftScene.add(mesh);
+		mesh.uniforms = material.uniforms;
+		let axisMap = {'X':0,'Y':1,'Z':2,'W':3};
+		mesh.uniforms.axis.value = axisMap[this.gui.params.axis];
+		mesh.uniforms.axisValue.value = 0;
+		console.log("Hyperplane",mesh);
+
 		return mesh;
 	}
 
@@ -285,13 +302,199 @@ var Mode4D = (function (scope) {
 			this.rightScene.add(this.rightMesh);
 		}
 
+		////////////// TESTING 4D SOLID PROJECTION 
+		/* 
+			- Given any 4D set of points, we want to draw a solid shape.
+			- This is just facets (a cube or a tetrahedron) so we can construct the correct faces & normals using ConvexGeometry in 3D 
+			- Now we need to do a projection. Take the W coordinate as a new attribute, and use that to project 
+
+			* Ex: to construct the XYZ cube, create a normal cube at XYZ with one specific W value that you then change as the axis sweeps
+			* To construct the YZW cube, again create the normal XYZ cube just like above. 
+				EXCEPT in the projection, re-interpret the coordinates:
+				
+				x -> w
+				y -> y
+				z -> z
+				w -> x 
+
+				Such that what you've got now is actually a cube that spans YZW, with a free motion along the X controlled by the axis 
+
+				This way, for all intents and purposes, you're always controlling the XYZ cube and moving it along W 
+				but only in the projection do you deal with 4D world space and interpret the coordinates differently 
+		*/
+		/*var vector3Array = [];
+		var vector4Array = [];
+		var points = [{x:0,y:0,z:0,w:-5},{x:5,y:0,z:0,w:0},{x:5,y:0,z:5,w:-5},{x:2,y:5,z:2,w:0}]
+		// Generate 4D cube  
+		points =  [];
+		for(let x = 0;x <= 1;x++){
+			for(let y = 0;y <= 1;y++){
+				for(let z = 0;z <= 1;z++){
+					//for(let w = 0;w <= 1;w++){
+						var min = -10;
+						var max = 10;
+						var X = x * (max - min) + min;
+						var Y = y * (max - min) + min;
+						var Z = z * (max - min) + min;
+
+						points.push({x:X,y:Y,z:Z,w:10})	
+					//}
+				}
+			}
+		}
+
+		for(var i=0;i<points.length;i++){
+			var p = points[i];
+			var vec3 = new THREE.Vector3(p.x,p.y,p.z);
+			var vec4 = new THREE.Vector4(p.x,p.y,p.z,p.w);
+			vector3Array.push(vec3);
+			vector4Array.push(vec4);
+		}
+		var geometry = new THREE.ConvexBufferGeometry( vector3Array );
+		var vertexShader = `
+			
+			precision mediump float;
+			precision mediump int;
+			uniform mat4 modelViewMatrix; // optional
+			uniform mat4 projectionMatrix; // optional
+			attribute vec3 position;
+
+			uniform float time;
+			uniform float axis;
+			attribute float W;
+
+			void main() {
+				// Attempting to reinterpet coordinates based on the axis value 
+				// axis = 0 -> (w,y,z, x)
+				// axis = 1 -> (x,w,z, y)
+				// axis = 2 -> (x,y,w, z)
+				// axis = 3 -> (x,y,z, w)
+
+				float Wcoordinate;
+				vec3 newPos;
+
+				if(axis == 0.0) {
+					newPos = vec3(W,position.yz);
+					Wcoordinate = position.x;
+					newPos.x  -= abs(1.0 - cos(time/2.0)) * 10.0;
+				}
+				if(axis == 1.0) {
+					newPos = vec3(position.x,W,position.z);
+					Wcoordinate = position.y;
+					newPos.y  -= abs(1.0 - cos(time/4.0)) * 20.0;
+				}
+				if(axis == 2.0) {
+					newPos = vec3(position.xy,W);
+					Wcoordinate = position.z;
+					newPos.z  -= abs(1.0 - cos(time/4.0)) * 20.0;
+				}
+				if(axis == 3.0) {
+					newPos = position.xyz;
+					Wcoordinate = W;
+					Wcoordinate = abs(1.0 - cos(time/4.0)) * 20.0;
+				}
+
+				
+
+				float Lw = 1.0 / (11.0 - Wcoordinate);
+				mat3 projection4DMatrix;
+				projection4DMatrix[0] = vec3(Lw,0.,0.);
+				projection4DMatrix[1] = vec3(0.,Lw,0.);
+				projection4DMatrix[2] = vec3(0.,0.,Lw);
 
 
+				newPos = projection4DMatrix * newPos;
+
+				gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos,1.0);
+			}
+		`;
+
+		var fragmentShader =`
+			precision mediump float;
+			precision mediump int;
+
+			void main(){
+				vec4 color = vec4(1.0,0.0,0.0,0.5);
+				
+				gl_FragColor = color;
+			}
+		`;
+
+		var uniforms = {
+			time: { type: "f", value: 0 },
+			axis: { type: "f", value: 0 }
+		};
+
+		var material = new THREE.RawShaderMaterial({
+			fragmentShader: fragmentShader,
+			vertexShader: vertexShader,
+			uniforms: uniforms,
+			transparent:true
+		});
+
+		var container = new THREE.Object3D();
+
+		var cube = new THREE.Mesh( geometry, material );
+		container.add(cube);
+		// Add the W attribute 
+		var posAttribute = geometry.getAttribute("position");
+		var Wpositions = [];
+		for(var i=0;i<posAttribute.array.length;i+=posAttribute.itemSize){
+			var x = posAttribute.array[i];
+			var y = posAttribute.array[i+1];
+			var z = posAttribute.array[i+2];
+			var w = 0;
+			for(var j=0;j<points.length;j++){
+				var p = points[j];
+				if(p.x == x && p.y == y && p.z == z){
+					w = p.w;
+					break;
+				}
+			}
+			
+			Wpositions.push(w);
+		}
+		geometry.addAttribute( 'W', new THREE.Float32BufferAttribute( Wpositions, 1 ));
+
+		// All edges points in a tetrahedron are paired 
+		var edges = [];
+		// for(var i=0;i<vector4Array.length;i++){
+		// 	for(var j=i+1;j<vector4Array.length;j++){
+		// 		edges.push(vector4Array[i]);
+		// 		edges.push(vector4Array[j]);
+		// 	}
+		// }
+		// All edges that agree on all but one coordinate are connected in a cube 
+		for(var i=0;i<vector4Array.length;i++){
+			var p = vector4Array[i];
+			for(var j=0;j<vector4Array.length;j++){
+				if(i == j) continue;
+				var p2 = vector4Array[j];
+				// For two points to be connected, they must share exactly 3 coordinates 
+				// xyz, xyw, xzw, yzw 
+				if(p.x == p2.x && p.y == p2.y && p.z == p2.z ||
+				   p.x == p2.x && p.y == p2.y && p.w == p2.w ||
+				   p.y == p2.y && p.z == p2.z && p.w == p2.w ||
+				   p.x == p2.x && p.z == p2.z && p.w == p2.w ){
+
+					edges.push(p);
+					edges.push(p2);
+				}
+			}
+		}
+		var wireframe = this.projector.Wireframe4D(vector4Array,edges);
+		container.add(wireframe);
+
+		this.leftMesh = container;
+		this.leftScene.add(this.leftMesh);
+		this.leftMesh.uniforms = uniforms;*/
+
+		/////////////////// END 4D SOLID PROJECTION
 	}
 
 	Mode4D.prototype.computeProjection = function(points,facets){
 		var new_points = [];
-		var scale = 5;
+		var scale = 1;
 		for(var i=0;i<points.length;i++){
 			var e = points[i];
 			var p = {x:e[0],y:e[1],z:e[2],w:e[3]}
@@ -314,6 +517,8 @@ var Mode4D = (function (scope) {
 			p.w *= scale;
 			edges.push(p);
 		}
+
+
 
 		var tesseractMesh = this.projector.Wireframe4D(new_points,edges);
 		this.leftMesh = tesseractMesh;
@@ -338,6 +543,7 @@ var Mode4D = (function (scope) {
 		var self = this;
 		// Get the facet data from Qhull
 		$.post("http://omarshehata.me/qhull/",{'points':JSON.stringify(points)},function(facets){
+			self.cleanupLeftMesh();
 			self.computeProjection(flatten_points,facets)
 		}).fail(function(msg){
 			var lines = msg.responseText.split("\n");
@@ -459,6 +665,9 @@ var Mode4D = (function (scope) {
 		if(!window.Keyboard.isKeyDown("G"))
 			this.pressedHide = false;
 		
+		if(this.leftMesh && this.leftMesh.uniforms && this.leftMesh.uniforms.time){
+			this.leftMesh.uniforms.time.value += 0.04;
+		}
 
 		if(this.current_mode == "convex-hull" && this.leftMesh){
 			// XW rotation
