@@ -281,7 +281,7 @@ var Mode4D = (function (scope) {
 			- Draw that 3D shape
 		*/
 		var equation = this.gui.params.equation
-		
+
 		var resolution = 20;
 		if (this.gui.params.resolution == "high") var resolution = 112;
 		else if (this.gui.params.resolution == "medium") var resolution = 60;
@@ -567,7 +567,7 @@ var Mode4D = (function (scope) {
 			}
 		}
 
-		Obtain facets that cover the surface
+		//Obtain facets that cover the surface
 		var facets = CHull4D.ConvexHull4D(points);
 		var edges_arr = this.util.FlattenFacets(facets, points);
 
@@ -582,7 +582,7 @@ var Mode4D = (function (scope) {
 			p.w *= scale;
 			new_points.push(p);
 		}
-		
+
 		// Construct edges
 		var edges = [];
 		for(var i=0;i<edges_arr.length;i+=4){
@@ -664,10 +664,7 @@ var Mode4D = (function (scope) {
 		}
 		if(!window.Keyboard.isKeyDown("G"))
 			this.pressedHide = false;
-		
-		if(this.leftMesh && this.leftMesh.uniforms && this.leftMesh.uniforms.time){
-			this.leftMesh.uniforms.time.value += 0.04;
-		}
+
 
 		if(this.current_mode == "convex-hull" && this.leftMesh){
 			// XW rotation
