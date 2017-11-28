@@ -567,17 +567,27 @@ var Mode4D = (function (scope) {
 			points.push(newPoint);
 		}
 		var self = this;
-		// Get the facet data from Qhull
-		$.post("http://omarshehata.me/qhull/",{'points':JSON.stringify(points)},function(facets){
+
+		var USE_QHULL = true;
+
+		if(USE_QHULL){
+			// Get the facet data from Qhull
+			$.post("http://omarshehata.me/qhull/",{'points':JSON.stringify(points)},function(facets){
+				self.cleanupLeftMesh();
+				self.computeProjection(flatten_points,facets)
+			}).fail(function(msg){
+				var lines = msg.responseText.split("\n");
+				console.log("FAIL!",lines)
+			});
+		} else {
 			self.cleanupLeftMesh();
+			var CHull4D = new ConvexHull4D();
+			var facets = CHull4D.ConvexHull4D(flatten_points);
 			self.computeProjection(flatten_points,facets)
-		}).fail(function(msg){
-			var lines = msg.responseText.split("\n");
-			console.log("FAIL!",lines)
-		});
+		}
 
 		/* 4D CONVEX HULL DEMO CODE
-		var CHull4D = new ConvexHull4D();
+		
 		var start = -5;
 		var end = 5;
 
