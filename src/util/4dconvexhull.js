@@ -276,14 +276,6 @@ var ConvexHull4D = (function (scope) {
   }
 
   ConvexHull4D.prototype.ConvexHull4D = function(points) {
-    var hull = {};
-    hull.points = points;
-    hull.facets = [];
-    hull.points_on_hull = [];
-    hull = this.CreateInitialSimplex(hull);
-    hull.points_on_hull = [0,1,2,3,4];
-    hull.outside_sets = this.GetInitialOutsideSets(hull);
-
     /*
     - This algorithm repeatedly adds a new point to the convex hull of the previously processed points
     - Each new point is processed in 3 steps:
@@ -296,7 +288,17 @@ var ConvexHull4D = (function (scope) {
       Sounds so easy! 
      */
 
-    // var counter = 0;
+    var hull = {};
+    hull.points = points;
+    hull.facets = [];
+    hull.points_on_hull = [];
+    // First we create a simplex of d+1 points 
+    /* Omar CONFIRMED that this works! Compared output of 5 points with Qhull output */
+    hull = this.CreateInitialSimplex(hull);
+    hull.points_on_hull = [0,1,2,3,4];
+    hull.outside_sets = this.GetInitialOutsideSets(hull);
+
+    var counter = 0;
     for (var osi = 0; osi < hull.outside_sets.length; osi++) {
       if (hull.outside_sets[osi].length > 0) {
         var furthest_point_i = this.GetFurthestOutsidePointFromFacet(osi, hull);
@@ -325,8 +327,11 @@ var ConvexHull4D = (function (scope) {
 
         osi = 0;
 
-        // counter++;
-        // if (counter == 7) break;
+        counter++;
+        if (counter == 7){
+          console.log("BREAK")
+          break;
+        }
       }
     }
 
