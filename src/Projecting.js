@@ -5,13 +5,15 @@ anything related to the left side of the screen (projection n dimensional object
 var Projecting = (function (scope) {
 	function Projecting(){}
 
-	Projecting.prototype.Wireframe4D = function(points,edges){
+	Projecting.prototype.Wireframe4D = function(points,edges,color){
 		/*
 			Takes an array of 4 dimensional points and/or edges and draws them projected from 4D to 3D
 
 			points: [THREE.Vector4] <--- just an array of points
 			edges: [THREE.Vector4] <---- an array of edge pairs. So edges[0] and edges[1] make a line. edges[2] and edges[3] make another
 		 */
+		 if(color == undefined)
+		 	color = new THREE.Color(0xFF0000);
 		vertexShader = `
 			precision mediump float;
 			precision mediump int;
@@ -23,7 +25,35 @@ var Projecting = (function (scope) {
 			attribute vec4 position;
 			attribute vec4 color;
 
+			uniform float axis;
+			uniform float axisValue;
+
 			void main() {
+				// Reinterpet coordinates based on the axis value 
+				// axis = 0 -> (w,y,z, x)
+				// axis = 1 -> (x,w,z, y)
+				// axis = 2 -> (x,y,w, z)
+				// axis = 3 -> (x,y,z, w)
+
+				vec4 newPos;
+
+				if(axis == 0.0) {
+					newPos.xyzw = position.wyzx; 
+					newPos.x  += axisValue;
+				}
+				if(axis == 1.0) {
+					newPos.xyzw = position.xwzy; 
+					newPos.y  += axisValue;
+				}
+				if(axis == 2.0) {
+					newPos.xyzw = position.xywz; 
+					newPos.z  += axisValue;
+				}
+				if(axis == 3.0) {
+					newPos.xyzw = position.xyzw; 
+					newPos.w  += axisValue;
+				}
+
 				// Apply any 4D rotations
 				mat4 rXW;
 				rXW[0] = vec4(cos(anglesW.x),0.,0.,-sin(anglesW.x));
@@ -43,7 +73,7 @@ var Projecting = (function (scope) {
 				rZW[2] = vec4(0.,0.,cos(anglesW.z),-sin(anglesW.z));
 				rZW[3] = vec4(0.,0.,sin(anglesW.z),cos(anglesW.z));
 
-				vec4 rotatedPos = rXW * rYW * rZW * position;
+				vec4 rotatedPos = rXW * rYW * rZW * newPos;
 
 				// Then project into 3D
 				float Lw = 1.0 / (11.0 - rotatedPos.w);
@@ -52,19 +82,32 @@ var Projecting = (function (scope) {
 				projection4DMatrix[1] = vec3(0.,Lw,0.);
 				projection4DMatrix[2] = vec3(0.,0.,Lw);
 
-				vec3 newPos = projection4DMatrix * rotatedPos.xyz;
+				vec3 finalPos = projection4DMatrix * rotatedPos.xyz;
 
 				// Now do the regular 3D -> 2D projection
-				gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos,1.0);
+				gl_Position = projectionMatrix * modelViewMatrix * vec4(finalPos,1.0);
 
 				gl_PointSize = 8.0;
 			}
 		`;
+		var fragmentShader =`
+			precision mediump float;
+			precision mediump int;
+
+			void main(){
+				vec4 color = vec4(${color.r},${color.g},${color.b},0.5);
+				
+				gl_FragColor = color;
+			}
+		`;
 		var uniforms = {
-			anglesW:  { type: "v3", value: new THREE.Vector3(0,0,0) }
+			anglesW:  { type: "v3", value: new THREE.Vector3(0,0,0) },
+			axisValue: { type: "f", value: 0 },
+			axis: { type: "f", value: 3 }
 		}
 		var shaderMaterial = new THREE.RawShaderMaterial({
 			vertexShader: vertexShader,
+			fragmentShader: fragmentShader,
 			uniforms: uniforms
 		});
 

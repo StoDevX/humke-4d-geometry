@@ -177,6 +177,7 @@ var Mode4D = (function (scope) {
 			}
 			let axisMap = {'X':0,'Y':1,'Z':2,'W':3}
 			self.intersectionPlane.uniforms.axis.value = axisMap[val];
+			self.intersectionPlane.wireframe.uniforms.axis.value = self.intersectionPlane.uniforms.axis.value;
 
 			self.ComputeSlicesCPU();
 		},
@@ -202,6 +203,7 @@ var Mode4D = (function (scope) {
 
 			// Update intersection plane position
 			self.intersectionPlane.uniforms.axisValue.value = val;
+			self.intersectionPlane.wireframe.uniforms.axisValue.value = val;
 
 			self.ComputeSlicesCPU();
 
@@ -246,7 +248,31 @@ var Mode4D = (function (scope) {
 		let axisMap = {'X':0,'Y':1,'Z':2,'W':3};
 		mesh.uniforms.axis.value = axisMap[this.gui.params.axis];
 		mesh.uniforms.axisValue.value = 0;
-		console.log("Hyperplane",mesh);
+
+		// Also create a wireframe!
+		// All edges that agree on all but one coordinate are connected in a cube 
+		var edges = [];
+		for(var i=0;i<points.length;i++){
+			var p = points[i];
+			for(var j=0;j<points.length;j++){
+				if(i == j) continue;
+				var p2 = points[j];
+				// For two points to be connected, they must share exactly 3 coordinates 
+				// xyz, xyw, xzw, yzw 
+				if(p.x == p2.x && p.y == p2.y && p.z == p2.z ||
+				   p.x == p2.x && p.y == p2.y && p.w == p2.w ||
+				   p.y == p2.y && p.z == p2.z && p.w == p2.w ||
+				   p.x == p2.x && p.z == p2.z && p.w == p2.w ){
+
+					edges.push(p);
+					edges.push(p2);
+				}
+			}
+		}
+		var wireframeMesh = this.projector.Wireframe4D(points,edges,new THREE.Color(color));
+		this.leftScene.add(wireframeMesh);
+		mesh.wireframe = wireframeMesh;
+		mesh.wireframe.uniforms.axis.value = mesh.uniforms.axis.value;
 
 		return mesh;
 	}
