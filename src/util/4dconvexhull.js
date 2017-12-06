@@ -5,7 +5,8 @@ var ConvexHull4D = (function (scope) {
     if (arr1.length != arr2.length) {
       return false;
     }
-    for (arr1_i = 0; arr1_i < arr1_i.length; arr1_i++) {
+    for (arr1_i = 0; arr1_i < arr1.length; arr1_i++) {
+      console.log(arr1[arr1_i], arr2[arr1_i]);
       if (arr1[arr1_i] != arr2[arr1_i]) return false;
     }
     return true;
@@ -341,3 +342,5 @@ var ConvexHull4D = (function (scope) {
 scope.ConvexHull4D = ConvexHull4D;
 return ConvexHull4D;
 })(typeof exports === 'undefined' ? {} : exports);
+
+exports.ConvexHull4D = ConvexHull4D;
