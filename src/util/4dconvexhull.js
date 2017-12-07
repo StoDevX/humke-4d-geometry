@@ -6,7 +6,6 @@ var ConvexHull4D = (function (scope) {
       return false;
     }
     for (arr1_i = 0; arr1_i < arr1.length; arr1_i++) {
-      console.log(arr1[arr1_i], arr2[arr1_i]);
       if (arr1[arr1_i] != arr2[arr1_i]) return false;
     }
     return true;
