@@ -4,19 +4,23 @@ Implementation inspired by https://github.com/Mugen87 's QuickHull.js
 */
 var QuickHull4D = (function (scope) {
 	function QuickHull4D(){
+		this.init();
 		// Just some test code 
 		// (0,0,0,5),(5,0,0,0),(0,5,0,0),(0,0,5,0),(0,-6,0,0),(-4,0,4,1)
 
-		// var v = [
-		// 	new THREE.Vector4(0,0,0,5),
-		// 	new THREE.Vector4(5,0,0,0),
-		// 	new THREE.Vector4(0,5,0,0),
-		// 	new THREE.Vector4(0,0,5,0),
-		// 	new THREE.Vector4(0,-6,0,0),
-		// 	new THREE.Vector4(-4,0,4,1),
-		// ]
-		// var f1 = new Facet(v[0],v[1],v[2],v[3]);
-		// var f2 = new Facet(v[0],v[1],v[2],v[4]);
+		var v = [
+			new THREE.Vector4(0,0,0,5),
+			new THREE.Vector4(5,0,0,0),
+			new THREE.Vector4(0,5,0,0),
+			new THREE.Vector4(0,0,5,0),
+			new THREE.Vector4(0,-6,0,0),
+			new THREE.Vector4(-4,0,4,1),
+		]
+		var f1 = new Facet(v[0],v[1],v[2],v[3]);
+		var f2 = new Facet(v[0],v[1],v[2],v[4]);
+		console.log("f1 == f2",f1==f2)
+		console.log("f1 == f1",f1==f1)
+		console.log("f2 == f2",f2==f2)
 		// console.log("Shared ridges:")
 		// console.log(this.getSharedRidges(f1,f2))
 	}
@@ -45,7 +49,7 @@ var QuickHull4D = (function (scope) {
 			    result.y = - (U.x * F) + (U.z * C) - (U.w * B);
 			    result.z =   (U.x * E) - (U.y * C) + (U.w * A);
 			    result.w = - (U.x * D) + (U.y * B) - (U.z * A);
-			    return result;
+			    return result.multiplyScalar(-1);
 			}
 		}
 	}
@@ -193,11 +197,11 @@ var QuickHull4D = (function (scope) {
 			// for each unassigned point p
 			for(var j=0;j<this.vertices.length;j++){
 				var point = this.vertices[j];
-				if(point.assigned || point.onHull) continue; 
+				if(point.onHull) continue; 
 				// if p is above F 
 				if(facet.isPointAbove(point)){
 					// assign p to F's outside set
-					point.assigned = facet; 
+					// point.assigned = facet; 
 					this.assigned.push(point);
 					facet.outside_set.push(point); 
 				}
@@ -229,7 +233,7 @@ var QuickHull4D = (function (scope) {
 			// 5- init visible set V (of faces visible from farthest_point)
 			var visible_set = [facet]	
 			// 6- for all unvisited neighbours N of facets in V 
-			var visited = {};
+			var visited = [];
 
 			for(var visible_i = 0;visible_i<visible_set.length;visible_i++){
 				var F = visible_set[visible_i];
@@ -241,8 +245,8 @@ var QuickHull4D = (function (scope) {
 							add N to V 
 					 */
 					var N = neighbours[n_i];
-				 	if(!visited[N]){
-				 		visited[N] = true;
+				 	if(visited.indexOf(N) == -1){
+				 		visited.push(N);
 				 		if(N.isPointAbove(farthest_point)){
 					 		visible_set.push(N);	
 					 	}
@@ -252,6 +256,9 @@ var QuickHull4D = (function (scope) {
 			// 7- Compute set of horizon ridges H 
 			var H = this.computeHorizon(visible_set,farthest_point);
 			console.log("Horizon for point",farthest_point,"is",H.length)
+			if(H.length == 0){
+				console.error("OMG - Horizon is zero???????",visible_set,farthest_point);
+			}
 			var newFacets = [];
 			// 8- For each ridge R in H 
 			for(var r_i=0;r_i<H.length;r_i++){
@@ -272,22 +279,22 @@ var QuickHull4D = (function (scope) {
 				for(var r_i=0;r_i<newFacets.length;r_i++){
 					var newF = newFacets[r_i];
 					// Unassign all points in all outside_set's of all facets in V 
-					for(var v_i=0;v_i<visible_set.length;v_i++){
-						var Vfacet = visible_set[v_i];
-						for(var q_i=0;q_i<Vfacet.outside_set.length;q_i++){
-							var q = Vfacet.outside_set[q_i];
-							q.assigned = undefined;
-						}
-					}
+					// for(var v_i=0;v_i<visible_set.length;v_i++){
+					// 	var Vfacet = visible_set[v_i];
+					// 	for(var q_i=0;q_i<Vfacet.outside_set.length;q_i++){
+					// 		var q = Vfacet.outside_set[q_i];
+					// 		q.assigned = undefined;
+					// 	}
+					// }
 					//for each unassigned point q in an outside set of a facet in V 
 					for(var v_i=0;v_i<visible_set.length;v_i++){
 						var Vfacet = visible_set[v_i];
 						for(var q_i=0;q_i<Vfacet.outside_set.length;q_i++){
 							var q = Vfacet.outside_set[q_i];
 							//if q is above F'
-							if((!q.assigned && !q.onHull) && newF.isPointAbove(q)){
+							if((!q.onHull) && newF.isPointAbove(q)){
 								//assign q to F's outside set 
-								q.assigned = newF;
+								//q.assigned = newF;
 								newF.outside_set.push(q);
 							}
 						}
@@ -306,6 +313,17 @@ var QuickHull4D = (function (scope) {
 			// Add the new facets
 			for(var nf_i=0;nf_i<newFacets.length;nf_i++){
 				this.facets.push(newFacets[nf_i])
+			}
+
+			// Confirm that farthest_point is no longer in any of the outside sets 
+			for(var i2=0;i2<this.facets.length;i2++){
+				var F = this.facets[i2];
+				for(var i3=0;i3<F.outside_set.length;i3++){
+					var p = F.outside_set[i3];
+					if(p == farthest_point){
+						console.error("FOUND FARTHEST POINT inside an outside set")
+					}
+				}
 			}
 
 			// If we're here, we found a non-empty outside set 
@@ -338,10 +356,11 @@ var QuickHull4D = (function (scope) {
 		// Copy all points into the vertices array
 		for ( var i = 0, l = points.length; i < l; i ++ ) {
 			var newPoint = points[i].clone();
-			// newPoint.x += Math.random() * 0.2 - 0.1;
-			// newPoint.y += Math.random() * 0.2 - 0.1;
-			// newPoint.z += Math.random() * 0.2 - 0.1;
-			// newPoint.w += Math.random() * 0.2 - 0.1;
+			var e = 0.01;
+			newPoint.x += Math.random() * e - e/2;
+			newPoint.y += Math.random() * e - e/2;
+			newPoint.z += Math.random() * e - e/2;
+			newPoint.w += Math.random() * e - e/2;
 			this.vertices.push( newPoint );
 		}
 		// Start the algorithm 
@@ -352,7 +371,7 @@ var QuickHull4D = (function (scope) {
 
 	function Facet(p0,p1,p2,p3){
 		this.vertices = [p0,p1,p2,p3];
-		this.centroid = new THREE.Vector4();
+		this.centroid = new THREE.Vector4(0,0,0,0);
 		for(var i=0;i<this.vertices.length;i++){
 			var v = this.vertices[i];
 			this.centroid.x += v.x;
@@ -391,7 +410,7 @@ var QuickHull4D = (function (scope) {
 	}
 	Object.assign( Facet.prototype, {
 		getHyperPlane: function(){
-		    var plane = new HyperPlane(this.normal,this.p0);
+		    var plane = new HyperPlane(this.normal,this.centroid);
 		    return plane;
 		},
 		isPointAbove: function(point){
