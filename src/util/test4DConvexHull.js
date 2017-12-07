@@ -61,7 +61,7 @@ console.log("Dot passed the test.");
 
 // ConvexHull4D.prototype.Cross
 // toBeTested = [[vecT0,vecT1,vecT2],[vecT7,vecT3,u1],[vecT4,vecT5,u3],[vecT14,vecT10,vecT12],[u2,u1,u3]];
-// expected = [];
+// expected = [[9,-1,-1,-1],[0,4,-7,8],[4,-1,0,0],[-11,-1,-1,9],[0,0,0,-1]];
 // for (var i = 0; i < toBeTested.length; ++i) {
 //     var lhs = c4d.ConvexHull4D.prototype.Cross(toBeTested[i][0],toBeTested[i][1],toBeTested[i][2]);
 //     var rhs = expected[i];
