@@ -164,7 +164,16 @@ var QuickHull4D = (function (scope) {
 					// Add the shared ridges to the horizon 
 					var sharedRidges = this.getSharedRidges(F,N);
 					for(var k=0;k<sharedRidges.length;k++){
-						horizon.push(sharedRidges[k]);
+						// Check that sharedRidges[k] is not in horizon 
+						var isInHorizon = false;
+						for(var l=0;l<horizon.length;l++){
+							if(this.isSameRidge(horizon[l],sharedRidges[k])){
+								isInHorizon = true;
+								break;
+							}
+						}
+						if(!isInHorizon)
+							horizon.push(sharedRidges[k]);
 					}
 				}
 			}
@@ -203,6 +212,7 @@ var QuickHull4D = (function (scope) {
 			var facet = this.facets[i];
 			console.log("Outside set of facet number",i,"is",facet.outside_set)
 			if(facet.outside_set.length == 0) continue;
+
 			// 4- Get furthest point p in F's outside set 
 			var plane = facet.getHyperPlane();
 			var farthest_point = facet.outside_set[0];
@@ -248,6 +258,12 @@ var QuickHull4D = (function (scope) {
 				var R = H[r_i];
 				//  create a new facet from R and p 
 				var newFacet = new Facet(R[0],R[1],R[2],farthest_point);
+				var pointOnVisible = visible_set[0].centroid;
+
+				if(newFacet.isPointAbove(pointOnVisible)){
+					newFacet.invertNormal();
+				}
+
 				newFacets.push(newFacet);
 			}
 
@@ -269,7 +285,7 @@ var QuickHull4D = (function (scope) {
 						for(var q_i=0;q_i<Vfacet.outside_set.length;q_i++){
 							var q = Vfacet.outside_set[q_i];
 							//if q is above F'
-							if(!q.assigned && newF.isPointAbove(q)){
+							if((!q.assigned && !q.onHull) && newF.isPointAbove(q)){
 								//assign q to F's outside set 
 								q.assigned = newF;
 								newF.outside_set.push(q);
@@ -283,7 +299,7 @@ var QuickHull4D = (function (scope) {
 			for(var i2=this.facets.length-1;i2>=0;i2--){
 				var F = this.facets[i2];
 				if(visible_set.indexOf(F) != -1){
-					//this.facets.splice(i2,1);
+					this.facets.splice(i2,1);
 				}
 			}
 
@@ -291,6 +307,16 @@ var QuickHull4D = (function (scope) {
 			for(var nf_i=0;nf_i<newFacets.length;nf_i++){
 				this.facets.push(newFacets[nf_i])
 			}
+
+			// If we're here, we found a non-empty outside set 
+			i = 0;
+		}
+
+
+		for(var i=0;i<this.facets.length;i++){
+			var F = this.facets[i];
+			console.log("The outside set of facet",i,"has length",F.outside_set.length);
+			console.log("And it is",F.outside_set)
 		}
 					
 		console.log("Final total of",this.facets.length,"facets")
@@ -311,7 +337,12 @@ var QuickHull4D = (function (scope) {
 		this.init();
 		// Copy all points into the vertices array
 		for ( var i = 0, l = points.length; i < l; i ++ ) {
-			this.vertices.push( points[i] );
+			var newPoint = points[i].clone();
+			// newPoint.x += Math.random() * 0.2 - 0.1;
+			// newPoint.y += Math.random() * 0.2 - 0.1;
+			// newPoint.z += Math.random() * 0.2 - 0.1;
+			// newPoint.w += Math.random() * 0.2 - 0.1;
+			this.vertices.push( newPoint );
 		}
 		// Start the algorithm 
 		this.compute();
@@ -321,6 +352,19 @@ var QuickHull4D = (function (scope) {
 
 	function Facet(p0,p1,p2,p3){
 		this.vertices = [p0,p1,p2,p3];
+		this.centroid = new THREE.Vector4();
+		for(var i=0;i<this.vertices.length;i++){
+			var v = this.vertices[i];
+			this.centroid.x += v.x;
+			this.centroid.y += v.y; 
+			this.centroid.z += v.z;
+			this.centroid.w += v.w; 
+		}
+		this.centroid.x /= this.vertices.length;
+		this.centroid.y /= this.vertices.length;
+		this.centroid.z /= this.vertices.length;
+		this.centroid.w /= this.vertices.length;
+
 		this.edges = [
 		[p0,p1],[p0,p2],[p0,p3],
 		[p1,p2],[p1,p3],[p2,p3]
