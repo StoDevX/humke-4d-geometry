@@ -5,7 +5,7 @@ var ConvexHull4D = (function (scope) {
     if (arr1.length != arr2.length) {
       return false;
     }
-    for (arr1_i = 0; arr1_i < arr1_i.length; arr1_i++) {
+    for (arr1_i = 0; arr1_i < arr1.length; arr1_i++) {
       if (arr1[arr1_i] != arr2[arr1_i]) return false;
     }
     return true;
@@ -22,23 +22,23 @@ var ConvexHull4D = (function (scope) {
     // Create an initial simplex of d+1 points and return its facets
     hull.facets.push([1,2,3,4]);
     if (this.IsPointAboveFacet(0, 0, hull)) {
-      hull.facets[0] = [4,3,2,1];
+      hull.facets[0] = [2,1,3,4];
     }
     hull.facets.push([4,3,2,0]);
     if(this.IsPointAboveFacet(1, 1, hull)) {
-      hull.facets[1] = [0,2,3,4];
+      hull.facets[1] = [3,4,2,0];
     }
     hull.facets.push([0,1,3,4]);
     if(this.IsPointAboveFacet(2, 2, hull)) {
-      hull.facets[2] = [4,3,1,0];
+      hull.facets[2] = [1,0,3,4];
     }
     hull.facets.push([4,2,1,0]);
     if(this.IsPointAboveFacet(3,3, hull)) {
-      hull.facets[3] = [0,1,2,4];
+      hull.facets[3] = [2,4,1,0];
     }
     hull.facets.push([0,1,2,3]);
     if(this.IsPointAboveFacet(4,4, hull)) {
-      hull.facets[4] = [3,2,1,0];
+      hull.facets[4] = [1,0,2,3];
     }
 
     return hull;
@@ -328,7 +328,8 @@ var ConvexHull4D = (function (scope) {
         osi = 0;
 
         counter++;
-        if (counter == 7){
+        console.log(counter,hull.facets.length)
+        if (counter >= 20){
           console.log("BREAK")
           break;
         }

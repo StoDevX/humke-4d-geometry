@@ -566,9 +566,11 @@ var Mode4D = (function (scope) {
 			flatten_points.push([rawPoint.x,rawPoint.y,rawPoint.z,rawPoint.w])
 			points.push(newPoint);
 		}
+	
+
 		var self = this;
 
-		var USE_QHULL = true;
+		var USE_QHULL = false;
 
 		if(USE_QHULL){
 			// Get the facet data from Qhull
@@ -580,10 +582,36 @@ var Mode4D = (function (scope) {
 				console.log("FAIL!",lines)
 			});
 		} else {
+			var USE_JUSTIN = false;
+
 			self.cleanupLeftMesh();
-			var CHull4D = new ConvexHull4D();
-			var facets = CHull4D.ConvexHull4D(flatten_points);
-			self.computeProjection(flatten_points,facets)
+			if(USE_JUSTIN){
+				var CHull4D = new ConvexHull4D();
+				var facets = CHull4D.ConvexHull4D(flatten_points);
+				self.computeProjection(flatten_points,facets)
+			} else {
+				var CHull4D = new QuickHull4D();
+
+				var facets = CHull4D.ComputeHull(points);
+				// Just construct the wireframe here 
+				var final_points = [];
+				var final_edges = [];
+				
+				for(var i=0;i<facets.length;i++){
+					var f = facets[i];
+					for(var j=0;j<f.edges.length;j++){
+						final_edges.push(f.edges[j][0],f.edges[j][1]);
+					}
+					for(var j=0;j<f.vertices.length;j++){
+						final_points.push(f.vertices[j]);
+					}
+				}
+
+				var tesseractMesh = this.projector.Wireframe4D(final_points,final_edges);
+				this.leftMesh = tesseractMesh;
+				this.leftScene.add(this.leftMesh);
+			}
+			
 		}
 
 		/* 4D CONVEX HULL DEMO CODE
