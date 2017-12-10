@@ -323,7 +323,6 @@ var Slicing = (function (scope) {
 			var mesh = new THREE.Mesh( geometry, material );
 			return mesh;
 		} else {
-			console.warn("Not enough intersection points found.");
 			return;
 		}
 	}
