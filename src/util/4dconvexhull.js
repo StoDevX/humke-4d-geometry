@@ -342,3 +342,5 @@ var ConvexHull4D = (function (scope) {
 scope.ConvexHull4D = ConvexHull4D;
 return ConvexHull4D;
 })(typeof exports === 'undefined' ? {} : exports);
+
+exports.ConvexHull4D = ConvexHull4D;
