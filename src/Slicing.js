@@ -266,11 +266,12 @@ var Slicing = (function (scope) {
 
 	}
 
-	Slicing.prototype.SliceConvex4D = function(mesh,axis,axisValue,color) {
+	Slicing.prototype.SliceConvex4D = function(mesh,facets,axis,axisValue,color) {
 		/*
 		Given a 4D mesh and axis, return the new convex hull mesh of the intersection 
 			Input: 
 				mesh = the 4D mesh
+				facets = [Facet] array of facet objects as defined in QuickHull4D.js
 				axis = "X" | "Y" | "Z" | "W"
 				axis_value = axis position
 				color = color of the slice
@@ -281,80 +282,47 @@ var Slicing = (function (scope) {
 					nothing returned
 		*/
 
-		var points = mesh.DATA_points;
-		var facets = mesh.DATA_facets;
-
+		// Get which axis we're slicing on
 		axis = axis.toLowerCase();
-
 		var axes = ['x','y','z','w']
 		var index = axes.indexOf(axis);
 		if (index > -1) {
 			axes.splice(index,1);
 		}
 
-		var new_points = [];
-		var scale = 1;
-		for(var i=0;i<points.length;i++){
-			var e = points[i];
-			var p = {x:e[0],y:e[1],z:e[2],w:e[3]}
-			p.x *= scale;
-			p.y *= scale;
-			p.z *= scale;
-			p.w *= scale;
-			new_points.push(p);
-		}
-
-		var util = new Util();
-
-		var edges_arr = util.FlattenFacets(facets, points);
-
-		var edges = [];
-		for(var i=0;i<edges_arr.length;i+=4){
-			var p = {
-				x:edges_arr[i],
-				y:edges_arr[i+1],
-				z:edges_arr[i+2],
-				w:edges_arr[i+3]
-			};
-
-			p.x *= scale;
-			p.y *= scale;
-			p.z *= scale;
-			p.w *= scale;
-			edges.push(p);
-		}
 
 		var intersection_points = [];
+		// Loop over all the edges and try to intersect 
+		for(var i=0;i<facets.length;i++){
+			var f = facets[i];
+			for(var j=0;j<f.edges.length;j++){
+				var edge = f.edges[j];
+				var point_a = edge[0];
+				var point_b = edge[1];
+				var point = this.CalculateIntersectionPoint4D(point_a,point_b,axis,axisValue);
 
-		for(var i=0;i<edges.length;i+=2) {
-			var point_a = edges[i];
-			var point_b = edges[i+1];
-			if(point_b == undefined){
-				break;
-			}
-
-			var point = this.CalculateIntersectionPoint4D(point_a,point_b,axis,axisValue);
-
-			if (point!=null) {
-				intersection_points.push(
-					new THREE.Vector3(
-						point[axes[0]],
-						point[axes[1]],
-						point[axes[2]]
+				if (point!=null) {
+					intersection_points.push(
+						new THREE.Vector3(
+							point[axes[0]],
+							point[axes[1]],
+							point[axes[2]]
+						)
 					)
-				)
+				}
 			}
-
+			
 		}
 
-		if (intersection_points[3]) {
+
+
+		if (intersection_points.length >= 3) {
 
 			geometry = new THREE.ConvexGeometry( intersection_points );
 			material = new THREE.MeshPhongMaterial( {flatShading:true, color:color} );
 			var mesh = new THREE.Mesh( geometry, material );
 			return mesh;
 		} else {
-			//console.log("not enough intersection points found");
 			return;
 		}
 	}
