@@ -229,8 +229,8 @@ var Mode4D = (function (scope) {
 		for(let x = 0;x <= 1;x++){
 			for(let y = 0;y <= 1;y++){
 				for(let z = 0;z <= 1;z++){
-					var min = -5;
-					var max = 5;
+					var min = -10;
+					var max = 10;
 					var X = x * (max - min) + min;
 					var Y = y * (max - min) + min;
 					var Z = z * (max - min) + min;
@@ -333,6 +333,8 @@ var Mode4D = (function (scope) {
 
 	Mode4D.prototype.initConvexHull = function(){
 		var pointsRaw = this.util.ParseConvexPoints(this.gui.params.points);
+		var projectingColor = new THREE.Color(this.gui.colors.projections);
+
 		// Convert the points into Vector3 objects:
 		var points = [];
 
@@ -360,12 +362,27 @@ var Mode4D = (function (scope) {
 			}
 		}
 
-		var tesseractMesh = this.projector.Wireframe4D(final_points,final_edges);
-		this.leftMesh = tesseractMesh;
-		this.leftScene.add(this.leftMesh);
+		var container = new THREE.Object3D();
+
+		var mesh = this.projector.Wireframe4D(final_points,final_edges,projectingColor);
+		this.leftMesh = container;
+		container.uniforms = mesh.uniforms;
+		container.angleSpeed = mesh.angleSpeed;
+		container.add(mesh);
 		
 		this.leftMesh.rawFacets = facets;
 
+		// Create solid facets too 
+		// for(var i=0;i<facets.length;i++){
+		// 	var F = facets[i];
+		// 	var geometry = new THREE.ConvexBufferHyperGeometry(F.vertices);
+		// 	var material = new THREE.HyperMaterial({color:projectingColor});
+		// 	var mesh = new THREE.Mesh(geometry,material);
+		// 	container.add(mesh);
+		// }
+
+		this.leftScene.add(this.leftMesh);
+		this.ComputeSlicesCPU();
 	}
 
 
