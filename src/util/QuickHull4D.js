@@ -3,35 +3,10 @@ A 4D version of QuickHull. Based on The Quickhull Algorithm for Convex Hulls by 
 Implementation inspired by https://github.com/Mugen87 's QuickHull.js 
 */
 var QuickHull4D = (function (scope) {
-	function QuickHull4D(){
-		this.init();
-		// Just some test code 
-		// (0,0,0,5),(5,0,0,0),(0,5,0,0),(0,0,5,0),(0,-6,0,0),(-4,0,4,1)
-
-		var v = [
-			new THREE.Vector4(0,0,0,5),
-			new THREE.Vector4(5,0,0,0),
-			new THREE.Vector4(0,5,0,0),
-			new THREE.Vector4(0,0,5,0),
-			new THREE.Vector4(0,-6,0,0),
-			new THREE.Vector4(-4,0,4,1),
-		]
-		var f1 = new Facet(v[0],v[1],v[2],v[3]);
-		var f2 = new Facet(v[0],v[1],v[2],v[4]);
-		console.log("f1 == f2",f1==f2)
-		console.log("f1 == f1",f1==f1)
-		console.log("f2 == f2",f2==f2)
-		// console.log("Shared ridges:")
-		// console.log(this.getSharedRidges(f1,f2))
-	}
+	function QuickHull4D(){}
 	
 	QuickHull4D.prototype.init = function(){
 		this.facets = []; // the generated faces of the convex hull
-		this.newFacets = []; // this array holds the faces that are generated within a single iteration
-
-		this.assigned = [];
-		this.unassigned = []; // Just marks points to be re-assigned 
-
 		this.vertices = []; 	// vertices of the hull
 
 		// Add a cross product on the threejs vector 
@@ -84,10 +59,6 @@ var QuickHull4D = (function (scope) {
 		if(facet.isPointAbove(v[4]))
 			facet.invertNormal();
 		this.facets.push(facet);
-
-		for(var i=0;i<this.facets.length;i++){
-			console.log("Facet",i,"has point above",this.facets[i].isPointAbove(v[i]))
-		}
 	}
 
 
@@ -187,8 +158,6 @@ var QuickHull4D = (function (scope) {
 	}
 
 	QuickHull4D.prototype.compute = function(){
-		console.log("COMPUTING CONVEX HULL")
-
 		// 1- Create initial simplex
 		this.computeInitialHull();
 		// 2- For each facet F
@@ -201,8 +170,6 @@ var QuickHull4D = (function (scope) {
 				// if p is above F 
 				if(facet.isPointAbove(point)){
 					// assign p to F's outside set
-					// point.assigned = facet; 
-					this.assigned.push(point);
 					facet.outside_set.push(point); 
 				}
 			}
@@ -214,17 +181,17 @@ var QuickHull4D = (function (scope) {
 
 		for(var i=0;i<this.facets.length;i++){
 			var facet = this.facets[i];
-			console.log("Outside set of facet number",i,"is",facet.outside_set)
+
 			if(facet.outside_set.length == 0) continue;
 
 			// 4- Get furthest point p in F's outside set 
 			var plane = facet.getHyperPlane();
 			var farthest_point = facet.outside_set[0];
-			var farthest_dist = plane.distanceToPoint(farthest_point);
+			var farthest_dist = Math.abs(plane.distanceToPoint(farthest_point));
 			for(var j=1;j<facet.outside_set.length;j++){
 				var point = facet.outside_set[j];
 				
-				var dist = plane.distanceToPoint(point);
+				var dist = Math.abs(plane.distanceToPoint(point));
 				if(dist > farthest_dist){
 					dist = farthest_dist;
 					farthest_point = point;
@@ -255,9 +222,9 @@ var QuickHull4D = (function (scope) {
 			}
 			// 7- Compute set of horizon ridges H 
 			var H = this.computeHorizon(visible_set,farthest_point);
-			console.log("Horizon for point",farthest_point,"is",H.length)
+
 			if(H.length == 0){
-				console.error("OMG - Horizon is zero???????",visible_set,farthest_point);
+				console.error("Horizon should never be 0!");
 			}
 			var newFacets = [];
 			// 8- For each ridge R in H 
@@ -278,14 +245,6 @@ var QuickHull4D = (function (scope) {
 				//For each new facet F' 
 				for(var r_i=0;r_i<newFacets.length;r_i++){
 					var newF = newFacets[r_i];
-					// Unassign all points in all outside_set's of all facets in V 
-					// for(var v_i=0;v_i<visible_set.length;v_i++){
-					// 	var Vfacet = visible_set[v_i];
-					// 	for(var q_i=0;q_i<Vfacet.outside_set.length;q_i++){
-					// 		var q = Vfacet.outside_set[q_i];
-					// 		q.assigned = undefined;
-					// 	}
-					// }
 					//for each unassigned point q in an outside set of a facet in V 
 					for(var v_i=0;v_i<visible_set.length;v_i++){
 						var Vfacet = visible_set[v_i];
@@ -294,13 +253,12 @@ var QuickHull4D = (function (scope) {
 							//if q is above F'
 							if((!q.onHull) && newF.isPointAbove(q)){
 								//assign q to F's outside set 
-								//q.assigned = newF;
 								newF.outside_set.push(q);
 							}
 						}
 					}
 				}
-			// CHECK: At this point, there should be NO points who are assigned to any of the faces about to be deleted
+
 
 			// 10- delete the facets in V 
 			for(var i2=this.facets.length-1;i2>=0;i2--){
@@ -315,29 +273,9 @@ var QuickHull4D = (function (scope) {
 				this.facets.push(newFacets[nf_i])
 			}
 
-			// Confirm that farthest_point is no longer in any of the outside sets 
-			for(var i2=0;i2<this.facets.length;i2++){
-				var F = this.facets[i2];
-				for(var i3=0;i3<F.outside_set.length;i3++){
-					var p = F.outside_set[i3];
-					if(p == farthest_point){
-						console.error("FOUND FARTHEST POINT inside an outside set")
-					}
-				}
-			}
-
 			// If we're here, we found a non-empty outside set 
 			i = 0;
 		}
-
-
-		for(var i=0;i<this.facets.length;i++){
-			var F = this.facets[i];
-			console.log("The outside set of facet",i,"has length",F.outside_set.length);
-			console.log("And it is",F.outside_set)
-		}
-					
-		console.log("Final total of",this.facets.length,"facets")
 	}
 
 	QuickHull4D.prototype.ComputeHull = function(points){
@@ -356,11 +294,11 @@ var QuickHull4D = (function (scope) {
 		// Copy all points into the vertices array
 		for ( var i = 0, l = points.length; i < l; i ++ ) {
 			var newPoint = points[i].clone();
-			var e = 0.01;
-			newPoint.x += Math.random() * e - e/2;
-			newPoint.y += Math.random() * e - e/2;
-			newPoint.z += Math.random() * e - e/2;
-			newPoint.w += Math.random() * e - e/2;
+			var e = 0.0001;
+			// newPoint.x += Math.random() * e - e/2;
+			// newPoint.y += Math.random() * e - e/2;
+			// newPoint.z += Math.random() * e - e/2;
+			// newPoint.w += Math.random() * e - e/2;
 			this.vertices.push( newPoint );
 		}
 		// Start the algorithm 
@@ -397,6 +335,7 @@ var QuickHull4D = (function (scope) {
 	    var v2 = new THREE.Vector4().subVectors(this.vertices[2],this.vertices[1]);
 	    var v3 = new THREE.Vector4().subVectors(this.vertices[3],this.vertices[2]);
 	    this.normal = this.normal.cross(v1,v2,v3);
+	    
 	    this.p0 = this.vertices[0];
 
 		this.outside_set = []
@@ -404,7 +343,7 @@ var QuickHull4D = (function (scope) {
 		// Set a flag on these points so we know they belong to the hull
 		p0.onHull = true;
 		p1.onHull = true;
-		p2.onHull = true;
+		p2.onHull = true; 
 		p3.onHull = true;
 
 	}
@@ -431,7 +370,11 @@ var QuickHull4D = (function (scope) {
 
 		isPointAbove: function (point) {
 			var diff = new THREE.Vector4().subVectors(point,this.p0);
-			return this.normal.dot(diff) > 0;
+			var dist = this.distanceToPoint(point);
+			if(isNaN(dist)){
+				return false;
+			}
+			return this.normal.dot(diff) >= 0;
 		},
 
 		distanceToPoint: function(point){
