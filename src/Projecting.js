@@ -20,6 +20,7 @@ var Projecting = (function (scope) {
 
 			uniform mat4 modelViewMatrix; 
 			uniform mat4 projectionMatrix; 
+			uniform mat4 rotationMatrix;
 			uniform vec3 anglesW;
 
 			attribute vec4 position;
@@ -54,26 +55,7 @@ var Projecting = (function (scope) {
 					newPos.w  += axisValue;
 				}
 
-				// Apply any 4D rotations
-				mat4 rXW;
-				rXW[0] = vec4(cos(anglesW.x),0.,0.,-sin(anglesW.x));
-				rXW[1] = vec4(0.,1.,0.,0.);
-				rXW[2] = vec4(0.,0.,1.,0.);
-				rXW[3] = vec4(sin(anglesW.x),0.,0.,cos(anglesW.x));
-
-				mat4 rYW;
-				rYW[0] = vec4(1.,0.,0.,0.);
-				rYW[1] = vec4(0.,cos(anglesW.y),0.,-sin(anglesW.y));
-				rYW[2] = vec4(0.,0.,1.,0.);
-				rYW[3] = vec4(0.,sin(anglesW.y),0.,cos(anglesW.y));
-
-				mat4 rZW;
-				rZW[0] = vec4(1.,0.,0.,0.);
-				rZW[1] = vec4(0.,1.,0.,0.);
-				rZW[2] = vec4(0.,0.,cos(anglesW.z),-sin(anglesW.z));
-				rZW[3] = vec4(0.,0.,sin(anglesW.z),cos(anglesW.z));
-
-				vec4 rotatedPos = rXW * rYW * rZW * newPos;
+				vec4 rotatedPos = rotationMatrix * newPos;
 
 				// Then project into 3D
 				float Lw = 1.0 / (11.0 - rotatedPos.w);
@@ -103,7 +85,8 @@ var Projecting = (function (scope) {
 		var uniforms = {
 			anglesW:  { type: "v3", value: new THREE.Vector3(0,0,0) },
 			axisValue: { type: "f", value: 0 },
-			axis: { type: "f", value: 3 }
+			axis: { type: "f", value: 3 },
+			rotationMatrix: {type:"m4",value:new THREE.Matrix4()   }
 		}
 		var shaderMaterial = new THREE.RawShaderMaterial({
 			vertexShader: vertexShader,
@@ -113,7 +96,33 @@ var Projecting = (function (scope) {
 
 		var container = new THREE.Object3D();
 		container.uniforms = uniforms;
-		container.angleSpeed = new THREE.Vector3(0,0,0);
+		container.baseVectors = [];
+		container.baseVectors[0] = E4.Vec(1,0,0,0);
+		container.baseVectors[1] = E4.Vec(0,1,0,0);
+		container.baseVectors[2] = E4.Vec(0,0,1,0);
+		container.baseVectors[3] = E4.Vec(0,0,0,1);
+		container.updateMatrixFromRotors = function(self,rXY,rXZ,rYZ,rXW,rYW,rZW){
+			var bases = self.baseVectors;
+			for(var i=0;i<bases.length;i++){
+				bases[i] = bases[i].sp(rXY).sp(rYZ).sp(rXZ).sp(rXW).sp(rYW).sp(rZW)
+			}
+			// Update matrix 
+			var m = self.uniforms.rotationMatrix.value; 
+			var b1 = bases[0];
+			var b2 = bases[1];
+			var b3 = bases[2];
+			var b4 = bases[3];
+			m.set(
+				b1[0], b2[0], b3[0], b4[0],
+				b1[1], b2[1], b3[1], b4[1],
+				b1[2], b2[2], b3[2], b4[2],
+				b1[3], b2[3], b3[3], b4[3]
+				)
+
+		}
+
+
+		
 
 		if(edges != undefined){
 			var geometry = new THREE.HyperBufferGeometry( edges );

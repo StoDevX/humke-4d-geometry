@@ -229,8 +229,8 @@ var Mode4D = (function (scope) {
 		for(let x = 0;x <= 1;x++){
 			for(let y = 0;y <= 1;y++){
 				for(let z = 0;z <= 1;z++){
-					var min = -10;
-					var max = 10;
+					var min = -5;
+					var max = 5;
 					var X = x * (max - min) + min;
 					var Y = y * (max - min) + min;
 					var Z = z * (max - min) + min;
@@ -329,6 +329,8 @@ var Mode4D = (function (scope) {
 			this.rightScene.add(this.rightMesh);
 		}
 
+		
+
 	}	
 
 	Mode4D.prototype.initConvexHull = function(){
@@ -367,7 +369,8 @@ var Mode4D = (function (scope) {
 		var mesh = this.projector.Wireframe4D(final_points,final_edges,projectingColor);
 		this.leftMesh = container;
 		container.uniforms = mesh.uniforms;
-		container.angleSpeed = mesh.angleSpeed;
+		container.baseVectors = mesh.baseVectors;
+		container.updateMatrixFromRotors = mesh.updateMatrixFromRotors;
 		container.add(mesh);
 		
 		this.leftMesh.rawFacets = facets;
@@ -448,38 +451,75 @@ var Mode4D = (function (scope) {
 			this.pressedHide = false;
 
 
-		if(this.current_mode == "convex-hull" && this.leftMesh){
+		if(this.leftMesh && this.leftMesh.updateMatrixFromRotors){
+			let rotationSpeed = 0.05; 
 			// XW rotation
+			let rotorXW = E4.Rot(Math.cos(0), 0 , 0, 0, Math.sin(0), 0, 0);
+
 			if(window.Keyboard.isKeyDown('A')){
-				this.leftMesh.angleSpeed.x ++;
+				rotorXW = E4.Rot(Math.cos(rotationSpeed/2), 0 , 0, 0, Math.sin(rotationSpeed/2), 0, 0);
 			}
 			if(window.Keyboard.isKeyDown('D')){
-				this.leftMesh.angleSpeed.x --;
+				rotorXW = E4.Rot(Math.cos(-rotationSpeed/2), 0 , 0, 0, Math.sin(-rotationSpeed/2), 0, 0);
 			}
+			
+
 			// YW rotation
+			let rotorYW = E4.Rot(Math.cos(0), 0 , 0, 0, 0, Math.sin(0), 0);
 			if(window.Keyboard.isKeyDown('W')){
-				this.leftMesh.angleSpeed.y ++;
+				rotorYW = E4.Rot(Math.cos(rotationSpeed/2), 0 , 0, 0, 0, Math.sin(rotationSpeed/2), 0);
 			}
 			if(window.Keyboard.isKeyDown('S')){
-				this.leftMesh.angleSpeed.y --;
+				rotorYW = E4.Rot(Math.cos(-rotationSpeed/2), 0 , 0, 0, 0, Math.sin(-rotationSpeed/2), 0);
 			}
+			
 			// ZW rotation
+			let rotorZW = E4.Rot(Math.cos(0), 0 , 0, 0, 0, 0, Math.sin(0));
 			if(window.Keyboard.isKeyDown('Q')){
-				this.leftMesh.angleSpeed.z ++;
+				rotorZW = E4.Rot(Math.cos(rotationSpeed/2), 0 , 0, 0, 0, 0, Math.sin(rotationSpeed/2));
 			}
 			if(window.Keyboard.isKeyDown('E')){
-				this.leftMesh.angleSpeed.z --;
+				rotorZW = E4.Rot(Math.cos(-rotationSpeed/2), 0 , 0, 0, 0, 0, Math.sin(-rotationSpeed/2));
+			}
+			
+
+			// XY rotation
+			let rotorXY = E4.Rot(Math.cos(0), Math.sin(0) , 0, 0, 0, 0, 0);
+
+			if(window.Keyboard.isKeyDown('J')){
+				rotorXY = E4.Rot(Math.cos(rotationSpeed/2), Math.sin(rotationSpeed/2) , 0, 0, 0, 0, 0);
+			}
+			if(window.Keyboard.isKeyDown('L')){
+				rotorXY = E4.Rot(Math.cos(-rotationSpeed/2), Math.sin(-rotationSpeed/2) , 0, 0, 0, 0, 0);
+			}
+			
+
+			// XZ rotation
+			let rotorXZ = E4.Rot(Math.cos(0), 0 , Math.sin(0), 0, 0, 0, 0);
+
+			if(window.Keyboard.isKeyDown('U')){
+				rotorXZ = E4.Rot(Math.cos(rotationSpeed/2), 0 , Math.sin(rotationSpeed/2), 0, 0, 0, 0);
+			}
+			if(window.Keyboard.isKeyDown('O')){
+				rotorXZ = E4.Rot(Math.cos(-rotationSpeed/2), 0 , Math.sin(-rotationSpeed/2), 0, 0, 0, 0);
 			}
 
-			var friction = 0.8;
-			this.leftMesh.angleSpeed.x *= friction;
-			this.leftMesh.angleSpeed.y *= friction;
-			this.leftMesh.angleSpeed.z *= friction;
 
-			var scaleFactor = 0.01;
-			this.leftMesh.uniforms.anglesW.value.x += this.leftMesh.angleSpeed.x * scaleFactor;
-			this.leftMesh.uniforms.anglesW.value.y += this.leftMesh.angleSpeed.y * scaleFactor;
-			this.leftMesh.uniforms.anglesW.value.z += this.leftMesh.angleSpeed.z * scaleFactor;
+			// YZ rotation
+			let rotorYZ = E4.Rot(Math.cos(0), 0 , 0, Math.sin(0), 0, 0, 0);
+			if(window.Keyboard.isKeyDown('I')){
+				rotorYZ = E4.Rot(Math.cos(rotationSpeed/2), 0 , 0, Math.sin(rotationSpeed/2), 0, 0, 0);
+			}
+			if(window.Keyboard.isKeyDown('K')){
+				rotorYZ = E4.Rot(Math.cos(-rotationSpeed/2), 0 , 0, Math.sin(-rotationSpeed/2), 0, 0, 0);
+			}
+			
+
+			this.leftMesh.updateMatrixFromRotors(this.leftMesh,rotorXY,rotorXZ,rotorYZ,rotorXW,rotorYW,rotorZW)
+			// Apply the same rotation to the hyperplane 
+			this.intersectionPlane.uniforms.rotationMatrix.value = this.leftMesh.uniforms.rotationMatrix.value;
+			this.intersectionPlane.wireframe.uniforms.rotationMatrix.value = this.leftMesh.uniforms.rotationMatrix.value;
+
 		}
 
 		for(var i=0;i<this.labels.length;i++)

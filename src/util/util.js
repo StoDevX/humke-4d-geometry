@@ -7,6 +7,7 @@ var Util = (function (scope) {
 		this.keyMap = {};
 		// Add the letters
 		for (i = 97; i < 123; i++) this.keyMap[String.fromCharCode(i)] = i - 32
+		this.keyMap['space'] = 32;
 	}
 
 	Util.prototype.SetupKeyListeners = function(){

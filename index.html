@@ -20,6 +20,8 @@
 	<script src="src/lib/threejs/ConvexHyperGeometry.js"></script>
 	<script src="src/lib/threejs/HyperGeometry.js"></script>
 	<script src="src/lib/threejs/THREE.MeshLine.js"></script>
+	<!-- Geometric Algebra libary -->
+	<script src="src/lib/versor.js"></script>
 
 	<!-- Controls -->
 	<script src="src/lib/threejs/OrbitControls.js"></script>
@@ -186,6 +188,16 @@
 		document.querySelector("#mode_container").style.display = "none";
 		// Destory the mode
 		mode_objects[current_mode].cleanup();
+	}
+
+	//Initialize the versor library 
+	if(window.E4 == null){ 
+		window.E4 = versor.create({
+			metric:[1, 1, 1, 1],
+			types: [
+				{ name:"Rot", bases:["s", "e12", "e13", "e23", "e14", "e24", "e34"] },
+			]
+		});
 	}
 </script>
 </body>

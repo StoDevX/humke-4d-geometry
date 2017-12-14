@@ -105,6 +105,7 @@
 
 			uniform mat4 modelViewMatrix; 
 			uniform mat4 projectionMatrix; 
+			uniform mat4 rotationMatrix;
 
 			attribute vec4 position; // It's a 4D world position!
 
@@ -137,7 +138,9 @@
 					newPos.w  += axisValue;
 				}
 
-				// TODO: Apply camera rotations 
+				newPos = rotationMatrix * newPos;
+
+				// TODO: Apply world coord to eye coord transformation based on 4D camera/field of view 
 				
 				float Lw = 1.0 / (11.0 - newPos.w);
 				mat3 projection4DMatrix;
@@ -165,7 +168,8 @@
 
 		var uniforms = {
 			axisValue: { type: "f", value: 0 },
-			axis: { type: "f", value: 0 }
+			axis: { type: "f", value: 0 },
+			rotationMatrix: {type:"m4",value:new THREE.Matrix4()   }
 		};
 
 		var material = new THREE.RawShaderMaterial({
