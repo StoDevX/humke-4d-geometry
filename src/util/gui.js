@@ -333,9 +333,9 @@ var GUI = (function (scope) {
 			if(callbacks['param_b']) callbacks['param_b'](mode_obj,val);
 		}));
 		if(this.mode == "3D" || this.mode  == "4D"){
-			arr.push(this.shapeProperties.add(this.params, 'param_c').name('c = ').listen().onChange(function(val){
-				if(callbacks['param_c']) callbacks['param_c'](mode_obj,val);
-			}));
+			// arr.push(this.shapeProperties.add(this.params, 'param_c').name('c = ').listen().onChange(function(val){
+			// 	if(callbacks['param_c']) callbacks['param_c'](mode_obj,val);
+			// }));
 		}
 		if(this.mode == "4D"){
 			arr.push(this.shapeProperties.add(this.params, 'param_d').name('d = ').listen().onChange(function(val){
