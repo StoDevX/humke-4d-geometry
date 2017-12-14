@@ -93,7 +93,7 @@ var GUI = (function (scope) {
 			'points':'', // For convex hull
 			'param_a':'', // These are the ranges the parameters take
 			'param_b':'',
-			'param_c':'',
+			//'param_c':'',
 			'param_d':'',
 			'param_eq_x':'', // This is the parametric equation
 			'param_eq_y':'',
@@ -137,10 +137,10 @@ var GUI = (function (scope) {
 			'param_eq_z':'sin(b)',
 			'param_a':'0 < a < 2 * PI',
 			'param_b':'0 < b < 2 * PI',
-			'param_c':'0 < c < 5',
+			//'param_c':'0 < c < 5',
 		}
 
-		// 3D defaults
+		// 4D defaults
 		this.defaults['4D'] = {
 			'equation':'x^2+y^2+z^2+w^2 = 10',
 			'points':'',
