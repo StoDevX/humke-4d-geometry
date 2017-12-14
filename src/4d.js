@@ -525,7 +525,7 @@ var Mode4D = (function (scope) {
 		for(var i=0;i<this.labels.length;i++)
 			this.labels[i].l.quaternion.copy(this.labels[i].c.quaternion);
 
-		requestAnimationFrame( this.animate.bind(this) );
+		this.animId = requestAnimationFrame( this.animate.bind(this) );
 		this.leftRenderer.render( this.leftScene, this.leftCamera );
 		this.rightRenderer.render( this.rightScene, this.rightCamera );
 	}
