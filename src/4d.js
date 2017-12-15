@@ -298,9 +298,9 @@ var Mode4D = (function (scope) {
 				variables.splice(i,1);
 		}
 
-		var projectingColor = this.gui.colors.projections;
+		var color = this.gui.colors.slices;
 
-		var mesh = this.projector.PolygonizeCartesian3D(equation,resolution,projectingColor,variables);
+		var mesh = this.projector.PolygonizeCartesian3D(equation,resolution,color,variables);
 		if(mesh){
 			this.rightMesh = mesh;
 			this.rightScene.add(this.rightMesh);
