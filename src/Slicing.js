@@ -290,11 +290,13 @@ var Slicing = (function (scope) {
 			axes.splice(index,1);
 		}
 
+		let surfaceGeometry = new THREE.Geometry();
+		let faceIndex = 0;
 
-		var intersection_points = [];
 		// Loop over all the edges and try to intersect 
 		for(var i=0;i<facets.length;i++){
 			var f = facets[i];
+			let numNewPoints = 0;
 			for(var j=0;j<f.edges.length;j++){
 				var edge = f.edges[j];
 				var point_a = edge[0];
@@ -302,29 +304,31 @@ var Slicing = (function (scope) {
 				var point = this.CalculateIntersectionPoint4D(point_a,point_b,axis,axisValue);
 
 				if (point!=null) {
-					intersection_points.push(
-						new THREE.Vector3(
-							point[axes[0]],
-							point[axes[1]],
-							point[axes[2]]
-						)
-					)
+					let newPoint = new THREE.Vector3(point[axes[0]], point[axes[1]], point[axes[2]]);
+					surfaceGeometry.vertices.push(newPoint);
+					numNewPoints ++;
 				}
 			}
-			
+
+			// The intersection of a tetrahedron with a 4D hyperplane is either a square or a triangle
+			if(numNewPoints == 4){
+				surfaceGeometry.faces.push(new THREE.Face3( faceIndex,faceIndex+1,faceIndex+3 ));
+				surfaceGeometry.faces.push(new THREE.Face3( faceIndex+1,faceIndex+2,faceIndex+3 ));
+				faceIndex += 4;
+			}
+			if(numNewPoints == 3){
+				surfaceGeometry.faces.push(new THREE.Face3( faceIndex,faceIndex+1,faceIndex+2 ));
+				faceIndex += 3;
+			}
+
+
 		}
 
 
 
-		if (intersection_points.length >= 3) {
-
-			geometry = new THREE.ConvexGeometry( intersection_points );
-			material = new THREE.MeshPhongMaterial( {flatShading:true, color:color} );
-			var mesh = new THREE.Mesh( geometry, material );
-			return mesh;
-		} else {
-			return;
-		}
+		material = new THREE.MeshPhongMaterial( {flatShading:true, color:color,side:THREE.DoubleSide} );
+		var mesh = new THREE.Mesh( surfaceGeometry, material );
+		return mesh;
 	}
 
 	Slicing.prototype.CalculateIntersectionPoint3D = function(p1,p2,axis,axis_value) {
