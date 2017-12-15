@@ -278,29 +278,6 @@ var Mode4D = (function (scope) {
 		return mesh;
 	}
 
-	// Generalizing the 3D cartesian drawing
-	Mode4D.prototype.polygonizeCartesian = function(equation_string,resolution,variables){
-
-		let sides = equation_string.split('=');
-		let LHS = sides[0];
-		let RHS = sides[1];
-		let LHSfunc = Parser.parse(LHS).toJSFunction(variables);
-		let RHSfunc = Parser.parse(RHS).toJSFunction(variables);
-		var eq = function(x,y,z) { return LHSfunc(x,y,z) - RHSfunc(x,y,z); };
-
-		//Parses the equation, and polygonizes it
-		try {
-			var triangleArray = [];
-			triangleArray = Polygonize.generate(eq, [[-10, 10], [-10, 10], [-10, 10]], resolution);
-			return triangleArray;
-
-		} catch(err){
-			console.log("Error rendering equation",err);
-			return []
-		}
-
-	}
-
 	Mode4D.prototype.initCartesian = function(){
 		/* To draw a section of a 4d cartesian:
 			- Grab the equation
