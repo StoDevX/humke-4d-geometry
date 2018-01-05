@@ -41,3 +41,15 @@ Thanks to Professor [Paul Humke](https://www.stolaf.edu/people/humke/) for spear
 Thanks to [Nick Nooney](https://github.com/nnooney) for the marching cubes implementation. 
 
 We would never have gotten this far without all the insightful [research we've built upon](https://github.com/StoDevX/humke-4d-geometry/wiki/Resources-&-References).
+
+## One More Example
+
+This is not currently possible to do using just the web viewer, so it's not included with the examples above. But it's really cool, so I wanted to show it. 
+
+|![Rotating Tesseract](media/highlighted_rotating_tesseract.gif)|
+|:-:|
+| A rotating tesseract with one face highlighted |
+
+To me, this is much easier to understand than standard animations of rotating tesseracts. This 4-dimensional cube appears to distort as it rotates. Being able to follow one face, and to see how it actually is a cube that just gets distorted as the view changes is really helpful. 
+
+Even though we have no UI to set this up in the app, it is not difficult to put together with a few lines of code. We simply define the 16 points in a tesseract, as well as the connecting edges then we define a cube in 4D space. We draw the former as a wireframe and the latter as a solid. We hope others interested in this topic will find the source code useful for constructing more complex visualizations and examples not possible in the app today. 
