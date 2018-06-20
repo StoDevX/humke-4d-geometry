@@ -110,6 +110,7 @@ var GUI = (function (scope) {
 			'thickness':'medium',
 			'show left view': true,
 			'show right view': true,
+			'qhull':true
 		};
 		this.gui = null;
 		this.mode = "";
@@ -143,7 +144,7 @@ var GUI = (function (scope) {
 		// 4D defaults
 		this.defaults['4D'] = {
 			'equation':'x^2+y^2+z^2+w^2 = 10',
-			'points':'',
+			'points':'(-5,-5,-5,-5),(5,-5,-5,-5),(-5,5,-5,-5),(5,5,-5,-5),(-5,-5,5,-5),(5,-5,5,-5),(-5,5,5,-5),(5,5,5,-5),(-5,-5,-5,5),(5,-5,-5,5),(-5,5,-5,5),(5,5,-5,5),(-5,-5,5,5),(5,-5,5,5),(-5,5,5,5),(5,5,5,5)' , // Small tesseract
 			'resolution':'low',
 			'param_eq_x':'',
 			'param_eq_y':'',
@@ -154,6 +155,7 @@ var GUI = (function (scope) {
 			'param_c':'0 < c < 1',
 			'param_d':'0 < d < 1',
 			'axis':'W',
+			'qhull': true
 		}
 
 		this.mode_obj = null;
@@ -244,6 +246,8 @@ var GUI = (function (scope) {
 		}
 
 
+
+
 		// Turn all sliders orange 
 		var sliders = document.querySelectorAll(".slider-fg")
 		for(var i=0;i<sliders.length;i++){
@@ -278,6 +282,8 @@ var GUI = (function (scope) {
 			});
 			arr.push(res);
 		}
+
+		
 
 
 		this.builtin_arr_cartesian = this.constructExampleItems(this.mode,'cartesian');
@@ -369,6 +375,13 @@ var GUI = (function (scope) {
 			if(callbacks['points']) callbacks['points'](mode_obj,val);
 		}).listen();
 		arr.push(points);
+
+		if(this.mode == '4D'){
+			var useQHull = this.shapeProperties.add(this.params, 'qhull').name("Use QHull Server").listen().onChange(function(val){
+				if(callbacks['qhull']) callbacks['qhull'](mode_obj,val);
+			});
+			arr.push(useQHull);
+		}
 
 		this.builtin_arr_convex = this.constructExampleItems(this.mode,'convex-hull');
 
