@@ -20,6 +20,7 @@ var Mode4D = (function (scope) {
 		this.rightMesh = null;
 
 		this.gridIsVisible = true;
+		this.useQHull = true;
 	}
 
 	// Creates the scene and everything
@@ -171,6 +172,11 @@ var Mode4D = (function (scope) {
 	}
 
 	Mode4D.prototype.callbacks = {
+		'qhull': function(self,val) {
+			self.useQHull = val
+			self.cleanupLeftMesh()
+			self.initConvexHull()
+		},
 		'axis':function(self,val) {
 			if(self.current_mode == "cartesian") {
 				self.cleanupLeftMesh();
@@ -312,6 +318,7 @@ var Mode4D = (function (scope) {
 
 	Mode4D.prototype.initConvexHull = function(){
 		var pointsRaw = this.util.ParseConvexPoints(this.gui.params.points);
+		if(pointsRaw.length == 0) return;
 		var projectingColor = new THREE.Color(this.gui.colors.projections);
 
 		// Convert the points into Vector3 objects:
@@ -323,46 +330,85 @@ var Mode4D = (function (scope) {
 			points.push(newPoint);
 		}
 	
+		var that = this;
+		function finishShape(facets){
+			// Just construct the wireframe here 
+			var final_points = [];
+			var final_edges = [];
 			
-		var CHull4D = new QuickHull4D();
+			for(var i=0;i<facets.length;i++){
+				var f = facets[i];
+				for(var j=0;j<f.edges.length;j++){
+					final_edges.push(f.edges[j][0],f.edges[j][1]);
+				}
+				for(var j=0;j<f.vertices.length;j++){
+					final_points.push(f.vertices[j]);
+				}
+			}
 
-		var facets = CHull4D.ComputeHull(points);
-		// Just construct the wireframe here 
-		var final_points = [];
-		var final_edges = [];
-		
-		for(var i=0;i<facets.length;i++){
-			var f = facets[i];
-			for(var j=0;j<f.edges.length;j++){
-				final_edges.push(f.edges[j][0],f.edges[j][1]);
-			}
-			for(var j=0;j<f.vertices.length;j++){
-				final_points.push(f.vertices[j]);
-			}
+			var container = new THREE.Object3D();
+
+			var mesh = that.projector.Wireframe4D(final_points,final_edges,projectingColor);
+			that.leftMesh = container;
+			container.uniforms = mesh.uniforms;
+			container.baseVectors = mesh.baseVectors;
+			container.updateMatrixFromRotors = mesh.updateMatrixFromRotors;
+			container.add(mesh);
+			
+			that.leftMesh.rawFacets = facets;
+
+			// Create solid facets too 
+			// for(var i=0;i<facets.length;i++){
+			// 	var F = facets[i];
+			// 	var geometry = new THREE.ConvexBufferHyperGeometry(F.vertices);
+			// 	var material = new THREE.HyperMaterial({color:projectingColor});
+			// 	var mesh = new THREE.Mesh(geometry,material);
+			// 	container.add(mesh);
+			// }
+
+			that.leftScene.add(that.leftMesh);
+			that.ComputeSlicesCPU();
 		}
 
-		var container = new THREE.Object3D();
+		if(this.useQHull){
+			axios.get('https://omarshehata.me/qhull/?points=' + JSON.stringify(points))
+			.then(function (response) {
+				if(response.data == 'No points given'){
+					throw new Error('Qhull server returned "no points given".');
+				}
+				var rawFacets = response.data;
+				var facets = []
+				// Construct structured facets out of Qhull's raw output 
+				for(var i=0;i<rawFacets.length;i++){
+					var rawF = rawFacets[i]
+					var vertices = []
+					for(var j=0;j<rawF.length;j++){
+						var index = rawF[j]
+						var point = points[index]
+						vertices.push(point)
+					}
+					var edges = []
+					edges.push([vertices[0],vertices[1]])
+					edges.push([vertices[1],vertices[2]])
+					edges.push([vertices[2],vertices[3]])
+					edges.push([vertices[3],vertices[0]])
 
-		var mesh = this.projector.Wireframe4D(final_points,final_edges,projectingColor);
-		this.leftMesh = container;
-		container.uniforms = mesh.uniforms;
-		container.baseVectors = mesh.baseVectors;
-		container.updateMatrixFromRotors = mesh.updateMatrixFromRotors;
-		container.add(mesh);
+					facets.push({edges:edges,vertices:vertices})
+				}
+				finishShape(facets)
+			})
+			.catch(function (error) {
+				// Clear shape 
+				console.log(error)
+				that.cleanupLeftMesh();
+			});
+		} else {
+			var CHull4D = new QuickHull4D();
+			var facets = CHull4D.ComputeHull(points);
+			finishShape(facets)
+		}
 		
-		this.leftMesh.rawFacets = facets;
-
-		// Create solid facets too 
-		// for(var i=0;i<facets.length;i++){
-		// 	var F = facets[i];
-		// 	var geometry = new THREE.ConvexBufferHyperGeometry(F.vertices);
-		// 	var material = new THREE.HyperMaterial({color:projectingColor});
-		// 	var mesh = new THREE.Mesh(geometry,material);
-		// 	container.add(mesh);
-		// }
-
-		this.leftScene.add(this.leftMesh);
-		this.ComputeSlicesCPU();
+		
 	}
 
 
