@@ -371,10 +371,11 @@ var Mode4D = (function (scope) {
 		}
 
 		if(this.useQHull){
-			var params = new URLSearchParams();
-			params.append('points', JSON.stringify(points));
-			axios.post('https://omarshehata.me/qhull/', params)
+			axios.get('https://omarshehata.me/qhull/?points=' + JSON.stringify(points))
 			.then(function (response) {
+				if(response.data == 'No points given'){
+					throw new Error('Qhull server returned "no points given".');
+				}
 				var rawFacets = response.data;
 				var facets = []
 				// Construct structured facets out of Qhull's raw output 
