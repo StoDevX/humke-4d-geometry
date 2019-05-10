@@ -64,6 +64,9 @@ var GUI = (function (scope) {
 				name: 'Sheared Hypertube', dimension: 4, input: 'cartesian',
 				data: { 'equation': '(x+w)^2+y^2+z^2 = 10' }},
 			{
+				name: 'Clean Tesseract', dimension: 4, input: 'convex-hull',
+				data: { 'points': 'untessellated_tesseract' }},
+			{
 				name: 'Large Tesseract', dimension: 4, input: 'convex-hull',
 				data: { 'points': '(-9,-9,-9,-9),(9,-9,-9,-9),(-9,9,-9,-9),(9,9,-9,-9),(-9,-9,9,-9),(9,-9,9,-9),(-9,9,9,-9),(9,9,9,-9),(-9,-9,-9,9),(9,-9,-9,9),(-9,9,-9,9),(9,9,-9,9),(-9,-9,9,9),(9,-9,9,9),(-9,9,9,9),(9,9,9,9)' }},
 			{
@@ -428,7 +431,6 @@ var GUI = (function (scope) {
 						for(let param in d.data){
 							if(d.data.hasOwnProperty(param)){
 								params[param] = d.data[param];
-								console.log(param,d.data[param])
 								if(callbacks[param]) callbacks[param](mode_obj,params[param]);
 							}
 						}

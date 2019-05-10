@@ -217,7 +217,15 @@ var Mode4D = (function (scope) {
 		},
 		'points': function(self,val){
 			self.cleanupLeftMesh()
-			self.initConvexHull()
+			// This is a special input to get the iconic tesseract
+			if (val == 'untessellated_tesseract') {
+				var tesseractMesh = self.constructTesseract();
+				self.leftMesh = tesseractMesh;
+				self.leftScene.add(self.leftMesh);
+				self.ComputeSlicesCPU();
+			} else {
+				self.initConvexHull()	
+			}
 		},
 		'show left view': function(self,val){
 			self.util.SetLeftDivVisibility(val);
@@ -315,6 +323,51 @@ var Mode4D = (function (scope) {
 		
 
 	}	
+
+	Mode4D.prototype.constructTesseract = function() {
+		// Generate tesseract points
+		var start = -5;
+		var end = 5;
+		var vectorArray = [];
+		// Generate the tesseract points
+		for(var x=start;x<=end;x+=(end-start)){
+			for(var y=start;y<=end;y+=(end-start)){
+				for(var z=start;z<=end;z+=(end-start)){
+					for(var w=start;w<=end;w+=(end-start)){
+						vectorArray.push(new THREE.Vector4(x,y,z,w));
+					}
+				}
+			}
+		}
+		// Generate the pairs of points that create the edges
+		var edgesArray = [];
+		for(var i=0;i<vectorArray.length;i++){
+			var p = vectorArray[i];
+			for(var j=0;j<vectorArray.length;j++){
+				if(i == j) continue;
+				var p2 = vectorArray[j];
+				// For two points to be connected, they must share exactly 3 coordinates
+				// xyz, xyw, xzw, yzw
+				if(p.x == p2.x && p.y == p2.y && p.z == p2.z ||
+				   p.x == p2.x && p.y == p2.y && p.w == p2.w ||
+				   p.y == p2.y && p.z == p2.z && p.w == p2.w ||
+				   p.x == p2.x && p.z == p2.z && p.w == p2.w ){
+					edgesArray.push(p);
+					edgesArray.push(p2);
+				}
+			}
+		}
+
+		var projectingColor = new THREE.Color(this.gui.colors.projections);
+		var tesseractMesh = this.projector.Wireframe4D(vectorArray, edgesArray, projectingColor);
+
+		// Construct this for the slicing code
+		var CHull4D = new QuickHull4D();
+		var facets = CHull4D.ComputeHull(vectorArray);
+		tesseractMesh.rawFacets = facets;
+
+		return tesseractMesh;		
+	}
 
 	Mode4D.prototype.initConvexHull = function(){
 		var pointsRaw = this.util.ParseConvexPoints(this.gui.params.points);
