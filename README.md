@@ -34,7 +34,7 @@ The [developer docs](https://github.com/StoDevX/humke-4d-geometry/wiki/Developer
 
 ## Credits 
 
-The main developers on this project have been [Omar Shehata](https://github.com/OmarShehata), [Joe Peterson](https://github.com/petersbob), [Tianyu Pang](https://github.com/pang-tian-yu) and [Justin Pacholec](https://github.com/justinpac).
+The main developers on this project have been [Omar Shehata](https://github.com/OmarShehata), [Joe Peterson](https://github.com/petersbob), [Tianyu Pang](https://github.com/kyuuchan) and [Justin Pacholec](https://github.com/justinpac).
 
 Thanks to Professor [Paul Humke](https://www.stolaf.edu/people/humke/) for spearheading this project and acting as our advisor. 
 
